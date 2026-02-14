@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { ArrowRight, ChevronDown } from "lucide-react";
-import heroBg from "@/assets/hero-industrial.png"; // Assuming you generated this
+import heroBg from "@/assets/hero-industrial.png";
 
 export default function Hero() {
   return (
@@ -9,8 +9,8 @@ export default function Hero() {
       <div className="absolute inset-0 z-0">
         <img
           src={heroBg}
-          alt="Industrial Refinery"
-          className="w-full h-full object-cover opacity-60"
+          alt="REDOXY Modular Waste Treatment"
+          className="w-full h-full object-cover opacity-50"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-transparent" />
         <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-100 contrast-150 mix-blend-overlay"></div>
@@ -29,16 +29,19 @@ export default function Hero() {
           >
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary font-tech text-sm tracking-widest mb-6">
               <span className="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
-              EST. 2020 KSA • EST. 2025 UAE
+              EST. 2020 KSA • EST. 2025 REDOXY FZC UAE
             </div>
+
             <h1 className="text-5xl md:text-7xl font-display font-bold text-white leading-tight mb-6">
-              SCALING <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-500 text-glow">MODULAR</span> INDUSTRIAL INFRASTRUCTURE
+              TRANSFORMING WASTE INTO <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-teal-400 text-glow">GLOBAL WEALTH</span>
             </h1>
-            <p className="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto mb-10 font-light font-sans">
-              Propelling Saudi Vision 2030 through circular energy solutions. 
-              Recycling, treating, and connecting waste value to the international market.
+
+            <p className="text-lg md:text-xl text-gray-300 max-w-3xl mx-auto mb-10 font-light font-sans">
+              Deploying modular, innovative waste treatment units across the Kingdom. 
+              <span className="font-semibold text-white"> Approved by the Royal Commission of Yanbu and Jubail. </span> 
+              We recycle and treat hazardous and non-hazardous waste, connecting resources directly to the international market.
             </p>
-            
+
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <a
                 href="#contact"
@@ -51,7 +54,7 @@ export default function Hero() {
                 href="#technology"
                 className="w-full sm:w-auto px-8 py-4 bg-transparent border border-white/20 text-white font-bold font-display uppercase tracking-wider rounded-sm hover:bg-white/5 transition-all backdrop-blur-sm"
               >
-                Our Technology
+                Our Modular Units
               </a>
             </div>
           </motion.div>
@@ -65,7 +68,9 @@ export default function Hero() {
         transition={{ delay: 1, duration: 1 }}
         className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-gray-500"
       >
-        <span className="text-xs font-tech tracking-widest uppercase">Scroll Down</span>
+        <span className="text-xs font-tech tracking-widest uppercase">
+          Trusted by Aramco & SABIC
+        </span>
         <ChevronDown className="w-5 h-5 animate-bounce" />
       </motion.div>
     </section>
