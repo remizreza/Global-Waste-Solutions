@@ -1,140 +1,102 @@
 import { motion } from "framer-motion";
-import { Mail, MapPin, Phone } from "lucide-react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { useToast } from "@/hooks/use-toast";
-
-const formSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters"),
-  email: z.string().email("Invalid email address"),
-  message: z.string().min(10, "Message must be at least 10 characters"),
-});
+import { Mail, Phone, MapPin, ArrowRight } from "lucide-react";
 
 export default function Contact() {
-  const { toast } = useToast();
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      name: "",
-      email: "",
-      message: "",
-    },
-  });
-
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values);
-    toast({
-      title: "Message Sent",
-      description: "Thank you for contacting REDOXY. We will get back to you shortly.",
-    });
-    form.reset();
-  }
-
   return (
-    <section id="contact" className="py-24 bg-background relative overflow-hidden">
-        {/* Decorative Grid */}
-        <div className="absolute inset-0 bg-grid-pattern opacity-5 pointer-events-none" />
-
+    <section id="contact" className="py-24 bg-black relative">
+       <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-5 brightness-100 contrast-150"></div>
+       
       <div className="container mx-auto px-6 relative z-10">
-        <div className="flex flex-col lg:flex-row gap-16">
-          {/* Contact Info */}
-          <div className="lg:w-1/2">
-            <h2 className="text-4xl font-display font-bold text-white mb-6">
-              GET IN TOUCH
-            </h2>
-            <p className="text-gray-400 mb-10 text-lg font-light">
-              Interested in our modular waste solutions? Contact our team in Jubail to discuss how REDOXY can optimize your industrial infrastructure.
-            </p>
+        <div className="text-center mb-16">
+           <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+          >
+            <h2 className="text-sm font-tech text-primary tracking-widest uppercase mb-4">Get In Touch</h2>
+            <h3 className="text-4xl md:text-5xl font-display font-bold text-white mb-6">
+              Ready to <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-500">Collaborate?</span>
+            </h3>
+          </motion.div>
+        </div>
 
-            <div className="space-y-8">
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-sm bg-primary/10 flex items-center justify-center shrink-0 border border-primary/20">
-                  <MapPin className="w-6 h-6 text-primary" />
-                </div>
-                <div>
-                  <h4 className="text-white font-display font-bold mb-1">Headquarters</h4>
-                  <p className="text-gray-400">Jubail, Saudi Arabia</p>
-                  <p className="text-gray-500 text-sm mt-1">Operating in KSA & UAE</p>
-                </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 max-w-5xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.2, duration: 0.6 }}
+            className="space-y-8"
+          >
+            <div className="flex items-start gap-4">
+              <div className="p-3 bg-primary/10 border border-primary/20 rounded-sm">
+                <MapPin className="w-6 h-6 text-primary" />
               </div>
-
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-sm bg-primary/10 flex items-center justify-center shrink-0 border border-primary/20">
-                  <Mail className="w-6 h-6 text-primary" />
-                </div>
-                <div>
-                  <h4 className="text-white font-display font-bold mb-1">Email Us</h4>
-                  <a href="mailto:info@redoxyksa.com" className="text-gray-400 hover:text-primary transition-colors">
-                    info@redoxyksa.com
-                  </a>
-                </div>
+              <div>
+                <h4 className="text-xl font-bold text-white mb-2">Headquarters</h4>
+                <p className="text-gray-400">P.O. Box 1234, Jubail Industrial City,<br />Kingdom of Saudi Arabia</p>
               </div>
             </div>
-          </div>
-
-          {/* Form */}
-          <div className="lg:w-1/2">
-            <div className="bg-card border border-white/5 p-8 rounded-lg">
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                  <FormField
-                    control={form.control}
-                    name="name"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-gray-300">Name</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Your Name" {...field} className="bg-background border-white/10 text-white focus:border-primary/50" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-gray-300">Email</FormLabel>
-                        <FormControl>
-                          <Input placeholder="name@company.com" {...field} className="bg-background border-white/10 text-white focus:border-primary/50" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="message"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-gray-300">Message</FormLabel>
-                        <FormControl>
-                          <Textarea placeholder="How can we help you?" {...field} className="bg-background border-white/10 text-white focus:border-primary/50 min-h-[120px]" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <Button type="submit" className="w-full bg-primary text-background font-bold hover:bg-primary/90">
-                    SEND MESSAGE
-                  </Button>
-                </form>
-              </Form>
+            
+            <div className="flex items-start gap-4">
+              <div className="p-3 bg-primary/10 border border-primary/20 rounded-sm">
+                <Phone className="w-6 h-6 text-primary" />
+              </div>
+              <div>
+                <h4 className="text-xl font-bold text-white mb-2">Phone</h4>
+                <p className="text-gray-400">+966 13 123 4567</p>
+                <p className="text-gray-400">+966 50 123 4567</p>
+              </div>
             </div>
-          </div>
+            
+            <div className="flex items-start gap-4">
+              <div className="p-3 bg-primary/10 border border-primary/20 rounded-sm">
+                <Mail className="w-6 h-6 text-primary" />
+              </div>
+              <div>
+                <h4 className="text-xl font-bold text-white mb-2">Email</h4>
+                <p className="text-gray-400">info@redoxy.sa</p>
+                <p className="text-gray-400">support@redoxy.sa</p>
+              </div>
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.4, duration: 0.6 }}
+            className="bg-white/5 p-8 border border-white/10 rounded-sm backdrop-blur-sm"
+          >
+            <form className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label htmlFor="name" className="text-xs font-tech text-gray-500 uppercase tracking-widest">Name</label>
+                  <input type="text" id="name" className="w-full bg-black/50 border border-white/10 rounded-sm p-3 text-white focus:outline-none focus:border-primary transition-colors" placeholder="John Doe" />
+                </div>
+                <div className="space-y-2">
+                  <label htmlFor="email" className="text-xs font-tech text-gray-500 uppercase tracking-widest">Email</label>
+                  <input type="email" id="email" className="w-full bg-black/50 border border-white/10 rounded-sm p-3 text-white focus:outline-none focus:border-primary transition-colors" placeholder="john@example.com" />
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <label htmlFor="subject" className="text-xs font-tech text-gray-500 uppercase tracking-widest">Subject</label>
+                <input type="text" id="subject" className="w-full bg-black/50 border border-white/10 rounded-sm p-3 text-white focus:outline-none focus:border-primary transition-colors" placeholder="Project Inquiry" />
+              </div>
+              
+              <div className="space-y-2">
+                <label htmlFor="message" className="text-xs font-tech text-gray-500 uppercase tracking-widest">Message</label>
+                <textarea id="message" rows={4} className="w-full bg-black/50 border border-white/10 rounded-sm p-3 text-white focus:outline-none focus:border-primary transition-colors resize-none" placeholder="Tell us about your project..." />
+              </div>
+              
+              <button type="button" className="w-full py-4 bg-primary text-background font-bold font-display uppercase tracking-wider rounded-sm hover:bg-primary/90 transition-all flex items-center justify-center gap-2 group">
+                Send Message
+                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </button>
+            </form>
+          </motion.div>
         </div>
       </div>
     </section>
