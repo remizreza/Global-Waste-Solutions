@@ -5,22 +5,30 @@ export default function Contact() {
   const contactInfo = [
     {
       title: "KSA Headquarters",
-      details: ["7766 Omar Bin Abdulaziz Street", "Al Danah, Jubayl 35514", "Saudi Arabia"],
+      details: [
+        "7766 Omar Bin Abdulaziz Street",
+        "Al Danah, Jubayl 35514",
+        "Saudi Arabia",
+      ],
       icon: <MapPin className="w-6 h-6 text-primary" />,
-      delay: 0.2
+      delay: 0.2,
     },
     {
       title: "UAE Trade Hub",
-      details: ["REDOXY FZC", "Connecting to International Markets", "United Arab Emirates"],
+      details: [
+        "REDOXY FZC",
+        "Connecting to International Markets",
+        "United Arab Emirates",
+      ],
       icon: <Building2 className="w-6 h-6 text-primary" />,
-      delay: 0.4
+      delay: 0.4,
     },
     {
       title: "Direct Contact",
       details: ["+966 53 378 6083", "www.redoxyksa.com", "info@redoxyksa.com"],
       icon: <Phone className="w-6 h-6 text-primary" />,
-      delay: 0.6
-    }
+      delay: 0.6,
+    },
   ];
 
   return (
@@ -30,7 +38,6 @@ export default function Contact() {
       <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-teal-900/10 rounded-full blur-[150px] pointer-events-none" />
 
       <div className="container mx-auto relative z-10 max-w-7xl">
-
         {/* Header Section */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -43,15 +50,18 @@ export default function Contact() {
             GLOBAL REACH
           </div>
           <h1 className="text-4xl md:text-5xl font-display font-bold text-white uppercase tracking-tight mb-4">
-            Partner With <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-teal-400">REDOXY</span>
+            Partner With{" "}
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-teal-400">
+              REDOXY
+            </span>
           </h1>
           <p className="text-gray-400 max-w-2xl mx-auto font-light">
-            Ready to revolutionize your waste management? Reach out to our expert team for sustainable, industrial-grade solutions.
+            Ready to revolutionize your waste management? Reach out to our
+            expert team for sustainable, industrial-grade solutions.
           </p>
         </motion.div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
-
           {/* Left Column: Contact Cards */}
           <div className="flex flex-col gap-6">
             {contactInfo.map((info, index) => (
@@ -67,10 +77,15 @@ export default function Contact() {
                   {info.icon}
                 </div>
                 <div>
-                  <h3 className="text-xl font-display font-bold text-white mb-2 uppercase tracking-wide">{info.title}</h3>
+                  <h3 className="text-xl font-display font-bold text-white mb-2 uppercase tracking-wide">
+                    {info.title}
+                  </h3>
                   <div className="flex flex-col gap-1">
                     {info.details.map((line, i) => (
-                      <span key={i} className="text-gray-400 font-sans font-light text-sm">
+                      <span
+                        key={i}
+                        className="text-gray-400 font-sans font-light text-sm"
+                      >
                         {line}
                       </span>
                     ))}
@@ -96,24 +111,24 @@ export default function Contact() {
 
             <form className="flex flex-col gap-5 relative z-10">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                <input 
-                  type="text" 
-                  placeholder="Your Name" 
+                <input
+                  type="text"
+                  placeholder="Your Name"
                   className="bg-background/50 border border-white/10 rounded-sm px-4 py-3 text-white placeholder:text-gray-600 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all font-sans font-light"
                 />
-                <input 
-                  type="text" 
-                  placeholder="Company Name" 
+                <input
+                  type="text"
+                  placeholder="Company Name"
                   className="bg-background/50 border border-white/10 rounded-sm px-4 py-3 text-white placeholder:text-gray-600 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all font-sans font-light"
                 />
               </div>
-              <input 
-                type="email" 
-                placeholder="Email Address" 
+              <input
+                type="email"
+                placeholder="Email Address"
                 className="bg-background/50 border border-white/10 rounded-sm px-4 py-3 text-white placeholder:text-gray-600 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all font-sans font-light"
               />
-              <textarea 
-                placeholder="How can we help you?" 
+              <textarea
+                placeholder="How can we help you?"
                 rows={4}
                 className="bg-background/50 border border-white/10 rounded-sm px-4 py-3 text-white placeholder:text-gray-600 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 transition-all font-sans font-light resize-none"
               ></textarea>
@@ -129,7 +144,6 @@ export default function Contact() {
               </motion.button>
             </form>
           </motion.div>
-
         </div>
       </div>
     </section>
