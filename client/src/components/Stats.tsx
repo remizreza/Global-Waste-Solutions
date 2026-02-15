@@ -1,5 +1,8 @@
 import { motion } from "framer-motion";
 import { TrendingUp, ShieldCheck, Globe, Activity } from "lucide-react";
+import aramcoLogo from "@/assets/logos/aramco.png";
+import sabicLogo from "@/assets/logos/sabic.png";
+import maadenLogo from "@/assets/logos/maaden.png";
 
 const stats = [
   {
@@ -28,13 +31,19 @@ const stats = [
   },
 ];
 
+const partners = [
+  { name: "Saudi Aramco", logo: aramcoLogo },
+  { name: "SABIC", logo: sabicLogo },
+  { name: "Ma'aden", logo: maadenLogo },
+];
+
 export default function Stats() {
   return (
     <section className="py-20 bg-background border-b border-white/5 relative overflow-hidden">
       <div className="absolute inset-0 bg-primary/5 blur-[100px] rounded-full w-1/2 h-1/2 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none" />
       
       <div className="container mx-auto px-6 relative z-10">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-20">
           {stats.map((stat, index) => (
             <motion.div
               key={index}
@@ -58,6 +67,24 @@ export default function Stats() {
               </p>
             </motion.div>
           ))}
+        </div>
+
+        <div className="pt-10 border-t border-white/5">
+          <p className="text-center text-xs font-tech text-gray-500 uppercase tracking-[0.2em] mb-10">Trusted by Industry Leaders</p>
+          <div className="flex flex-wrap justify-center items-center gap-12 md:gap-24 opacity-50 grayscale hover:grayscale-0 transition-all duration-700">
+            {partners.map((partner) => (
+              <motion.img
+                key={partner.name}
+                src={partner.logo}
+                alt={partner.name}
+                className="h-8 md:h-12 w-auto object-contain"
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 1 }}
+              />
+            ))}
+          </div>
         </div>
       </div>
     </section>
