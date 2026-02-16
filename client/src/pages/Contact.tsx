@@ -18,7 +18,6 @@ export default function Contact() {
       details: [
         "REDOXY FZC",
         "Connecting to International Markets",
-        "Ajman Free Zone, Ajman 942",
         "United Arab Emirates",
       ],
       icon: <Building2 className="w-6 h-6 text-primary" />,
@@ -26,8 +25,7 @@ export default function Contact() {
     },
     {
       title: "Direct Contact",
-      details: ["UAE| KSA",
-            "+971 50 420 0717 | +966 53 378 6083", "www.redoxyksa.com", "info@redoxyksa.com"],
+      details: ["+966 53 378 6083", "www.redoxyksa.com", "info@redoxyksa.com"],
       icon: <Phone className="w-6 h-6 text-primary" />,
       delay: 0.6,
     },
