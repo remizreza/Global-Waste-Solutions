@@ -7,7 +7,7 @@ export default function Services() {
       title: "Waste Water & Environmental",
       icon: <Droplets className="w-8 h-8 text-white" />,
       // 🚨 Ensure you upload 'water-bg.jpg' to your public folder
-      bgImage: "water-bg.jpg",
+      bgImage: "/water-bg.jpg",
       items: [
         "Advanced chemical oxidation",
         "Reverse Osmosis & Vacuum Evaporation",
@@ -22,7 +22,7 @@ export default function Services() {
       title: "Industrial Services",
       icon: <Factory className="w-8 h-8 text-white" />,
       // 🚨 Ensure you upload 'industrial-bg.jpg' to your public folder
-      bgImage: "industrial-bg.jpg",
+      bgImage: "/industrial-bg.jpg",
       items: [
         "Chemical Cleaning (Boilers, reactors, pipelines)",
         "Blasting & Painting of Pipelines (API standard)",
@@ -37,7 +37,7 @@ export default function Services() {
       title: "Support & Logistics",
       icon: <Wrench className="w-8 h-8 text-white" />,
       // 🚨 Ensure you upload 'logistics-bg.jpg' to your public folder
-      bgImage: "logistics-bg.jpg",
+      bgImage: "/logistics-bg.jpg",
       items: [
         "Equipment Rental (pumps, generators, boilers)",
         "Media replacement operations",
@@ -81,7 +81,7 @@ export default function Services() {
               transition={{ duration: 0.5, delay: index * 0.2 }}
               className="relative group h-[600px] rounded-sm overflow-hidden border border-white/10 hover:border-primary/50 transition-colors cursor-pointer"
             >
-              {client / public / logistics - bg.png}
+              {/* Background Image with Zoom on Hover */}
               <div
                 className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110"
                 style={{ backgroundImage: `url(${category.bgImage})` }}
