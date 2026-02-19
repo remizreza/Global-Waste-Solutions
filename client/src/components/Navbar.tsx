@@ -1,12 +1,24 @@
 import { useState, useEffect } from "react";
 import { Link } from "wouter";
-import { Menu, X, ChevronRight } from "lucide-react";
+import { Menu, X, ChevronRight, User, LogOut } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import logo from "@/assets/redoxy/logo.png";
+import { useAuth } from "@/lib/auth";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const { user, login, logout, isLoading } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -56,6 +68,43 @@ export default function Navbar() {
               Contact Us
             </a>
           </Link>
+
+          {user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                  <Avatar className="h-10 w-10 border border-white/20">
+                    <AvatarImage src={user.profileImage} alt={user.username} />
+                    <AvatarFallback>{user.username.charAt(0).toUpperCase()}</AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56" align="end" forceMount>
+                <DropdownMenuLabel className="font-normal">
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium leading-none">{user.username}</p>
+                    <p className="text-xs leading-none text-muted-foreground">
+                      user@example.com
+                    </p>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={logout} className="cursor-pointer text-red-500 focus:text-red-500">
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Log out</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Button 
+              variant="outline" 
+              onClick={login} 
+              disabled={isLoading}
+              className="border-primary/50 text-primary hover:bg-primary/10 hover:text-primary"
+            >
+              {isLoading ? "Loading..." : "Login"}
+            </Button>
+          )}
         </div>
 
         {/* Mobile Toggle */}
@@ -88,6 +137,25 @@ export default function Navbar() {
                   </a>
                 </Link>
               ))}
+              
+              <div className="pt-4 border-t border-white/10">
+                {user ? (
+                  <div className="flex items-center gap-3 px-2 py-2">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={user.profileImage} />
+                      <AvatarFallback>{user.username.charAt(0)}</AvatarFallback>
+                    </Avatar>
+                    <span className="text-gray-300">{user.username}</span>
+                    <Button variant="ghost" size="sm" onClick={logout} className="ml-auto text-red-400">
+                      <LogOut className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <Button onClick={login} disabled={isLoading} className="w-full">
+                    Login
+                  </Button>
+                )}
+              </div>
             </div>
           </motion.div>
         )}
