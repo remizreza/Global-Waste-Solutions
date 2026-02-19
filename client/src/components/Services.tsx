@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
-import { Factory, Recycle, Activity, Package, Settings, Zap } from "lucide-react";
+import { Link } from "wouter";
+import { Factory, Recycle, Activity, Package, Settings, Zap, ArrowRight } from "lucide-react";
 
 const services = [
   {
@@ -53,9 +54,15 @@ export default function Services() {
             <h3 className="text-4xl md:text-5xl font-display font-bold text-white mb-6 uppercase">
               Corporate <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">Offerings</span>
             </h3>
-            <p className="text-gray-400 max-w-2xl mx-auto text-lg">
+            <p className="text-gray-400 max-w-2xl mx-auto text-lg mb-8">
               Redoxy delivers integrated environmental and industrial solutions that drive efficiency and sustainability.
             </p>
+            <Link href="/services">
+              <a className="inline-flex items-center gap-2 px-8 py-3 bg-primary text-black font-tech font-bold uppercase tracking-widest hover:bg-primary/90 transition-all group">
+                View All Services
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </a>
+            </Link>
           </motion.div>
         </div>
 

@@ -40,7 +40,6 @@ export default function Navbar() {
     >
       <div className="container mx-auto px-6 h-20 flex items-center justify-between">
         <Link href="/">
-          {/* 🚨 Here is the fix for the overlap! Added shrink-0 and hidden xl:block */}
           <div className="cursor-pointer flex items-center gap-3 hover:scale-105 transition-transform duration-300 shrink-0">
             <img
               src={logo}
