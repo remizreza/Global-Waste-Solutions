@@ -8,6 +8,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import { AnimatePresence, motion } from "framer-motion";
 import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 
 const Home = lazy(() => import("@/pages/Home"));
 const About = lazy(() => import("@/pages/About"));
@@ -80,6 +81,7 @@ function App() {
           </WouterRouter>
         </Suspense>
         <Analytics />
+        <SpeedInsights />
       </TooltipProvider>
     </QueryClientProvider>
   );
