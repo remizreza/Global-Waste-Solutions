@@ -7,6 +7,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import { AnimatePresence, motion } from "framer-motion";
+import { Analytics } from "@vercel/analytics/react";
 
 const Home = lazy(() => import("@/pages/Home"));
 const About = lazy(() => import("@/pages/About"));
@@ -78,6 +79,7 @@ function App() {
             <AnimatedRouter />
           </WouterRouter>
         </Suspense>
+        <Analytics />
       </TooltipProvider>
     </QueryClientProvider>
   );
