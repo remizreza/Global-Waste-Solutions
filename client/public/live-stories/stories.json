@@ -1,0 +1,20 @@
+{
+  "title": "Live Stories & Updates",
+  "subtitle": "Upload images/videos into /live-stories/media and update this file to publish instantly.",
+  "slides": [
+    {
+      "id": "network-connectivity",
+      "title": "Network Connectivity & Regional Reach",
+      "description": "Connected operating model linking technical execution, logistics, and cross-border delivery corridors.",
+      "image": "/story-assets/network-connectivity.jpg",
+      "mediaType": "image"
+    },
+    {
+      "id": "mtu-001",
+      "title": "REDOXY MTU 001 Program",
+      "description": "Modular infrastructure pathway designed for fast industrial deployment and measurable treatment outcomes.",
+      "image": "/story-assets/mtu-scale-01.png",
+      "mediaType": "image"
+    }
+  ]
+}

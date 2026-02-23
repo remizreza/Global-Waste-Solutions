@@ -1,0 +1,13 @@
+node_modules
+dist
+.DS_Store
+.config/
+.local/
+openJdk-*.jdk/
+server/public
+vite.config.ts.*
+*.tar.gz
+.env*
+.flaskenv*
+!.env.project
+!.env.vault
