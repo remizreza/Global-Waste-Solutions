@@ -34,55 +34,14 @@ export default function Home() {
                 playsInline
                 autoPlay
                 poster="/assets/hero-fallback.jpg"
-                style={{ opacity: 0.78, filter: "brightness(0.92)" }}
+                style={{ opacity: 0.95, filter: "brightness(1)" }}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-secondary/80 via-secondary/45 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-secondary/65 via-secondary/25 to-transparent" />
             </div>
           </div>
-          <motion.div
-            className="hero-motion-layer absolute inset-0"
-            animate={
-              reduceMotion
-                ? undefined
-                : { scale: [1.02, 1.08, 1.02], x: [0, -22, 0], y: [0, -10, 0] }
-            }
-            transition={{
-              duration: 34,
-              ease: "linear",
-              repeat: Infinity,
-            }}
-            style={{ y: parallaxY }}
-          >
-            <img
-              src="/home-refinery-bg.jpg"
-              alt="Redoxy industrial operations"
-              className="w-full h-full object-cover opacity-20"
-              loading="eager"
-            />
-          </motion.div>
-          <motion.div
-            className="hero-motion-layer-alt absolute inset-0 mix-blend-screen"
-            animate={
-              reduceMotion
-                ? undefined
-                : { scale: [1.06, 1.11, 1.06], x: [0, 18, 0], y: [0, 10, 0] }
-            }
-            transition={{
-              duration: 28,
-              ease: "linear",
-              repeat: Infinity,
-            }}
-          >
-            <img
-              src="/home-refinery-bg.jpg"
-              alt=""
-              aria-hidden="true"
-              className="w-full h-full object-cover opacity-28 blur-[0.8px]"
-              loading="eager"
-            />
-          </motion.div>
-          <div className="hero-heat-haze absolute inset-0" />
-          <div className="hero-noise absolute inset-0 opacity-25" />
+          <div className="absolute inset-0 bg-[#05070c]" />
+          <div className="hero-heat-haze absolute inset-0 mix-blend-soft-light opacity-60" />
+          <div className="hero-noise absolute inset-0 opacity-18" />
 
           {!reduceMotion ? (
             <>
