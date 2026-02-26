@@ -24,9 +24,9 @@ export default function Home() {
       <section className="relative min-h-screen flex items-center justify-center pt-24 pb-16 overflow-hidden bg-[#05070c]">
         <div className="absolute inset-0 z-0">
           <div className="absolute inset-0 flex items-center justify-center px-6">
-            <div className="relative w-full max-w-7xl rounded-2xl overflow-hidden shadow-[0_30px_120px_rgba(0,0,0,0.55)] border border-white/10">
+            <div className="relative w-full max-w-7xl rounded-2xl overflow-hidden shadow-[0_30px_120px_rgba(0,0,0,0.55)] border border-white/10 bg-black">
               <video
-                className="bg-video-smooth w-full h-[70vh] object-cover"
+                className="bg-video-smooth w-full h-[80vh] md:h-[85vh] object-cover"
                 src="/assets/hero-bg-1200.mp4?v=3"
                 preload="auto"
                 muted
@@ -34,9 +34,7 @@ export default function Home() {
                 playsInline
                 autoPlay
                 poster="/assets/hero-fallback.jpg"
-                style={{ opacity: 0.95, filter: "brightness(1)" }}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-secondary/65 via-secondary/25 to-transparent" />
             </div>
           </div>
           <div className="absolute inset-0 bg-[#05070c]" />
