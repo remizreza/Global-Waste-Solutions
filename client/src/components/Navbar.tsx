@@ -39,12 +39,23 @@ export default function Navbar() {
       <div className="container mx-auto px-6 h-20 flex items-center justify-between">
         <Link href={pageLinks.home}>
           <a className="flex items-center gap-3 shrink-0 min-w-0">
-            <img
-              src="/redoxy-wordmark-logo.png"
-              alt="REDOXY wordmark"
-              className="h-10 md:h-12 w-auto object-contain drop-shadow-[0_0_16px_rgba(37,99,235,0.35)]"
-              loading="eager"
-            />
+            <div className="flex items-center gap-3">
+              <img
+                src="/redoxy-icon.png"
+                alt="REDOXY emblem"
+                className="h-10 w-10 md:h-11 md:w-11 object-contain drop-shadow-[0_0_16px_rgba(37,99,235,0.35)]"
+                loading="eager"
+              />
+              <span className="company-title">
+                <span className="navy">R</span>
+                <span className="navy">E</span>
+                <span className="navy">D</span>
+                <span className="orange">O</span>
+                <span className="navy">X</span>
+                <span className="navy">Y</span>
+                <span className="trademark">®</span>
+              </span>
+            </div>
           </a>
         </Link>
 
