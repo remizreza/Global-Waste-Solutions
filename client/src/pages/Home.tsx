@@ -34,8 +34,9 @@ export default function Home() {
                 playsInline
                 autoPlay
                 poster="/assets/hero-fallback.jpg"
+                style={{ opacity: 0.78, filter: "brightness(0.92)" }}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-secondary/70 via-secondary/30 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-secondary/80 via-secondary/45 to-transparent" />
             </div>
           </div>
           <motion.div
