@@ -52,11 +52,11 @@ export default function Navbar() {
               aria-label="REDOXY"
             >
               <defs>
-                <linearGradient id="rSplit" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#F37021" />
-                  <stop offset="42%" stopColor="#F37021" />
-                  <stop offset="42%" stopColor="#002D72" />
-                  <stop offset="100%" stopColor="#002D72" />
+                <linearGradient id="rSplit" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#002D72" />
+                  <stop offset="48%" stopColor="#002D72" />
+                  <stop offset="52%" stopColor="#F37021" />
+                  <stop offset="100%" stopColor="#F37021" />
                 </linearGradient>
                 <style>
                   {`
@@ -69,10 +69,12 @@ export default function Navbar() {
                 </style>
               </defs>
               <g transform="translate(0,64)">
+                {/* left leg split: overlay gradient bar on top of the navy R */}
+                <rect x="0" y="-56" width="20" height="56" rx="2" fill="url(#rSplit)" />
                 <text
                   x="0"
                   y="0"
-                  fill="url(#rSplit)"
+                  fill="#002D72"
                   fontSize="56"
                   className="logo-font"
                 >
