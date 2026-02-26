@@ -1,3 +1,4 @@
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@900&display=swap");
 @import "tailwindcss";
 @import "tw-animate-css";
 
@@ -395,5 +396,33 @@
       0 0 0 1px rgba(47, 123, 255, 0.35),
       0 16px 30px rgba(47, 123, 255, 0.18),
       0 10px 28px rgba(255, 122, 26, 0.2);
+  }
+
+  .company-title {
+    font-family: "Montserrat", var(--font-sans);
+    font-weight: 900;
+    font-size: clamp(1.75rem, 2vw + 1rem, 3rem);
+    letter-spacing: -0.04em;
+    text-transform: uppercase;
+    display: inline-flex;
+    align-items: baseline;
+    line-height: 1;
+  }
+
+  .company-title .navy {
+    color: #002d72;
+  }
+
+  .company-title .orange {
+    color: #f37021;
+  }
+
+  .company-title .trademark {
+    font-size: 0.42em;
+    vertical-align: super;
+    font-weight: 600;
+    color: #002d72;
+    margin-left: 4px;
+    letter-spacing: 0;
   }
 }

@@ -21,13 +21,13 @@ export default function Home() {
 
   return (
     <SiteLayout>
-      <section className="relative min-h-screen flex items-center justify-center pt-24 pb-16 overflow-hidden">
+      <section className="relative min-h-screen flex items-center justify-center pt-24 pb-16 overflow-hidden bg-[#05070c]">
         <div className="absolute inset-0 z-0">
           <div className="absolute inset-0 flex items-center justify-center px-6">
-            <div className="relative w-full max-w-7xl rounded-2xl overflow-hidden shadow-[0_30px_120px_rgba(0,0,0,0.55)] border border-white/10">
+            <div className="relative w-full max-w-7xl rounded-2xl overflow-hidden shadow-[0_30px_120px_rgba(0,0,0,0.55)] border border-white/10 bg-black">
               <video
-                className="bg-video-smooth w-full h-[70vh] object-cover"
-                src="/assets/Hero.mp4"
+                className="bg-video-smooth w-full h-[80vh] md:h-[85vh] object-cover"
+                src="/assets/hero-bg-20260226-v2.mp4?v=1"
                 preload="auto"
                 muted
                 loop
@@ -35,53 +35,11 @@ export default function Home() {
                 autoPlay
                 poster="/assets/hero-fallback.jpg"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-secondary/70 via-secondary/30 to-transparent" />
             </div>
           </div>
-          <motion.div
-            className="hero-motion-layer absolute inset-0"
-            animate={
-              reduceMotion
-                ? undefined
-                : { scale: [1.02, 1.08, 1.02], x: [0, -22, 0], y: [0, -10, 0] }
-            }
-            transition={{
-              duration: 34,
-              ease: "linear",
-              repeat: Infinity,
-            }}
-            style={{ y: parallaxY }}
-          >
-            <img
-              src="/home-refinery-bg.jpg"
-              alt="Redoxy industrial operations"
-              className="w-full h-full object-cover opacity-20"
-              loading="eager"
-            />
-          </motion.div>
-          <motion.div
-            className="hero-motion-layer-alt absolute inset-0 mix-blend-screen"
-            animate={
-              reduceMotion
-                ? undefined
-                : { scale: [1.06, 1.11, 1.06], x: [0, 18, 0], y: [0, 10, 0] }
-            }
-            transition={{
-              duration: 28,
-              ease: "linear",
-              repeat: Infinity,
-            }}
-          >
-            <img
-              src="/home-refinery-bg.jpg"
-              alt=""
-              aria-hidden="true"
-              className="w-full h-full object-cover opacity-28 blur-[0.8px]"
-              loading="eager"
-            />
-          </motion.div>
-          <div className="hero-heat-haze absolute inset-0" />
-          <div className="hero-noise absolute inset-0 opacity-25" />
+          <div className="absolute inset-0 bg-[#05070c]" />
+          <div className="hero-heat-haze absolute inset-0 mix-blend-soft-light opacity-60" />
+          <div className="hero-noise absolute inset-0 opacity-18" />
 
           {!reduceMotion ? (
             <>
