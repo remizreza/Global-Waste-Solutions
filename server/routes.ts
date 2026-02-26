@@ -9,6 +9,30 @@ type BulletinItem = {
   publishedAt: string;
 };
 
+type CommoditySnapshot = {
+  crude: number;
+  diesel: number;
+  naphtha: number;
+  recoveryOils: number;
+  timestamp: string;
+  source: string;
+};
+
+const COMMODITIES_API_BASE = "https://commodities-api.com/api";
+const DEFAULT_COMMODITIES_KEY =
+  process.env.COMMODITIES_API_KEY ??
+  process.env.NEXT_PUBLIC_COMMODITIES_API_KEY ??
+  "q38sxllxx9x4tcq01zr6q8b18271lcq9p880dmclzprmi8844pr4s0lkqg10";
+
+const FALLBACK_COMMODITY_QUOTES: CommoditySnapshot = {
+  crude: 84.2,
+  diesel: 96.5,
+  naphtha: 71.4,
+  recoveryOils: 62.3,
+  timestamp: new Date().toISOString(),
+  source: "fallback",
+};
+
 const KEYWORDS = [
   "oil",
   "gas",
@@ -117,6 +141,56 @@ function isIndustryRelevant(item: BulletinItem): boolean {
   return KEYWORDS.some((keyword) => haystack.includes(keyword));
 }
 
+function buildCommoditiesUrl(endpoint: string, params: Record<string, string>) {
+  const url = new URL(`${COMMODITIES_API_BASE}/${endpoint}`);
+  url.searchParams.set("access_key", DEFAULT_COMMODITIES_KEY);
+
+  for (const [key, value] of Object.entries(params)) {
+    url.searchParams.set(key, value);
+  }
+
+  return url;
+}
+
+async function fetchCommoditiesJson<T>(
+  endpoint: string,
+  params: Record<string, string> = {},
+): Promise<T> {
+  const url = buildCommoditiesUrl(endpoint, params);
+  const response = await fetch(url.toString(), {
+    headers: { "user-agent": "redoxy-commodities-client/1.0" },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Commodities API ${endpoint} failed: ${response.status}`);
+  }
+
+  return (await response.json()) as T;
+}
+
+function numberOrNull(value: unknown): number | null {
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
+function parseSnapshotRates(rates: Record<string, unknown>): CommoditySnapshot {
+  const crude = numberOrNull(rates.CRUDE) ?? numberOrNull(rates.crude);
+  const diesel = numberOrNull(rates.DIESEL) ?? numberOrNull(rates.diesel);
+  const naphtha = numberOrNull(rates.NAPHTHA) ?? numberOrNull(rates.naphtha);
+
+  if (crude == null || diesel == null || naphtha == null) {
+    throw new Error("Missing required commodity rates");
+  }
+
+  return {
+    crude,
+    diesel,
+    naphtha,
+    recoveryOils: Number((naphtha * 0.872).toFixed(2)),
+    timestamp: new Date().toISOString(),
+    source: "live",
+  };
+}
+
 async function getLiveBulletin(): Promise<BulletinItem[]> {
   const feedItems = await Promise.all(
     FEEDS.map(async (feed) => {
@@ -171,6 +245,63 @@ export async function registerRoutes(
       count: items.length,
       items,
     });
+  });
+
+  app.get("/api/commodities/symbols", async (_req, res) => {
+    try {
+      const payload = await fetchCommoditiesJson<Record<string, unknown>>(
+        "symbols",
+      );
+      res.json(payload);
+    } catch (error) {
+      res.status(502).json({
+        ok: false,
+        error:
+          error instanceof Error
+            ? error.message
+            : "Unable to load commodities symbols",
+      });
+    }
+  });
+
+  app.get("/api/commodities", async (_req, res) => {
+    try {
+      const payload = await fetchCommoditiesJson<{
+        rates?: Record<string, unknown>;
+        timestamp?: number;
+      }>("latest", {
+        base: "USD",
+        symbols: "CRUDE,DIESEL,NAPHTHA",
+      });
+
+      const rates = payload.rates ?? {};
+      const snapshot = parseSnapshotRates(rates);
+
+      if (payload.timestamp) {
+        snapshot.timestamp = new Date(payload.timestamp * 1000).toISOString();
+      }
+
+      res.json(snapshot);
+    } catch {
+      res.json(FALLBACK_COMMODITY_QUOTES);
+    }
+  });
+
+  app.get("/api/commodities/news", async (_req, res) => {
+    try {
+      const payload = await fetchCommoditiesJson<Record<string, unknown>>(
+        "getNews",
+      );
+      res.json(payload);
+    } catch (error) {
+      res.status(502).json({
+        ok: false,
+        error:
+          error instanceof Error
+            ? error.message
+            : "Unable to load commodities news",
+      });
+    }
   });
 
   return httpServer;
