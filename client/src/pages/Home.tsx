@@ -27,7 +27,7 @@ export default function Home() {
             <div className="relative w-full max-w-7xl rounded-2xl overflow-hidden shadow-[0_30px_120px_rgba(0,0,0,0.55)] border border-white/10">
               <video
                 className="bg-video-smooth w-full h-[70vh] object-cover"
-                src="/assets/Hero-1200.mp4?v=1"
+                src="/assets/hero-bg-1200.mp4?v=2"
                 preload="auto"
                 muted
                 loop
