@@ -40,14 +40,65 @@ export default function Navbar() {
         <Link href={pageLinks.home}>
           <a className="flex items-center gap-3 shrink-0 min-w-0">
             <img
-              src="/brand-redoxy-full.png"
-              alt="REDOXY"
-              className="h-11 md:h-12 w-auto object-contain drop-shadow-[0_0_16px_rgba(37,99,235,0.35)]"
+              src="/redoxy-wordmark.svg"
+              alt="redoxy wordmark"
+              className="h-10 md:h-11 w-auto object-contain"
               loading="eager"
             />
-            <span className="text-white font-display text-lg md:text-xl tracking-[0.22em] uppercase">
-              REDOXY
-            </span>
+              src="/redoxy-icon.png"
+              alt="REDOXY emblem"
+              className="h-10 w-10 md:h-11 md:w-11 object-contain drop-shadow-[0_0_16px_rgba(37,99,235,0.35)]"
+              loading="eager"
+            />
+            <svg
+              className="h-10 md:h-12 w-auto drop-shadow-[0_0_12px_rgba(37,99,235,0.25)]"
+              viewBox="0 0 300 80"
+              role="img"
+              aria-label="REDOXY"
+            >
+              <defs>
+                <linearGradient id="rSplit" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#004A99" />
+                  <stop offset="48%" stopColor="#004A99" />
+                  <stop offset="52%" stopColor="#FF7F00" />
+                  <stop offset="100%" stopColor="#FF7F00" />
+                </linearGradient>
+                <style>
+                  {`
+                  .logo-font {
+                    font-family: 'Montserrat', 'Inter', sans-serif;
+                    font-weight: 900;
+                    letter-spacing: 0px;
+                  }
+                  `}
+                </style>
+              </defs>
+              <g transform="translate(0,62)">
+                <rect x="1" y="-54" width="18" height="54" rx="2" fill="url(#rSplit)" />
+                <text x="0" y="0" fill="#004A99" fontSize="56" className="logo-font">
+                  R
+                </text>
+                <text x="44" y="0" fill="#004A99" fontSize="56" className="logo-font">
+                  ED
+                </text>
+                <text x="120" y="0" fill="#FF7F00" fontSize="56" className="logo-font">
+                  O
+                </text>
+                <text x="168" y="0" fill="#004A99" fontSize="56" className="logo-font">
+                  XY
+                </text>
+                <text
+                  x="254"
+                  y="-20"
+                  fill="#004A99"
+                  fontSize="13"
+                  fontWeight="700"
+                  fontFamily="'Montserrat','Inter',sans-serif"
+                >
+                  ®
+                </text>
+              </g>
+            </svg>
           </a>
         </Link>
 
