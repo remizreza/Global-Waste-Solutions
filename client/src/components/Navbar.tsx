@@ -45,8 +45,14 @@ export default function Navbar() {
               className="h-11 md:h-12 w-auto object-contain drop-shadow-[0_0_16px_rgba(37,99,235,0.35)]"
               loading="eager"
             />
-            <span className="text-white font-display text-lg md:text-xl tracking-[0.22em] uppercase">
-              REDOXY
+            <span className="company-title">
+              <span className="navy">R</span>
+              <span className="navy">E</span>
+              <span className="navy">D</span>
+              <span className="orange">O</span>
+              <span className="navy">X</span>
+              <span className="navy">Y</span>
+              <span className="trademark">®</span>
             </span>
           </a>
         </Link>
