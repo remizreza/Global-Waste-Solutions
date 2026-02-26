@@ -40,6 +40,11 @@ export default function Navbar() {
         <Link href={pageLinks.home}>
           <a className="flex items-center gap-3 shrink-0 min-w-0">
             <img
+              src="/redoxy-wordmark.svg"
+              alt="redoxy wordmark"
+              className="h-10 md:h-11 w-auto object-contain"
+              loading="eager"
+            />
               src="/redoxy-icon.png"
               alt="REDOXY emblem"
               className="h-10 w-10 md:h-11 md:w-11 object-contain drop-shadow-[0_0_16px_rgba(37,99,235,0.35)]"
