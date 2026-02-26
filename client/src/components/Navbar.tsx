@@ -47,7 +47,7 @@ export default function Navbar() {
             />
             <svg
               className="h-10 md:h-12 w-auto"
-              viewBox="0 0 310 82"
+              viewBox="0 0 300 80"
               role="img"
               aria-label="REDOXY"
             >
@@ -68,9 +68,9 @@ export default function Navbar() {
                   `}
                 </style>
               </defs>
-              <g transform="translate(0,64)">
+              <g transform="translate(0,62)">
                 {/* left leg split: vertical half split on R */}
-                <rect x="1" y="-56" width="18" height="56" rx="2" fill="url(#rSplit)" />
+                <rect x="1" y="-54" width="18" height="54" rx="2" fill="url(#rSplit)" />
                 <text
                   x="0"
                   y="0"
@@ -81,7 +81,7 @@ export default function Navbar() {
                   R
                 </text>
                 <text
-                  x="50"
+                  x="44"
                   y="0"
                   fill="#004A99"
                   fontSize="56"
@@ -90,7 +90,7 @@ export default function Navbar() {
                   ED
                 </text>
                 <text
-                  x="138"
+                  x="120"
                   y="0"
                   fill="#FF7F00"
                   fontSize="56"
@@ -99,7 +99,7 @@ export default function Navbar() {
                   O
                 </text>
                 <text
-                  x="186"
+                  x="168"
                   y="0"
                   fill="#004A99"
                   fontSize="56"
@@ -108,8 +108,8 @@ export default function Navbar() {
                   XY
                 </text>
                 <text
-                  x="268"
-                  y="-22"
+                  x="254"
+                  y="-20"
                   fill="#004A99"
                   fontSize="13"
                   fontWeight="700"
