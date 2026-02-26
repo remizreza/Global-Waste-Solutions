@@ -21,7 +21,7 @@ export default function Home() {
 
   return (
     <SiteLayout>
-      <section className="relative min-h-screen flex items-center justify-center pt-24 pb-16 overflow-hidden">
+      <section className="relative min-h-screen flex items-center justify-center pt-24 pb-16 overflow-hidden bg-[#05070c]">
         <div className="absolute inset-0 z-0">
           <div className="absolute inset-0 flex items-center justify-center px-6">
             <div className="relative w-full max-w-7xl rounded-2xl overflow-hidden shadow-[0_30px_120px_rgba(0,0,0,0.55)] border border-white/10">
