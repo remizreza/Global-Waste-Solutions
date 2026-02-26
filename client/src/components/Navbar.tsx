@@ -46,72 +46,72 @@ export default function Navbar() {
               loading="eager"
             />
             <svg
-              className="h-10 md:h-12 w-auto drop-shadow-[0_0_12px_rgba(37,99,235,0.25)]"
-              viewBox="0 0 320 82"
+              className="h-10 md:h-12 w-auto"
+              viewBox="0 0 310 82"
               role="img"
               aria-label="REDOXY"
             >
               <defs>
                 <linearGradient id="rSplit" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stopColor="#002D72" />
-                  <stop offset="48%" stopColor="#002D72" />
-                  <stop offset="52%" stopColor="#F37021" />
-                  <stop offset="100%" stopColor="#F37021" />
+                  <stop offset="0%" stopColor="#004A99" />
+                  <stop offset="48%" stopColor="#004A99" />
+                  <stop offset="52%" stopColor="#FF7F00" />
+                  <stop offset="100%" stopColor="#FF7F00" />
                 </linearGradient>
                 <style>
                   {`
                   .logo-font {
                     font-family: 'Montserrat', 'Inter', sans-serif;
                     font-weight: 900;
-                    letter-spacing: -1px;
+                    letter-spacing: 0px;
                   }
                   `}
                 </style>
               </defs>
               <g transform="translate(0,64)">
-                {/* left leg split: overlay gradient bar on top of the navy R */}
-                <rect x="0" y="-56" width="20" height="56" rx="2" fill="url(#rSplit)" />
+                {/* left leg split: vertical half split on R */}
+                <rect x="1" y="-56" width="18" height="56" rx="2" fill="url(#rSplit)" />
                 <text
                   x="0"
                   y="0"
-                  fill="#002D72"
+                  fill="#004A99"
                   fontSize="56"
                   className="logo-font"
                 >
                   R
                 </text>
                 <text
-                  x="52"
+                  x="50"
                   y="0"
-                  fill="#002D72"
+                  fill="#004A99"
                   fontSize="56"
                   className="logo-font"
                 >
                   ED
                 </text>
                 <text
-                  x="146"
+                  x="138"
                   y="0"
-                  fill="#F37021"
+                  fill="#FF7F00"
                   fontSize="56"
                   className="logo-font"
                 >
                   O
                 </text>
                 <text
-                  x="195"
+                  x="186"
                   y="0"
-                  fill="#002D72"
+                  fill="#004A99"
                   fontSize="56"
                   className="logo-font"
                 >
                   XY
                 </text>
                 <text
-                  x="280"
-                  y="-24"
-                  fill="#002D72"
-                  fontSize="14"
+                  x="268"
+                  y="-22"
+                  fill="#004A99"
+                  fontSize="13"
                   fontWeight="700"
                   fontFamily="'Montserrat','Inter',sans-serif"
                 >
