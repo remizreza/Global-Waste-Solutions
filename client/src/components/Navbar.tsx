@@ -39,23 +39,67 @@ export default function Navbar() {
       <div className="container mx-auto px-6 h-20 flex items-center justify-between">
         <Link href={pageLinks.home}>
           <a className="flex items-center gap-3 shrink-0 min-w-0">
-            <div className="flex items-center gap-3">
-              <img
-                src="/redoxy-icon.png"
-                alt="REDOXY emblem"
-                className="h-10 w-10 md:h-11 md:w-11 object-contain drop-shadow-[0_0_16px_rgba(37,99,235,0.35)]"
-                loading="eager"
-              />
-              <span className="company-title">
-                <span className="navy">R</span>
-                <span className="navy">E</span>
-                <span className="navy">D</span>
-                <span className="orange">O</span>
-                <span className="navy">X</span>
-                <span className="navy">Y</span>
-                <span className="trademark">®</span>
-              </span>
-            </div>
+            <svg
+              className="h-10 md:h-12 w-auto drop-shadow-[0_0_16px_rgba(37,99,235,0.35)]"
+              viewBox="0 0 280 80"
+              role="img"
+              aria-label="REDOXY"
+            >
+              <defs>
+                <style>
+                  {`
+                  .logo-font {
+                    font-family: 'Montserrat', 'Inter', sans-serif;
+                    font-weight: 900;
+                  }
+                  `}
+                </style>
+              </defs>
+              <g>
+                {/* stylized orange "t" */}
+                <rect x="8" y="12" width="18" height="56" rx="4" fill="#F37021" />
+                <rect x="8" y="12" width="32" height="14" rx="4" fill="#F37021" />
+
+                {/* RED */}
+                <text
+                  x="50"
+                  y="58"
+                  fill="#002D72"
+                  fontSize="54"
+                  letterSpacing="-1"
+                  className="logo-font"
+                >
+                  RED
+                </text>
+
+                {/* O ring */}
+                <circle cx="178" cy="40" r="24" fill="none" stroke="#F37021" strokeWidth="10" />
+
+                {/* XY */}
+                <text
+                  x="210"
+                  y="58"
+                  fill="#002D72"
+                  fontSize="54"
+                  letterSpacing="-1"
+                  className="logo-font"
+                >
+                  XY
+                </text>
+
+                {/* trademark */}
+                <text
+                  x="262"
+                  y="20"
+                  fill="#002D72"
+                  fontSize="12"
+                  fontWeight="700"
+                  fontFamily="'Montserrat','Inter',sans-serif"
+                >
+                  ®
+                </text>
+              </g>
+            </svg>
           </a>
         </Link>
 
