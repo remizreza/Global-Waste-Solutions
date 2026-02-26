@@ -10,6 +10,15 @@
           "value": "no-store, max-age=0"
         }
       ]
+    },
+    {
+      "source": "/assets/hero-bg-20260226.mp4",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store, max-age=0"
+        }
+      ]
     }
   ],
   "rewrites": [
