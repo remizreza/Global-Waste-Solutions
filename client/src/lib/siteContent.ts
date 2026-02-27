@@ -61,6 +61,7 @@ export const serviceDivisions = [
       "Integrated with onsite logistics and emergency support to minimize downtime.",
     ],
     bgImage: "https://www.redoxyksa.com/story-assets/whatsapp-service-1.png",
+    bgImage: "/story-assets/image6.jpeg",
     route: "/technology",
   },
   {
@@ -81,6 +82,7 @@ export const serviceDivisions = [
       "Built to improve reliability, safety, and turnaround speed.",
     ],
     bgImage: "https://www.redoxyksa.com/story-assets/whatsapp-service-2.png",
+    bgImage: "/story-assets/image8.jpeg",
     route: "/traction",
   },
   {
@@ -101,6 +103,7 @@ export const serviceDivisions = [
       "Roadmap includes distribution expansion to support Africa and Asia growth.",
     ],
     bgImage: "https://www.redoxyksa.com/story-assets/whatsapp-service-3.png",
+    bgImage: "/story-assets/image9.jpeg",
     route: "/products",
   },
 ];
@@ -226,6 +229,7 @@ export const tractionContracts = [
 ];
 
 export const storySlides: StorySlideContent[] = [
+export const storySlides = [
   {
     id: "scaling-infrastructure-deck",
     title: "REDOXY: Scaling Modular Industrial Infrastructure",
@@ -234,6 +238,7 @@ export const storySlides: StorySlideContent[] = [
     image: "https://www.redoxyksa.com/story-assets/redoxy-presentation.pdf",
     mediaType: "pdf",
     pdfPages: 8,
+    image: "/story-assets/REDOXY_Scaling_Modular_Industrial_Infrastructure (1).pdf.png",
   },
 ];
 

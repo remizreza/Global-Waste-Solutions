@@ -38,6 +38,7 @@ export default function Home() {
             </div>
           </div>
           <div className="absolute inset-0 bg-[#05070c]/10" />
+          <div className="absolute inset-0 bg-[#05070c]/18" />
           <div className="hero-heat-haze absolute inset-0 mix-blend-soft-light opacity-45" />
           <div className="hero-noise absolute inset-0 opacity-18" />
 
