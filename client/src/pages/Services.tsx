@@ -168,10 +168,6 @@ export default function Services() {
             {serviceDivisions.map((division) => (
               <motion.div
                 key={division.id}
-                initial={{ opacity: 0, y: 24 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.2 }}
-                transition={{ duration: 0.5 }}
                 whileHover={{ y: -8, scale: 1.01 }}
                 className="bg-card/60 border border-white/10 rounded-xl overflow-hidden flex flex-col backdrop-blur-sm"
               >

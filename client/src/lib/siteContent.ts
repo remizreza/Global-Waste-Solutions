@@ -60,7 +60,7 @@ export const serviceDivisions = [
       "Designed for industrial plants requiring reliable compliance and recovery outcomes.",
       "Integrated with onsite logistics and emergency support to minimize downtime.",
     ],
-    bgImage: "https://www.redoxyksa.com/story-assets/whatsapp-service-1.png",
+    bgImage: "/water-bg.jpg",
     route: "/technology",
   },
   {
@@ -80,7 +80,7 @@ export const serviceDivisions = [
       "Combines technical crews, maintenance tooling, and QA discipline.",
       "Built to improve reliability, safety, and turnaround speed.",
     ],
-    bgImage: "https://www.redoxyksa.com/story-assets/whatsapp-service-2.png",
+    bgImage: "/industrial-bg.jpg",
     route: "/traction",
   },
   {
@@ -100,7 +100,7 @@ export const serviceDivisions = [
       "Commercial model focuses on margin discipline and reliable fulfillment.",
       "Roadmap includes distribution expansion to support Africa and Asia growth.",
     ],
-    bgImage: "https://www.redoxyksa.com/story-assets/whatsapp-service-3.png",
+    bgImage: "/logistics-bg.jpg",
     route: "/products",
   },
 ];
