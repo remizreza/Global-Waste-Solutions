@@ -3,6 +3,12 @@
   "subtitle": "If are interested to be part of our beautiful journey join hands with us, here is snap of what we ask for ....",
   "slides": [
     {
+      "id": "redoxy-presentation-pdf",
+      "title": "REDOXY Presentation Deck",
+      "description": "PDF is displayed as an auto-running slideshow with sequential page turns.",
+      "image": "https://www.redoxyksa.com/story-assets/redoxy-presentation.pdf",
+      "mediaType": "pdf",
+      "pdfPages": 8
       "id": "redoxy-scaling-modular-industrial-infrastructure",
       "title": "REDOXY: Scaling Modular Industrial Infrastructure",
       "description": "Presentation snapshot from the REDOXY strategic PDF highlighting modular deployment, business scaling, and industrial growth priorities.",

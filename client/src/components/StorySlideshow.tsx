@@ -6,7 +6,8 @@ type StorySlide = {
   title: string;
   description: string;
   image: string;
-  mediaType?: "image" | "video";
+  mediaType?: "image" | "video" | "pdf";
+  pdfPages?: number;
 };
 
 type StorySlideshowProps = {
@@ -21,6 +22,7 @@ export default function StorySlideshow({
   slides,
 }: StorySlideshowProps) {
   const [activeIndex, setActiveIndex] = useState(0);
+  const [pdfPage, setPdfPage] = useState(1);
 
   useEffect(() => {
     if (slides.length < 2) return;
@@ -29,6 +31,21 @@ export default function StorySlideshow({
     }, 4500);
     return () => window.clearInterval(intervalId);
   }, [slides.length]);
+
+  useEffect(() => {
+    const activeSlide = slides[activeIndex];
+    if (!activeSlide || activeSlide.mediaType !== "pdf") {
+      setPdfPage(1);
+      return;
+    }
+
+    const totalPages = Math.max(1, activeSlide.pdfPages ?? 1);
+    const intervalId = window.setInterval(() => {
+      setPdfPage((prev) => (prev >= totalPages ? 1 : prev + 1));
+    }, 3200);
+
+    return () => window.clearInterval(intervalId);
+  }, [activeIndex, slides]);
 
   if (slides.length === 0) return null;
   const active = slides[activeIndex];
@@ -58,6 +75,25 @@ export default function StorySlideshow({
                 playsInline
                 poster="/assets/hero-fallback.jpg"
               />
+            ) : active.mediaType === "pdf" ? (
+              <motion.object
+                key={`${active.id}-${pdfPage}`}
+                data={`${active.image}#page=${pdfPage}&view=FitH`}
+                type="application/pdf"
+                aria-label={active.title}
+                className="absolute inset-0 h-full w-full bg-white"
+                initial={{ opacity: 0, scale: 1.01 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.45 }}
+              >
+                <div className="h-full w-full flex items-center justify-center bg-white/95 text-black text-sm px-4 text-center">
+                  PDF preview is unavailable on this browser.
+                  <a href={active.image} target="_blank" rel="noreferrer" className="underline font-semibold ml-1">
+                    Open presentation
+                  </a>
+                </div>
+              </motion.object>
             ) : (
               <motion.img
                 key={active.id}
@@ -72,15 +108,19 @@ export default function StorySlideshow({
               />
             )}
           </AnimatePresence>
-          <div className="absolute inset-0 bg-gradient-to-t from-secondary/80 via-secondary/20 to-transparent" />
-          <div className="absolute bottom-0 left-0 right-0 p-5 md:p-6">
+          {active.mediaType === "pdf" ? null : (
+            <div className="absolute inset-0 bg-gradient-to-t from-secondary/80 via-secondary/20 to-transparent" />
+          )}
+          <div className={`absolute left-0 right-0 p-5 md:p-6 ${active.mediaType === "pdf" ? "top-0" : "bottom-0"}`}>
             <p className="text-xs uppercase tracking-[0.18em] text-primary font-tech mb-2">
               Live Story
             </p>
-            <h4 className="text-xl md:text-2xl text-white font-display mb-2">
+            <h4 className={`text-xl md:text-2xl font-display mb-2 ${active.mediaType === "pdf" ? "text-black" : "text-white"}`}>
               {active.title}
             </h4>
-            <p className="text-sm text-gray-200 max-w-3xl">{active.description}</p>
+            <p className={`text-sm max-w-3xl ${active.mediaType === "pdf" ? "text-black/80" : "text-gray-200"}`}>
+              {active.description}
+            </p>
           </div>
         </div>
         <div className="flex items-center justify-center gap-2 p-4 bg-background/60">

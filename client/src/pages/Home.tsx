@@ -26,7 +26,7 @@ export default function Home() {
           <div className="absolute inset-0 flex items-center justify-center px-6">
             <div className="relative w-full max-w-7xl rounded-2xl overflow-hidden shadow-[0_30px_120px_rgba(0,0,0,0.55)] border border-white/10 bg-black">
               <video
-                className="bg-video-smooth w-full h-[80vh] md:h-[85vh] object-cover"
+                className="bg-video-smooth w-full h-[80vh] md:h-[85vh] object-cover contrast-[1.08] brightness-[1.08] saturate-[1.15]"
                 src="/assets/hero-bg-20260226-v2.mp4?v=1"
                 preload="auto"
                 muted
@@ -37,6 +37,7 @@ export default function Home() {
               />
             </div>
           </div>
+          <div className="absolute inset-0 bg-[#05070c]/10" />
           <div className="absolute inset-0 bg-[#05070c]/18" />
           <div className="hero-heat-haze absolute inset-0 mix-blend-soft-light opacity-45" />
           <div className="hero-noise absolute inset-0 opacity-18" />
@@ -55,7 +56,7 @@ export default function Home() {
               />
             </>
           ) : null}
-          <div className="absolute inset-0 bg-gradient-to-t from-secondary/52 via-secondary/24 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-secondary/45 via-secondary/15 to-transparent" />
         </div>
         <div className="absolute inset-0 bg-grid-pattern opacity-10 z-0 pointer-events-none" />
 
@@ -213,7 +214,7 @@ export default function Home() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.15 }}
                 transition={{ duration: 0.45 }}
-                whileHover={{ y: -6 }}
+                whileHover={{ y: -8, scale: 1.01 }}
                 className="bg-card/60 border border-white/10 rounded-lg overflow-hidden flex flex-col backdrop-blur-sm"
               >
                 <div className="aspect-video w-full bg-black/20">
