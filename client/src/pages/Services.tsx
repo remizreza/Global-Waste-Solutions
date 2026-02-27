@@ -172,14 +172,14 @@ export default function Services() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.2 }}
                 transition={{ duration: 0.5 }}
-                whileHover={{ y: -6 }}
+                whileHover={{ y: -8, scale: 1.01 }}
                 className="bg-card/60 border border-white/10 rounded-xl overflow-hidden flex flex-col backdrop-blur-sm"
               >
                 <div className="aspect-video w-full bg-black/20">
                   <img
                     src={division.bgImage}
                     alt={division.title}
-                    className="w-full h-full object-contain"
+                    className="w-full h-full object-cover"
                     loading="lazy"
                   />
                 </div>

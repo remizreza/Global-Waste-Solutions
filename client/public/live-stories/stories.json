@@ -1,20 +1,14 @@
 {
   "title": "Live Stories & Updates",
-  "subtitle": "Upload images/videos into /live-stories/media and update this file to publish instantly.",
+  "subtitle": "If are interested to be part of our beautiful journey join hands with us, here is snap of what we ask for ....",
   "slides": [
     {
-      "id": "network-connectivity",
-      "title": "Network Connectivity & Regional Reach",
-      "description": "Connected operating model linking technical execution, logistics, and cross-border delivery corridors.",
-      "image": "/story-assets/network-connectivity.jpg",
-      "mediaType": "image"
-    },
-    {
-      "id": "mtu-001",
-      "title": "REDOXY MTU 001 Program",
-      "description": "Modular infrastructure pathway designed for fast industrial deployment and measurable treatment outcomes.",
-      "image": "/story-assets/mtu-scale-01.png",
-      "mediaType": "image"
+      "id": "redoxy-presentation-pdf",
+      "title": "REDOXY Presentation Deck",
+      "description": "PDF is displayed as an auto-running slideshow with sequential page turns.",
+      "image": "https://www.redoxyksa.com/story-assets/redoxy-presentation.pdf",
+      "mediaType": "pdf",
+      "pdfPages": 8
     }
   ]
 }

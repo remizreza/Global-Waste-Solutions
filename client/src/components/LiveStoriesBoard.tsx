@@ -6,7 +6,8 @@ type LiveStory = {
   title: string;
   description: string;
   image: string;
-  mediaType?: "image" | "video";
+  mediaType?: "image" | "video" | "pdf";
+  pdfPages?: number;
 };
 
 type LiveStoriesFile = {
