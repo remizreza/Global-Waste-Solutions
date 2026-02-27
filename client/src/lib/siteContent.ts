@@ -60,8 +60,7 @@ export const serviceDivisions = [
       "Designed for industrial plants requiring reliable compliance and recovery outcomes.",
       "Integrated with onsite logistics and emergency support to minimize downtime.",
     ],
-    bgImage: "https://www.redoxyksa.com/story-assets/whatsapp-service-1.png",
-    bgImage: "/story-assets/image6.jpeg",
+    bgImage: "/water-bg.jpg",
     route: "/technology",
   },
   {
@@ -81,8 +80,7 @@ export const serviceDivisions = [
       "Combines technical crews, maintenance tooling, and QA discipline.",
       "Built to improve reliability, safety, and turnaround speed.",
     ],
-    bgImage: "https://www.redoxyksa.com/story-assets/whatsapp-service-2.png",
-    bgImage: "/story-assets/image8.jpeg",
+    bgImage: "/industrial-bg.jpg",
     route: "/traction",
   },
   {
@@ -102,8 +100,7 @@ export const serviceDivisions = [
       "Commercial model focuses on margin discipline and reliable fulfillment.",
       "Roadmap includes distribution expansion to support Africa and Asia growth.",
     ],
-    bgImage: "https://www.redoxyksa.com/story-assets/whatsapp-service-3.png",
-    bgImage: "/story-assets/image9.jpeg",
+    bgImage: "/logistics-bg.jpg",
     route: "/products",
   },
 ];
@@ -229,7 +226,6 @@ export const tractionContracts = [
 ];
 
 export const storySlides: StorySlideContent[] = [
-export const storySlides = [
   {
     id: "scaling-infrastructure-deck",
     title: "REDOXY: Scaling Modular Industrial Infrastructure",
@@ -238,7 +234,6 @@ export const storySlides = [
     image: "https://www.redoxyksa.com/story-assets/redoxy-presentation.pdf",
     mediaType: "pdf",
     pdfPages: 8,
-    image: "/story-assets/REDOXY_Scaling_Modular_Industrial_Infrastructure (1).pdf.png",
   },
 ];
 
