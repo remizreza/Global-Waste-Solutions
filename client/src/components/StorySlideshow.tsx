@@ -27,6 +27,7 @@ export default function StorySlideshow({
   useEffect(() => {
     if (slides.length < 2) return;
     const intervalId = window.setInterval(() => {
+      setPdfPage(1);
       setActiveIndex((prev) => (prev + 1) % slides.length);
     }, 4500);
     return () => window.clearInterval(intervalId);
@@ -34,8 +35,8 @@ export default function StorySlideshow({
 
   useEffect(() => {
     const activeSlide = slides[activeIndex];
+
     if (!activeSlide || activeSlide.mediaType !== "pdf") {
-      setPdfPage(1);
       return;
     }
 
@@ -129,7 +130,10 @@ export default function StorySlideshow({
               key={slide.id}
               type="button"
               aria-label={`Show slide ${index + 1}`}
-              onClick={() => setActiveIndex(index)}
+              onClick={() => {
+                setPdfPage(1);
+                setActiveIndex(index);
+              }}
               className={`h-2.5 rounded-full transition-all ${
                 index === activeIndex
                   ? "w-9 bg-primary"
