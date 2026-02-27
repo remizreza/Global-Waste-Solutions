@@ -37,8 +37,8 @@ export default function Home() {
               />
             </div>
           </div>
-          <div className="absolute inset-0 bg-[#05070c]" />
-          <div className="hero-heat-haze absolute inset-0 mix-blend-soft-light opacity-60" />
+          <div className="absolute inset-0 bg-[#05070c]/28" />
+          <div className="hero-heat-haze absolute inset-0 mix-blend-soft-light opacity-45" />
           <div className="hero-noise absolute inset-0 opacity-18" />
 
           {!reduceMotion ? (
@@ -55,7 +55,7 @@ export default function Home() {
               />
             </>
           ) : null}
-          <div className="absolute inset-0 bg-gradient-to-t from-secondary/68 via-secondary/36 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-secondary/52 via-secondary/24 to-transparent" />
         </div>
         <div className="absolute inset-0 bg-grid-pattern opacity-10 z-0 pointer-events-none" />
 
