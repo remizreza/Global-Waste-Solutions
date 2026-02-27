@@ -1,3 +1,12 @@
+export type StorySlideContent = {
+  id: string;
+  title: string;
+  description: string;
+  image: string;
+  mediaType?: "image" | "video" | "pdf";
+  pdfPages?: number;
+};
+
 export const pageLinks = {
   home: "/",
   about: "/about",
@@ -20,9 +29,9 @@ export const homeStats = [
     description: "Industrial execution + agile trading and logistics",
   },
   {
-    label: "2024 KSA Profit",
-    value: "SAR 199,713",
-    description: "Demonstrated operational profitability",
+    label: "2025 Revenue Achievement",
+    value: "46%",
+    description: "Revenue achieved through high-performance delivery in 2025",
   },
   {
     label: "Sustainability Goal",
@@ -51,7 +60,7 @@ export const serviceDivisions = [
       "Designed for industrial plants requiring reliable compliance and recovery outcomes.",
       "Integrated with onsite logistics and emergency support to minimize downtime.",
     ],
-    bgImage: "/story-assets/mtu-scale-01.png",
+    bgImage: "https://www.redoxyksa.com/story-assets/whatsapp-service-1.png",
     route: "/technology",
   },
   {
@@ -71,7 +80,7 @@ export const serviceDivisions = [
       "Combines technical crews, maintenance tooling, and QA discipline.",
       "Built to improve reliability, safety, and turnaround speed.",
     ],
-    bgImage: "/story-assets/mtu-scale-02.png",
+    bgImage: "https://www.redoxyksa.com/story-assets/whatsapp-service-2.png",
     route: "/traction",
   },
   {
@@ -91,8 +100,8 @@ export const serviceDivisions = [
       "Commercial model focuses on margin discipline and reliable fulfillment.",
       "Roadmap includes distribution expansion to support Africa and Asia growth.",
     ],
-    bgImage: "/story-assets/network-connectivity.jpg",
-    route: "/about",
+    bgImage: "https://www.redoxyksa.com/story-assets/whatsapp-service-3.png",
+    route: "/products",
   },
 ];
 
@@ -159,11 +168,11 @@ export const rdAchievements = [
 export const tractionItems = [
   {
     title: "Financial Health",
-    metric: "SAR 199,713",
-    subtitle: "KSA net profit achieved in 2024",
+    metric: "46% Revenue Achievement",
+    subtitle: "Performance level achieved in 2025 with profitability momentum",
     details: [
       "Reflects disciplined project execution and controlled operating model.",
-      "Forms baseline for scaled cross-border growth.",
+      "2030 target set to reach 80% profit with expanded program scale.",
     ],
   },
   {
@@ -216,27 +225,15 @@ export const tractionContracts = [
   },
 ];
 
-export const storySlides = [
+export const storySlides: StorySlideContent[] = [
   {
-    id: "network-connectivity",
-    title: "Network Connectivity & Regional Reach",
+    id: "scaling-infrastructure-deck",
+    title: "REDOXY: Scaling Modular Industrial Infrastructure",
     description:
-      "Connected operating model linking technical execution, logistics, and cross-border delivery corridors.",
-    image: "/story-assets/network-connectivity.jpg",
-  },
-  {
-    id: "mtu-001-program",
-    title: "REDOXY MTU 001 Program",
-    description:
-      "Modular infrastructure pathway designed for fast industrial deployment and measurable treatment outcomes.",
-    image: "/story-assets/mtu-scale-01.png",
-  },
-  {
-    id: "industrial-asset-engine",
-    title: "Industrial Asset Engine",
-    description:
-      "Containerized system engineering integrated with process controls, piping, and resilience planning.",
-    image: "/story-assets/mtu-scale-02.png",
+      "Strategic presentation snapshot covering execution model, growth trajectory, and deployment readiness.",
+    image: "https://www.redoxyksa.com/story-assets/redoxy-presentation.pdf",
+    mediaType: "pdf",
+    pdfPages: 8,
   },
 ];
 

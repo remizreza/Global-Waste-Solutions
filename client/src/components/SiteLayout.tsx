@@ -30,8 +30,7 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
       </a>
       <footer className="py-8 bg-black text-center border-t border-white/10">
         <p className="text-gray-500 text-sm font-tech px-4">
-          © {new Date().getFullYear()} REDOXY Group. All rights reserved. | KSA
-          + UAE | ESG aligned operations
+          © 2000 REDOXY Group. All rights reserved. | KSA + UAE | ESG aligned operations
         </p>
       </footer>
     </div>

@@ -91,11 +91,11 @@ export default function Traction() {
               </div>
               <div className="border border-white/10 rounded-lg p-4">
                 <p className="text-primary font-tech uppercase text-xs mb-2">
-                  2035 Vision
+                  2030 Profit Target
                 </p>
                 <p className="text-gray-300">
-                  Targeting 50% of revenue from new energy ventures (Green
-                  Hydrogen, SAF, CCS).
+                  Targeting 80% profit performance through scaled services,
+                  recurring contracts, and cross-market trading execution.
                 </p>
               </div>
             </div>
@@ -129,8 +129,8 @@ export default function Traction() {
               </motion.div>
             ))}
             <LiveStoriesBoard
-              fallbackTitle="Project Stories & Announcements"
-              fallbackSubtitle="Update /live-stories/stories.json and upload media to publish new stories automatically."
+              fallbackTitle="Live Stories & Updates"
+              fallbackSubtitle="If are interested to be part of our beautiful journey join hands with us, here is snap of what we ask for ...."
               fallbackSlides={storySlides}
             />
           </div>

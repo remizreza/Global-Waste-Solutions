@@ -3,7 +3,7 @@ import { Link, useLocation } from "wouter";
 import { ChevronRight, Menu, X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { pageLinks } from "@/lib/siteContent";
-import BrandWordmark from "@/components/BrandWordmark";
+import RedoxyWordmark from "@/components/RedoxyWordmark";
 
 const navItems = [
   { label: "Services", href: pageLinks.services },
@@ -40,18 +40,16 @@ export default function Navbar() {
       <div className="container mx-auto px-6 h-20 flex items-center justify-between">
         <Link href={pageLinks.home}>
           <a className="flex items-center gap-3 shrink-0 min-w-0">
-            <BrandWordmark
-              className="text-3xl md:text-[2rem] leading-none transition-all duration-300"
-              variant={scrolled ? "classic" : "glow"}
-              fontStyle={scrolled ? "display" : "wide"}
-              height="compact"
-            />
-            <img
-              src="/redoxy-icon.png"
-              alt="REDOXY emblem"
-              className="h-10 w-10 md:h-11 md:w-11 object-contain drop-shadow-[0_0_16px_rgba(37,99,235,0.35)]"
-              loading="eager"
-            />
+            <span className="relative inline-flex">
+              <span className="absolute inset-0 rounded-full bg-orange-400/35 blur-md animate-pulse" />
+              <img
+                src="/redoxy-icon.png"
+                alt="REDOXY emblem"
+                className="relative h-10 w-10 md:h-11 md:w-11 object-contain drop-shadow-[0_0_18px_rgba(255,122,0,0.45)]"
+                loading="eager"
+              />
+            </span>
+            <RedoxyWordmark className="text-3xl md:text-[2rem] transition-all duration-300" />
           </a>
         </Link>
 
