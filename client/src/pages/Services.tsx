@@ -136,7 +136,7 @@ export default function Services() {
         <div className="absolute inset-0 z-0">
           <video
             className="bg-video-smooth absolute inset-0 w-full h-full object-cover opacity-48"
-            src="/assets/Services.mp4"
+            src="/attached_assets/Services%20new.mp4"
             preload="auto"
             muted
             loop
