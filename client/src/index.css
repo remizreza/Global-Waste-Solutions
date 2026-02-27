@@ -46,33 +46,8 @@
   }
   body {
     @apply font-sans antialiased bg-background text-foreground selection:bg-primary/30 selection:text-primary;
-    cursor: none;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
-  }
-  a,
-  button,
-  [role="button"] {
-    cursor: none;
-  }
-  .custom-cursor {
-    transition:
-      transform 120ms ease-out,
-      opacity 180ms ease-out;
-    will-change: transform;
-  }
-  .custom-cursor > div {
-    transition:
-      transform 120ms ease-out,
-      background-color 180ms ease-out,
-      border-color 180ms ease-out;
-  }
-  .custom-cursor.is-active > div {
-    transform: scale(1.25);
-  }
-  .custom-cursor.is-active > div {
-    border-color: rgba(249, 115, 22, 0.8);
-    background: rgba(249, 115, 22, 0.2);
   }
 }
 
@@ -84,9 +59,6 @@
   button,
   [role="button"] {
     cursor: pointer;
-  }
-  .custom-cursor {
-    display: none;
   }
 }
 

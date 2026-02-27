@@ -2,7 +2,6 @@ import type { ReactNode } from "react";
 import { MessageCircle } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { contactDetails } from "@/lib/siteContent";
-import CustomCursor from "@/components/CustomCursor";
 import SmoothScrollProvider from "@/components/SmoothScrollProvider";
 import FloatingChatbot from "@/components/FloatingChatbot";
 
@@ -14,7 +13,6 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
   return (
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden selection:bg-primary/30">
       <SmoothScrollProvider />
-      <CustomCursor />
       <Navbar />
       <main>{children}</main>
       <FloatingChatbot />
