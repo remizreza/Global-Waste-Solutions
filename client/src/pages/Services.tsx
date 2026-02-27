@@ -179,7 +179,7 @@ export default function Services() {
                   <img
                     src={division.bgImage}
                     alt={division.title}
-                    className="w-full h-full object-contain"
+                    className="w-full h-full object-cover"
                     loading="lazy"
                   />
                 </div>

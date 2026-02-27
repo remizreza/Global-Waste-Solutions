@@ -21,7 +21,7 @@ export default function Home() {
 
   return (
     <SiteLayout>
-      <section className="relative min-h-screen flex items-center justify-center pt-24 pb-16 overflow-hidden bg-[#05070c]">
+      <section className="relative min-h-screen flex items-center justify-center pt-24 pb-16 overflow-hidden bg-[#04070f]">
         <div className="absolute inset-0 z-0">
           <div className="absolute inset-0 flex items-center justify-center px-6">
             <div className="relative w-full max-w-7xl rounded-2xl overflow-hidden shadow-[0_30px_120px_rgba(0,0,0,0.55)] border border-white/10 bg-black">
@@ -37,7 +37,7 @@ export default function Home() {
               />
             </div>
           </div>
-          <div className="absolute inset-0 bg-[#05070c]/28" />
+          <div className="absolute inset-0 bg-[#05070c]/18" />
           <div className="hero-heat-haze absolute inset-0 mix-blend-soft-light opacity-45" />
           <div className="hero-noise absolute inset-0 opacity-18" />
 
@@ -60,26 +60,33 @@ export default function Home() {
         <div className="absolute inset-0 bg-grid-pattern opacity-10 z-0 pointer-events-none" />
 
         <div className="container mx-auto px-6 relative z-10 text-center max-w-5xl">
-          <motion.img
-            src="/redoxy-icon.png"
-            alt="REDOXY emblem"
-            className="mx-auto mb-6 h-14 w-14 object-contain drop-shadow-[0_0_18px_rgba(249,115,22,0.45)]"
-            initial={{ opacity: 0, scale: 0.75, y: 14 }}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.72, y: 18 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            transition={{ duration: 0.55, ease: "easeOut" }}
-          />
+            transition={{ duration: 0.6, ease: "easeOut" }}
+            className="relative mx-auto mb-6 w-fit"
+          >
+            <span className="absolute inset-0 rounded-full bg-orange-500/40 blur-2xl" />
+            <motion.img
+              src="/redoxy-icon.png"
+              alt="REDOXY emblem"
+              className="relative mx-auto h-16 w-16 md:h-20 md:w-20 object-contain drop-shadow-[0_0_24px_rgba(255,122,0,0.75)]"
+              animate={reduceMotion ? undefined : { y: [0, -6, 0] }}
+              transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
+            />
+          </motion.div>
           <motion.p
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 22 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.08 }}
-            className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary font-tech text-sm tracking-widest mb-6"
+            transition={{ delay: 0.28, duration: 0.45 }}
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-orange-500/15 border border-orange-300/45 text-orange-100 font-tech text-xs md:text-sm tracking-[0.24em] mb-6"
           >
             THE GLOBAL PARTNER
           </motion.p>
           <motion.h1
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
+            transition={{ delay: 0.45, duration: 0.5 }}
             className="hero-glitch text-4xl md:text-6xl font-display font-bold text-white leading-tight mb-6"
           >
             Sustainable Industrial & Energy Solutions
@@ -87,8 +94,8 @@ export default function Home() {
           <motion.p
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="text-lg md:text-xl text-gray-300 max-w-3xl mx-auto mb-10"
+            transition={{ delay: 0.65, duration: 0.5 }}
+            className="text-base md:text-xl text-gray-200 max-w-3xl mx-auto mb-10"
           >
             Integrated industrial, environmental, and trading services across
             GCC, Asia, and Africa.
@@ -213,7 +220,7 @@ export default function Home() {
                   <img
                     src={division.bgImage}
                     alt={division.title}
-                    className="w-full h-full object-contain"
+                    className="w-full h-full object-cover"
                     loading="lazy"
                   />
                 </div>
