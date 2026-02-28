@@ -9,10 +9,10 @@ export default function SmoothScrollProvider() {
     if (prefersReduced || coarsePointer || !finePointer) return;
 
     const lenis = new Lenis({
-      lerp: 0.09,
+      lerp: 0.075,
       smoothWheel: true,
-      wheelMultiplier: 0.95,
-      touchMultiplier: 1.1,
+      wheelMultiplier: 0.85,
+      touchMultiplier: 1,
     });
 
     let rafId = 0;
