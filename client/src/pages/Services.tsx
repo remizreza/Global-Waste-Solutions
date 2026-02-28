@@ -169,9 +169,9 @@ export default function Services() {
               <motion.div
                 key={division.id}
                 whileHover={{ y: -8, scale: 1.01 }}
-                className="bg-card/60 border border-white/10 rounded-xl overflow-hidden flex flex-col backdrop-blur-sm"
+                className="brand-surface brand-hover-lift rounded-xl overflow-hidden flex flex-col"
               >
-                <div className="aspect-video w-full bg-black/20">
+                <div className="aspect-video w-full bg-secondary/35">
                   <img
                     src={division.bgImage}
                     alt={division.title}

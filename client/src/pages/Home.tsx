@@ -22,7 +22,7 @@ export default function Home() {
       <section className="relative pt-24 pb-14 overflow-hidden bg-[#04070f]">
         <div className="absolute inset-0 z-0">
           <div className="absolute inset-x-0 top-24 px-0 sm:px-4 lg:px-8">
-            <div className="relative w-full max-w-[1680px] mx-auto rounded-none sm:rounded-2xl overflow-hidden shadow-[0_30px_120px_rgba(0,0,0,0.55)] border-y sm:border border-white/10 bg-black">
+            <div className="relative w-full max-w-[1680px] mx-auto rounded-none sm:rounded-2xl overflow-hidden shadow-[0_30px_120px_rgba(0,0,0,0.55)] border-y sm:border border-white/10 brand-surface">
               <video
                 className="bg-video-smooth w-full aspect-[16/8] object-cover contrast-[1.08] brightness-[1.08] saturate-[1.15]"
                 src="/assets/hero-bg-20260226-v2.mp4?v=1"
@@ -210,7 +210,7 @@ export default function Home() {
                 whileHover={{ y: -8, scale: 1.01 }}
                 className="bg-card/60 border border-white/10 rounded-lg overflow-hidden flex flex-col backdrop-blur-sm"
               >
-                <div className="aspect-video w-full bg-black/20">
+                <div className="aspect-video w-full bg-secondary/35">
                   <img
                     src={division.bgImage}
                     alt={division.title}
