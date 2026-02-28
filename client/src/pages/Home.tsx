@@ -57,7 +57,7 @@ export default function Home() {
         </div>
         <div className="absolute inset-0 bg-grid-pattern opacity-10 z-0 pointer-events-none" />
 
-        <div className="container mx-auto px-6 relative z-10 text-center max-w-5xl min-h-[52vw] max-h-[78vh] flex flex-col items-center justify-center">
+        <div className="container mx-auto px-6 relative z-10 text-center max-w-5xl min-h-[52vw] max-h-[78vh] pt-44 md:pt-56 lg:pt-64 pb-10 flex flex-col items-center justify-start">
           <motion.div
             initial={{ opacity: 0, scale: 0.72, y: 18 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
