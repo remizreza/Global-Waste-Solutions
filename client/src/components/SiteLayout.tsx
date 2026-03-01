@@ -2,7 +2,6 @@ import type { ReactNode } from "react";
 import { MessageCircle } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import { contactDetails } from "@/lib/siteContent";
-import CustomCursor from "@/components/CustomCursor";
 import SmoothScrollProvider from "@/components/SmoothScrollProvider";
 import FloatingChatbot from "@/components/FloatingChatbot";
 
@@ -14,9 +13,11 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
   return (
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden selection:bg-primary/30">
       <SmoothScrollProvider />
-      <CustomCursor />
       <Navbar />
-      <main>{children}</main>
+      <main className="relative">
+        <div className="site-ambient pointer-events-none fixed inset-0 -z-10" />
+        {children}
+      </main>
       <FloatingChatbot />
       <a
         href={contactDetails.whatsappUrl}
@@ -28,7 +29,7 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
         <span className="absolute inset-0 rounded-full bg-cyan-400/35 blur-md animate-pulse" />
         <MessageCircle className="h-6 w-6" />
       </a>
-      <footer className="py-8 bg-black text-center border-t border-white/10">
+      <footer className="py-8 bg-secondary/95 text-center border-t border-white/10">
         <p className="text-gray-500 text-sm font-tech px-4">
           © 2000 REDOXY Group. All rights reserved. | KSA + UAE | ESG aligned operations
         </p>

@@ -57,7 +57,7 @@ export default function LiveCommodityTicker() {
   }, [quotes]);
 
   return (
-    <div className="relative overflow-hidden rounded-lg border border-white/10 bg-[#111] px-4 py-3">
+    <div className="relative overflow-hidden rounded-lg border border-white/10 bg-secondary/70 brand-surface px-4 py-3">
       <div className="pointer-events-none absolute inset-0 opacity-60">
         <div className="h-full w-full bg-[radial-gradient(circle_at_center,rgba(22,163,74,0.18),transparent_60%)]" />
       </div>
