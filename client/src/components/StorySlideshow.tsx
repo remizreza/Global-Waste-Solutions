@@ -34,6 +34,8 @@ export default function StorySlideshow({
   }, [slides.length]);
 
   useEffect(() => {
+    setPdfPage(1);
+
     const activeSlide = slides[activeIndex];
 
     if (!activeSlide || activeSlide.mediaType !== "pdf") {
