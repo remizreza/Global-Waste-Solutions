@@ -6,7 +6,7 @@ import LiveStoriesBoard from "@/components/LiveStoriesBoard";
 import LiveCommodityTicker from "@/components/LiveCommodityTicker";
 import {
   pageLinks,
-  storySlides,
+  tractionStorySlides,
   tractionContracts,
   tractionItems,
 } from "@/lib/siteContent";
@@ -46,7 +46,7 @@ export default function Traction() {
                 viewport={{ once: true, amount: 0.2 }}
                 transition={{ duration: 0.45 }}
                 whileHover={{ y: -4 }}
-                className="border border-white/10 rounded-lg p-7 bg-card/50 backdrop-blur-sm"
+                className="border border-white/10 rounded-lg p-7 brand-surface brand-hover-lift"
               >
                 <p className="text-primary text-xs font-tech uppercase tracking-wider mb-2">
                   {item.title}
@@ -66,7 +66,7 @@ export default function Traction() {
             ))}
           </div>
 
-          <div className="bg-card/50 border border-white/10 rounded-lg p-8">
+          <div className="bg-secondary/45 border border-white/10 rounded-lg p-8">
             <h3 className="text-2xl text-white font-display mb-4">
               Strategic Timeline
             </h3>
@@ -131,7 +131,7 @@ export default function Traction() {
             <LiveStoriesBoard
               fallbackTitle="Live Stories & Updates"
               fallbackSubtitle="If are interested to be part of our beautiful journey join hands with us, here is snap of what we ask for ...."
-              fallbackSlides={storySlides}
+              fallbackSlides={tractionStorySlides}
             />
           </div>
 

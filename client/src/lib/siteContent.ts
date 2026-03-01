@@ -60,7 +60,7 @@ export const serviceDivisions = [
       "Designed for industrial plants requiring reliable compliance and recovery outcomes.",
       "Integrated with onsite logistics and emergency support to minimize downtime.",
     ],
-    bgImage: "https://www.redoxyksa.com/story-assets/whatsapp-service-1.png",
+    bgImage: "/water-bg.jpg",
     route: "/technology",
   },
   {
@@ -80,7 +80,7 @@ export const serviceDivisions = [
       "Combines technical crews, maintenance tooling, and QA discipline.",
       "Built to improve reliability, safety, and turnaround speed.",
     ],
-    bgImage: "https://www.redoxyksa.com/story-assets/whatsapp-service-2.png",
+    bgImage: "/industrial-bg.jpg",
     route: "/traction",
   },
   {
@@ -100,7 +100,7 @@ export const serviceDivisions = [
       "Commercial model focuses on margin discipline and reliable fulfillment.",
       "Roadmap includes distribution expansion to support Africa and Asia growth.",
     ],
-    bgImage: "https://www.redoxyksa.com/story-assets/whatsapp-service-3.png",
+    bgImage: "/logistics-bg.jpg",
     route: "/products",
   },
 ];
@@ -225,17 +225,61 @@ export const tractionContracts = [
   },
 ];
 
-export const storySlides: StorySlideContent[] = [
+export const technologyStorySlides: StorySlideContent[] = [
   {
-    id: "scaling-infrastructure-deck",
-    title: "REDOXY: Scaling Modular Industrial Infrastructure",
+    id: "advanced-water-infrastructure",
+    title: "Advanced Water Infrastructure Outlook",
     description:
-      "Strategic presentation snapshot covering execution model, growth trajectory, and deployment readiness.",
-    image: "https://www.redoxyksa.com/story-assets/redoxy-presentation.pdf",
-    mediaType: "pdf",
-    pdfPages: 8,
+      "Regional desalination and industrial reuse investments are accelerating resilient water systems in GCC markets.",
+    image: "https://images.pexels.com/photos/1076758/pexels-photo-1076758.jpeg",
+    mediaType: "image",
+  },
+  {
+    id: "modular-treatment-design",
+    title: "Modular Treatment Design Standards",
+    description:
+      "Compact process skids are being prioritized for faster commissioning, cleaner maintenance windows, and lower lifecycle risk.",
+    image: "https://images.pexels.com/photos/257700/pexels-photo-257700.jpeg",
+    mediaType: "image",
+  },
+  {
+    id: "digital-industrial-control",
+    title: "Industrial Digital Control Rooms",
+    description:
+      "Operational teams are integrating process telemetry and remote diagnostics to improve uptime and response planning.",
+    image: "https://images.pexels.com/photos/3912360/pexels-photo-3912360.jpeg",
+    mediaType: "image",
   },
 ];
+
+export const tractionStorySlides: StorySlideContent[] = [
+  {
+    id: "energy-logistics-corridor",
+    title: "Energy Logistics Corridor Development",
+    description:
+      "Port-connected storage and blending nodes continue to improve cross-border reliability for industrial offtake programs.",
+    image: "https://images.pexels.com/photos/906982/pexels-photo-906982.jpeg",
+    mediaType: "image",
+  },
+  {
+    id: "petrochemical-demand-cycle",
+    title: "Petrochemical Demand & Margin Signals",
+    description:
+      "Feedstock planning now balances inventory discipline with flexible procurement windows through quarterly market cycles.",
+    image: "https://images.pexels.com/photos/221047/pexels-photo-221047.jpeg",
+    mediaType: "image",
+  },
+  {
+    id: "future-energy-transition",
+    title: "Future Energy Transition Readiness",
+    description:
+      "Hydrogen, SAF, and carbon-management pathways are moving from roadmap planning toward pilot-stage execution.",
+    image: "https://images.pexels.com/photos/356036/pexels-photo-356036.jpeg",
+    mediaType: "image",
+  },
+];
+
+export const storySlides = technologyStorySlides;
 
 export const aboutValues = [
   {
