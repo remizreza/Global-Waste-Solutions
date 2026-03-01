@@ -33,7 +33,7 @@ export default function Navbar() {
     <nav
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         scrolled
-          ? "bg-secondary/95 backdrop-blur-md border-b border-white/10"
+          ? "bg-secondary/92 backdrop-blur-xl border-b border-white/15 shadow-[0_10px_35px_rgba(6,12,28,0.45)]"
           : "bg-transparent"
       }`}
     >
@@ -58,10 +58,10 @@ export default function Navbar() {
             <Link key={item.href} href={item.href}>
               <a
                 aria-current={location === item.href ? "page" : undefined}
-                className={`text-sm font-tech uppercase tracking-widest transition-all ${
+                className={`text-sm font-tech uppercase tracking-[0.16em] transition-all relative after:absolute after:left-0 after:-bottom-1 after:h-[1px] after:bg-primary after:transition-all ${
                   location === item.href
-                    ? "text-primary"
-                    : "text-gray-300 hover:text-primary"
+                    ? "text-primary after:w-full"
+                    : "text-gray-300 hover:text-primary after:w-0 hover:after:w-full"
                 }`}
               >
                 {item.label}

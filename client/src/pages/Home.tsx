@@ -1,6 +1,6 @@
 import { Link } from "wouter";
 import { ArrowRight, Leaf, ShieldCheck } from "lucide-react";
-import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import SiteLayout from "@/components/SiteLayout";
 import InfoPreviewDialog from "@/components/InfoPreviewDialog";
 import LiveBulletinBoard from "@/components/LiveBulletinBoard";
@@ -15,18 +15,16 @@ import sabicLogo from "@/assets/logos/sabic.png";
 import maadenLogo from "@/assets/logos/maaden.png";
 
 export default function Home() {
-  const { scrollY } = useScroll();
   const reduceMotion = useReducedMotion();
-  const parallaxY = useTransform(scrollY, [0, 700], [0, 120]);
 
   return (
     <SiteLayout>
-      <section className="relative min-h-screen flex items-center justify-center pt-24 pb-16 overflow-hidden bg-[#04070f]">
+      <section className="relative pt-24 pb-14 overflow-hidden bg-[#04070f]">
         <div className="absolute inset-0 z-0">
-          <div className="absolute inset-0 flex items-center justify-center px-6">
-            <div className="relative w-full max-w-7xl rounded-2xl overflow-hidden shadow-[0_30px_120px_rgba(0,0,0,0.55)] border border-white/10 bg-black">
+          <div className="absolute inset-x-0 top-24 px-0 sm:px-4 lg:px-8">
+            <div className="relative w-full max-w-[1680px] mx-auto rounded-none sm:rounded-2xl overflow-hidden shadow-[0_30px_120px_rgba(0,0,0,0.55)] border-y sm:border border-white/10 brand-surface">
               <video
-                className="bg-video-smooth w-full h-[80vh] md:h-[85vh] object-cover contrast-[1.08] brightness-[1.08] saturate-[1.15]"
+                className="bg-video-smooth w-full aspect-[16/8] object-cover contrast-[1.08] brightness-[1.08] saturate-[1.15]"
                 src="/assets/hero-bg-20260226-v2.mp4?v=1"
                 preload="auto"
                 muted
@@ -37,7 +35,7 @@ export default function Home() {
               />
             </div>
           </div>
-          <div className="absolute inset-0 bg-[#05070c]/10" />
+          <div className="absolute inset-0 bg-[#05070c]/25" />
           <div className="hero-heat-haze absolute inset-0 mix-blend-soft-light opacity-45" />
           <div className="hero-noise absolute inset-0 opacity-18" />
 
@@ -55,15 +53,15 @@ export default function Home() {
               />
             </>
           ) : null}
-          <div className="absolute inset-0 bg-gradient-to-t from-secondary/45 via-secondary/15 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-secondary/70 via-secondary/30 to-transparent" />
         </div>
         <div className="absolute inset-0 bg-grid-pattern opacity-10 z-0 pointer-events-none" />
 
-        <div className="container mx-auto px-6 relative z-10 text-center max-w-5xl">
+        <div className="container mx-auto px-6 relative z-10 text-center max-w-5xl min-h-[52vw] max-h-[78vh] pt-44 md:pt-56 lg:pt-64 pb-10 flex flex-col items-center justify-start">
           <motion.div
             initial={{ opacity: 0, scale: 0.72, y: 18 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
+            transition={{ duration: 1.2, ease: "easeOut" }}
             className="relative mx-auto mb-6 w-fit"
           >
             <span className="absolute inset-0 rounded-full bg-orange-500/40 blur-2xl" />
@@ -78,7 +76,7 @@ export default function Home() {
           <motion.p
             initial={{ opacity: 0, y: 22 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.28, duration: 0.45 }}
+            transition={{ delay: 0.6, duration: 1.1, ease: "easeOut" }}
             className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-orange-500/15 border border-orange-300/45 text-orange-100 font-tech text-xs md:text-sm tracking-[0.24em] mb-6"
           >
             THE GLOBAL PARTNER
@@ -86,7 +84,7 @@ export default function Home() {
           <motion.h1
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.45, duration: 0.5 }}
+            transition={{ delay: 1.1, duration: 1.2, ease: "easeOut" }}
             className="hero-glitch text-4xl md:text-6xl font-display font-bold text-white leading-tight mb-6"
           >
             Sustainable Industrial & Energy Solutions
@@ -94,7 +92,7 @@ export default function Home() {
           <motion.p
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.65, duration: 0.5 }}
+            transition={{ delay: 1.6, duration: 1.2, ease: "easeOut" }}
             className="text-base md:text-xl text-gray-200 max-w-3xl mx-auto mb-10"
           >
             Integrated industrial, environmental, and trading services across
@@ -212,7 +210,7 @@ export default function Home() {
                 whileHover={{ y: -8, scale: 1.01 }}
                 className="bg-card/60 border border-white/10 rounded-lg overflow-hidden flex flex-col backdrop-blur-sm"
               >
-                <div className="aspect-video w-full bg-black/20">
+                <div className="aspect-video w-full bg-secondary/35">
                   <img
                     src={division.bgImage}
                     alt={division.title}

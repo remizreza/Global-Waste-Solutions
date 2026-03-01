@@ -46,33 +46,8 @@
   }
   body {
     @apply font-sans antialiased bg-background text-foreground selection:bg-primary/30 selection:text-primary;
-    cursor: none;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
-  }
-  a,
-  button,
-  [role="button"] {
-    cursor: none;
-  }
-  .custom-cursor {
-    transition:
-      transform 120ms ease-out,
-      opacity 180ms ease-out;
-    will-change: transform;
-  }
-  .custom-cursor > div {
-    transition:
-      transform 120ms ease-out,
-      background-color 180ms ease-out,
-      border-color 180ms ease-out;
-  }
-  .custom-cursor.is-active > div {
-    transform: scale(1.25);
-  }
-  .custom-cursor.is-active > div {
-    border-color: rgba(249, 115, 22, 0.8);
-    background: rgba(249, 115, 22, 0.2);
   }
 }
 
@@ -84,9 +59,6 @@
   button,
   [role="button"] {
     cursor: pointer;
-  }
-  .custom-cursor {
-    display: none;
   }
 }
 
@@ -265,9 +237,35 @@
     font-size: 0.95rem;
     letter-spacing: 0.18em;
     text-transform: uppercase;
-    color: #86efac;
-    text-shadow: 0 0 10px rgba(34, 197, 94, 0.5);
+    color: #bfdbfe;
+    text-shadow: 0 0 10px rgba(47, 123, 255, 0.45);
   }
+
+  .brand-surface {
+    background: linear-gradient(145deg, rgba(11, 31, 58, 0.95), rgba(7, 19, 39, 0.92));
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.26);
+    backdrop-filter: blur(10px);
+  }
+
+  .brand-hover-lift {
+    transition: transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease;
+  }
+
+  .brand-hover-lift:hover {
+    transform: translateY(-4px);
+    border-color: rgba(255, 122, 26, 0.45);
+    box-shadow: 0 18px 44px rgba(7, 19, 39, 0.55);
+  }
+
+  .site-ambient {
+    background:
+      radial-gradient(circle at 12% 8%, rgba(255, 122, 26, 0.16), transparent 34%),
+      radial-gradient(circle at 88% 26%, rgba(47, 123, 255, 0.14), transparent 36%),
+      radial-gradient(circle at 48% 78%, rgba(255, 255, 255, 0.05), transparent 46%);
+    animation: hazeShift 12s ease-in-out infinite;
+  }
+
 }
 
 @layer components {

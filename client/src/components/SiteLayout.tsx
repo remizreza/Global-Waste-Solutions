@@ -72,9 +72,11 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
   return (
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden selection:bg-primary/30">
       <SmoothScrollProvider />
-      <CustomCursor />
       <Navbar />
-      <main>{children}</main>
+      <main className="relative">
+        <div className="site-ambient pointer-events-none fixed inset-0 -z-10" />
+        {children}
+      </main>
       <FloatingChatbot />
       <a
         href={contactDetails.whatsappUrl}
