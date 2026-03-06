@@ -10,9 +10,20 @@ import {
   pageLinks,
   serviceDivisions,
 } from "@/lib/siteContent";
+import {
+  fadeIn,
+  fadeUp,
+  hoverElevation,
+  MOTION_EASE,
+  motionDuration,
+  scaleIn,
+  staggerContainer,
+} from "@/lib/motion";
 import aramcoLogo from "@/assets/logos/aramco.png";
 import sabicLogo from "@/assets/logos/sabic.png";
 import maadenLogo from "@/assets/logos/maaden.png";
+
+const heroHeading = "Sustainable Industrial & Energy Solutions".split(" ");
 
 export default function Home() {
   const reduceMotion = useReducedMotion();
@@ -57,11 +68,15 @@ export default function Home() {
         </div>
         <div className="absolute inset-0 bg-grid-pattern opacity-10 z-0 pointer-events-none" />
 
-        <div className="container mx-auto px-6 relative z-10 text-center max-w-5xl min-h-[52vw] max-h-[78vh] pt-44 md:pt-56 lg:pt-64 pb-10 flex flex-col items-center justify-start">
+        <motion.div
+          initial="hidden"
+          animate="visible"
+          variants={staggerContainer(0.12, 0.14)}
+          className="container mx-auto px-6 relative z-10 text-center max-w-5xl min-h-[52vw] max-h-[78vh] pt-44 md:pt-56 lg:pt-64 pb-10 flex flex-col items-center justify-start"
+        >
           <motion.div
-            initial={{ opacity: 0, scale: 0.72, y: 18 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            transition={{ duration: 1.2, ease: "easeOut" }}
+            variants={scaleIn(0.72)}
+            transition={{ duration: motionDuration.hero, ease: MOTION_EASE }}
             className="relative mx-auto mb-6 w-fit"
           >
             <span className="absolute inset-0 rounded-full bg-orange-500/40 blur-2xl" />
@@ -74,46 +89,47 @@ export default function Home() {
             />
           </motion.div>
           <motion.p
-            initial={{ opacity: 0, y: 22 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6, duration: 1.1, ease: "easeOut" }}
+            variants={fadeUp(18)}
             className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-orange-500/15 border border-orange-300/45 text-orange-100 font-tech text-xs md:text-sm tracking-[0.24em] mb-6"
           >
             THE GLOBAL PARTNER
           </motion.p>
           <motion.h1
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1.1, duration: 1.2, ease: "easeOut" }}
+            variants={staggerContainer(0.05)}
             className="hero-glitch text-4xl md:text-6xl font-display font-bold text-white leading-tight mb-6"
           >
-            Sustainable Industrial & Energy Solutions
+            {heroHeading.map((word) => (
+              <motion.span key={word} variants={fadeUp(18)} className="inline-block mr-3">
+                {word}
+              </motion.span>
+            ))}
           </motion.h1>
           <motion.p
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1.6, duration: 1.2, ease: "easeOut" }}
+            variants={fadeUp(20)}
             className="text-base md:text-xl text-gray-200 max-w-3xl mx-auto mb-10"
           >
-            Integrated industrial, environmental, and trading services across
-            GCC, Asia, and Africa.
+            Integrated industrial, environmental, and trading services across GCC, Asia, and Africa.
           </motion.p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <motion.div variants={fadeIn} className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href={pageLinks.services}>
-              <a className="btn-premium">
+              <a className="btn-premium magnetic-button">
                 Explore Our Services <ArrowRight className="w-4 h-4" />
               </a>
             </Link>
             <Link href={pageLinks.about}>
-              <a className="btn-premium-outline">
-                Learn About The Group
-              </a>
+              <a className="btn-premium-outline magnetic-button">Learn About The Group</a>
             </Link>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       </section>
 
-      <section className="py-12 border-y border-white/10 bg-card/25">
+      <motion.section
+        className="py-12 border-y border-white/10 bg-card/25"
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.4 }}
+        variants={fadeUp(24)}
+      >
         <div className="container mx-auto px-6 text-center max-w-5xl">
           <p className="text-xs font-tech uppercase tracking-[0.2em] text-primary mb-3">
             Investor Note
@@ -128,7 +144,7 @@ export default function Home() {
             {investmentCallout.summary}
           </p>
         </div>
-      </section>
+      </motion.section>
 
       <LiveBulletinBoard />
 
@@ -137,15 +153,23 @@ export default function Home() {
           <p className="text-xs font-tech uppercase tracking-[0.2em] text-primary text-center mb-6">
             Partner Ecosystem
           </p>
-          <div className="grid md:grid-cols-3 gap-4">
+          <motion.div
+            className="grid md:grid-cols-3 gap-4"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.25 }}
+            variants={staggerContainer(0.1)}
+          >
             {[
               { name: "Saudi Aramco", logo: aramcoLogo },
               { name: "SABIC", logo: sabicLogo },
               { name: "Ma'aden", logo: maadenLogo },
             ].map((partner) => (
-              <div
+              <motion.div
                 key={partner.name}
-                className="link-premium flex flex-col items-center justify-center py-6"
+                variants={fadeUp(16)}
+                whileHover={hoverElevation}
+                className="link-premium premium-card flex flex-col items-center justify-center py-6"
               >
                 <img
                   src={partner.logo}
@@ -155,47 +179,41 @@ export default function Home() {
                 />
                 <p className="text-white font-tech text-sm">{partner.name}</p>
                 <p className="text-xs text-gray-400 mt-1">Vendor Engagement</p>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </section>
 
       <section className="py-20 border-y border-white/10">
-        <div className="container mx-auto px-6 grid lg:grid-cols-2 gap-8">
+        <motion.div
+          className="container mx-auto px-6 grid lg:grid-cols-2 gap-8"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.2 }}
+          variants={staggerContainer(0.12)}
+        >
           <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.2 }}
-            transition={{ duration: 0.55 }}
-            className="bg-card/60 border border-white/10 p-8 rounded-lg backdrop-blur-sm"
+            variants={fadeUp(20)}
+            className="premium-card bg-card/60 border border-white/10 p-8 rounded-lg backdrop-blur-sm"
           >
-            <h2 className="text-3xl font-display text-white mb-4">
-              Who We Are
-            </h2>
+            <h2 className="text-3xl font-display text-white mb-4">Who We Are</h2>
             <p className="text-gray-300 leading-relaxed">
-              REDOXY unifies two execution pillars: REDOXY-ITCC (KSA) for
-              technical and environmental delivery, and REDOXY F.Z.C. (UAE) for
-              agile trading and logistics.
+              REDOXY unifies two execution pillars: REDOXY-ITCC (KSA) for technical and environmental delivery, and
+              REDOXY F.Z.C. (UAE) for agile trading and logistics.
             </p>
           </motion.div>
           <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.2 }}
-            transition={{ duration: 0.55, delay: 0.08 }}
-            className="bg-card/60 border border-white/10 p-8 rounded-lg backdrop-blur-sm"
+            variants={fadeUp(20)}
+            className="premium-card bg-card/60 border border-white/10 p-8 rounded-lg backdrop-blur-sm"
           >
-            <h2 className="text-3xl font-display text-white mb-4">
-              Integrated Value
-            </h2>
+            <h2 className="text-3xl font-display text-white mb-4">Integrated Value</h2>
             <p className="text-gray-300 leading-relaxed">
-              The model connects field capability, advanced treatment
-              technology, and responsive commercial flow to deliver measurable
-              industrial outcomes.
+              The model connects field capability, advanced treatment technology, and responsive commercial flow to
+              deliver measurable industrial outcomes.
             </p>
           </motion.div>
-        </div>
+        </motion.div>
       </section>
 
       <section className="py-20">
@@ -203,18 +221,25 @@ export default function Home() {
           <h2 className="text-3xl md:text-4xl font-display text-white text-center mb-12">
             Our Core Services
           </h2>
-          <div className="grid md:grid-cols-3 gap-6">
+          <motion.div
+            className="grid md:grid-cols-3 gap-6"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.15 }}
+            variants={staggerContainer(0.12)}
+          >
             {serviceDivisions.map((division) => (
               <motion.div
                 key={division.id}
-                whileHover={{ y: -8, scale: 1.01 }}
-                className="bg-card/60 border border-white/10 rounded-lg overflow-hidden flex flex-col backdrop-blur-sm"
+                variants={fadeUp(20)}
+                whileHover={hoverElevation}
+                className="premium-card bg-card/60 border border-white/10 rounded-lg overflow-hidden flex flex-col backdrop-blur-sm"
               >
-                <div className="aspect-video w-full bg-secondary/35">
+                <div className="aspect-video w-full bg-secondary/35 overflow-hidden">
                   <img
                     src={division.bgImage}
                     alt={division.title}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover image-lift"
                     loading="lazy"
                   />
                 </div>
@@ -222,12 +247,8 @@ export default function Home() {
                   <p className="text-primary text-xs font-tech uppercase tracking-wider mb-2">
                     {division.entity}
                   </p>
-                  <h3 className="text-xl font-display text-white mb-3">
-                    {division.title}
-                  </h3>
-                  <p className="text-gray-300 text-sm mb-5 flex-1">
-                    {division.summary}
-                  </p>
+                  <h3 className="text-xl font-display text-white mb-3">{division.title}</h3>
+                  <p className="text-gray-300 text-sm mb-5 flex-1">{division.summary}</p>
                   <div className="flex items-center gap-3">
                     <InfoPreviewDialog
                       title={division.title}
@@ -238,50 +259,47 @@ export default function Home() {
                       triggerLabel="Preview"
                     />
                     <Link href={division.route}>
-                      <a className="btn-premium-outline !px-3 !py-2 !text-xs !font-tech">
-                        Go to section
-                      </a>
+                      <a className="btn-premium-outline !px-3 !py-2 !text-xs !font-tech">Go to section</a>
                     </Link>
                   </div>
                 </div>
               </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </section>
 
       <section className="py-16 border-y border-white/10 bg-card/30">
         <div className="container mx-auto px-6 grid lg:grid-cols-2 gap-8 items-center">
           <div>
-            <h3 className="text-2xl font-display text-white mb-4">
-              Commitment Highlight
-            </h3>
+            <h3 className="text-2xl font-display text-white mb-4">Commitment Highlight</h3>
             <div className="space-y-3 text-gray-300">
               <p className="flex items-center gap-2">
-                <Leaf className="text-primary w-5 h-5" /> Net-Zero commitment by
-                2050
+                <Leaf className="text-primary w-5 h-5" /> Net-Zero commitment by 2050
               </p>
               <p className="flex items-center gap-2">
-                <ShieldCheck className="text-primary w-5 h-5" /> ISO 14001
-                certified environmental practices
+                <ShieldCheck className="text-primary w-5 h-5" /> ISO 14001 certified environmental practices
               </p>
             </div>
             <Link href={pageLinks.technology}>
-              <a className="btn-premium-outline mt-5 !px-4 !py-2 !text-xs !font-tech">
+              <a className="btn-premium-outline mt-5 !px-4 !py-2 !text-xs !font-tech magnetic-button">
                 See Our Technology
               </a>
             </Link>
           </div>
-          <div className="grid sm:grid-cols-2 gap-4">
+          <motion.div
+            className="grid sm:grid-cols-2 gap-4"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.3 }}
+            variants={staggerContainer(0.08)}
+          >
             {homeStats.map((item) => (
               <motion.div
                 key={item.label}
-                initial={{ opacity: 0, y: 18 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.2 }}
-                transition={{ duration: 0.45 }}
-                whileHover={{ y: -4 }}
-                className="border border-white/10 rounded-lg p-4 bg-background/60 backdrop-blur-sm"
+                variants={fadeUp(16)}
+                whileHover={{ y: -4, transition: { duration: motionDuration.micro, ease: MOTION_EASE } }}
+                className="premium-card border border-white/10 rounded-lg p-4 bg-background/60 backdrop-blur-sm"
               >
                 <p className="text-2xl font-display text-white">{item.value}</p>
                 <p className="text-primary text-xs font-tech uppercase tracking-wider mt-1">
@@ -290,15 +308,13 @@ export default function Home() {
                 <p className="text-gray-400 text-sm mt-2">{item.description}</p>
               </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </section>
 
       <section className="py-14 text-center">
         <Link href={pageLinks.traction}>
-          <a className="btn-premium">
-            View Our Growth and Financial Outlook
-          </a>
+          <a className="btn-premium magnetic-button">View Our Growth and Financial Outlook</a>
         </Link>
       </section>
     </SiteLayout>
