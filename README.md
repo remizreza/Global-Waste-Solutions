@@ -9,3 +9,5 @@ Set these repository secrets to enable automatic production deploys on every pus
 
 Workflow file: `.github/workflows/main.yml`.
 
+## Branching note
+- Open pull requests with `main` as the base branch.
