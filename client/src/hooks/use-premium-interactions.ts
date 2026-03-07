@@ -4,6 +4,22 @@ import { useLocation } from "wouter";
 const MAX_TILT_DEG = 5;
 const MAGNETIC_OFFSET = 10;
 
+const formatDeg = (value: number) => `${value.toFixed(2)}deg`;
+const formatPx = (value: number) => `${value.toFixed(2)}px`;
+
+const formatTiltRotate = (xDeg: number, yDeg: number) => {
+  const magnitude = Math.hypot(xDeg, yDeg);
+
+  if (magnitude < 0.01) {
+    return "0deg";
+  }
+
+  const axisX = (xDeg / magnitude).toFixed(4);
+  const axisY = (yDeg / magnitude).toFixed(4);
+
+  return `${axisX} ${axisY} 0 ${formatDeg(magnitude)}`;
+};
+
 export default function usePremiumInteractions() {
   const [location] = useLocation();
 
@@ -20,6 +36,10 @@ export default function usePremiumInteractions() {
 
     const cleanups = interactiveNodes.map((node) => {
       const mode = node.dataset.premiumMode ?? "glow";
+      const initialTransform = node.style.transform;
+      const initialRotate = node.style.rotate;
+      const initialTranslate = node.style.translate;
+      const initialScale = node.style.scale;
       let frameId: number | null = null;
 
       const handleMove = (event: MouseEvent) => {
@@ -38,12 +58,16 @@ export default function usePremiumInteractions() {
           node.style.setProperty("--glow-y", `${py}px`);
 
           if (mode === "tilt") {
-            node.style.transform = `perspective(1000px) rotateX(${(-ny * MAX_TILT_DEG).toFixed(2)}deg) rotateY(${(nx * MAX_TILT_DEG).toFixed(2)}deg) translateZ(0)`;
+            const rotateXDeg = -ny * MAX_TILT_DEG;
+            const rotateYDeg = nx * MAX_TILT_DEG;
+
+            node.style.transform = "perspective(1000px) translateZ(0)";
+            node.style.rotate = formatTiltRotate(rotateXDeg, rotateYDeg);
             return;
           }
 
           if (mode === "magnetic") {
-            node.style.translate = `${(nx * MAGNETIC_OFFSET).toFixed(2)}px ${(ny * MAGNETIC_OFFSET).toFixed(2)}px`;
+            node.style.translate = `${formatPx(nx * MAGNETIC_OFFSET)} ${formatPx(ny * MAGNETIC_OFFSET)}`;
             node.style.scale = "1.02";
           }
         });
@@ -51,7 +75,8 @@ export default function usePremiumInteractions() {
 
       const handleLeave = () => {
         if (mode === "tilt") {
-          node.style.transform = "translate3d(0, 0, 0) rotateX(0deg) rotateY(0deg)";
+          node.style.transform = "perspective(1000px) translateZ(0)";
+          node.style.rotate = "0deg";
           return;
         }
 
@@ -71,9 +96,10 @@ export default function usePremiumInteractions() {
 
         node.removeEventListener("mousemove", handleMove);
         node.removeEventListener("mouseleave", handleLeave);
-        node.style.transform = "";
-        node.style.translate = "";
-        node.style.scale = "";
+        node.style.transform = initialTransform;
+        node.style.rotate = initialRotate;
+        node.style.translate = initialTranslate;
+        node.style.scale = initialScale;
       };
     });
 
