@@ -304,6 +304,10 @@
       transform: none !important;
       opacity: 1 !important;
     }
+
+    [data-premium-interactive] {
+      transform: none !important;
+    }
   }
 
   .site-ambient {
@@ -477,6 +481,36 @@
 
   .magnetic-button:active {
     transform: scale(0.98);
+  }
+
+  [data-premium-interactive] {
+    position: relative;
+    transform-style: preserve-3d;
+    transition:
+      transform 180ms cubic-bezier(0.16, 1, 0.3, 1),
+      box-shadow 220ms cubic-bezier(0.16, 1, 0.3, 1),
+      border-color 220ms cubic-bezier(0.16, 1, 0.3, 1),
+      filter 220ms cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: transform;
+  }
+
+  [data-premium-interactive]::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    background: radial-gradient(
+      140px circle at var(--glow-x, 50%) var(--glow-y, 50%),
+      rgba(255, 255, 255, 0.2),
+      rgba(255, 255, 255, 0)
+    );
+    opacity: 0;
+    transition: opacity 220ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  [data-premium-interactive]:hover::after {
+    opacity: 1;
   }
 
   .company-title {
