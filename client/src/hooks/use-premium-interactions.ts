@@ -34,12 +34,21 @@ export default function usePremiumInteractions() {
         }
 
         if (mode === "magnetic") {
-          node.style.transform = `translate3d(${(nx * MAGNETIC_OFFSET).toFixed(2)}px, ${(ny * MAGNETIC_OFFSET).toFixed(2)}px, 0) scale(1.02)`;
+          node.style.translate = `${(nx * MAGNETIC_OFFSET).toFixed(2)}px ${(ny * MAGNETIC_OFFSET).toFixed(2)}px`;
+          node.style.scale = "1.02";
         }
       };
 
       const handleLeave = () => {
-        node.style.transform = "translate3d(0, 0, 0) rotateX(0deg) rotateY(0deg) scale(1)";
+        if (mode === "tilt") {
+          node.style.transform = "translate3d(0, 0, 0) rotateX(0deg) rotateY(0deg)";
+          return;
+        }
+
+        if (mode === "magnetic") {
+          node.style.translate = "0 0";
+          node.style.scale = "1";
+        }
       };
 
       node.addEventListener("mousemove", handleMove);
@@ -48,10 +57,12 @@ export default function usePremiumInteractions() {
       return () => {
         node.removeEventListener("mousemove", handleMove);
         node.removeEventListener("mouseleave", handleLeave);
+        node.style.transform = "";
+        node.style.translate = "";
+        node.style.scale = "";
       };
     });
 
     return () => cleanups.forEach((cleanup) => cleanup());
   }, []);
 }
-
