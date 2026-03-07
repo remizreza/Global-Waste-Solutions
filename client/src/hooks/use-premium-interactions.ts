@@ -4,6 +4,8 @@ import { useLocation } from "wouter";
 const MAX_TILT_DEG = 5;
 const MAGNETIC_OFFSET = 10;
 
+const formatDeg = (value: number) => `${value.toFixed(2)}deg`;
+
 export default function usePremiumInteractions() {
   const [location] = useLocation();
 
