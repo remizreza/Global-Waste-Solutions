@@ -49,6 +49,8 @@ export default function Technology() {
                 key={module.id}
                 href={`#tech-${module.id}`}
                 className="btn-premium-outline !px-3 !py-2 !text-[10px] !font-tech"
+                data-premium-interactive
+                data-premium-mode="magnetic"
               >
                 {module.title}
               </a>
@@ -56,12 +58,16 @@ export default function Technology() {
             <a
               href="#tech-mtu"
               className="btn-premium-outline !px-3 !py-2 !text-[10px] !font-tech"
+              data-premium-interactive
+              data-premium-mode="magnetic"
             >
               Modular Treatment Units (MTU)
             </a>
             <a
               href="#tech-advanced-recycling"
               className="btn-premium-outline !px-3 !py-2 !text-[10px] !font-tech"
+              data-premium-interactive
+              data-premium-mode="magnetic"
             >
               Advanced Oil Recycling
             </a>
@@ -78,6 +84,8 @@ export default function Technology() {
                 transition={{ duration: 0.45 }}
                 whileHover={{ y: -4 }}
                 className="border border-white/10 rounded-lg p-7 bg-secondary/45 flex flex-col backdrop-blur-sm"
+                data-premium-interactive
+                data-premium-mode="tilt"
               >
                 <div className="flex items-center gap-2 mb-3">
                   <h2 className="text-2xl text-white font-display">
@@ -156,7 +164,7 @@ export default function Technology() {
             <img
               src="/story-assets/network-connectivity.jpg"
               alt="Redoxy network connectivity map"
-              className="w-full h-[250px] md:h-[320px] object-cover"
+              className="w-full h-[250px] md:h-[320px] object-cover image-lift"
               loading="lazy"
             />
             <div className="p-5 md:p-6">
