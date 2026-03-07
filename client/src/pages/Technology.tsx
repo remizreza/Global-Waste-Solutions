@@ -82,7 +82,6 @@ export default function Technology() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.2 }}
                 transition={{ duration: 0.45 }}
-                whileHover={{ y: -4 }}
                 className="border border-white/10 rounded-lg p-7 bg-secondary/45 flex flex-col backdrop-blur-sm"
                 data-premium-interactive
                 data-premium-mode="tilt"

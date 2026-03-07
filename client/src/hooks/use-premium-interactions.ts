@@ -1,9 +1,12 @@
 import { useEffect } from "react";
+import { useLocation } from "wouter";
 
 const MAX_TILT_DEG = 5;
 const MAGNETIC_OFFSET = 10;
 
 export default function usePremiumInteractions() {
+  const [location] = useLocation();
+
   useEffect(() => {
     const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const finePointer = window.matchMedia("(pointer: fine)").matches;
@@ -17,26 +20,33 @@ export default function usePremiumInteractions() {
 
     const cleanups = interactiveNodes.map((node) => {
       const mode = node.dataset.premiumMode ?? "glow";
+      let frameId: number | null = null;
 
       const handleMove = (event: MouseEvent) => {
-        const rect = node.getBoundingClientRect();
-        const px = event.clientX - rect.left;
-        const py = event.clientY - rect.top;
-        const nx = px / rect.width - 0.5;
-        const ny = py / rect.height - 0.5;
-
-        node.style.setProperty("--glow-x", `${px}px`);
-        node.style.setProperty("--glow-y", `${py}px`);
-
-        if (mode === "tilt") {
-          node.style.transform = `perspective(1000px) rotateX(${(-ny * MAX_TILT_DEG).toFixed(2)}deg) rotateY(${(nx * MAX_TILT_DEG).toFixed(2)}deg) translateZ(0)`;
-          return;
+        if (frameId !== null) {
+          cancelAnimationFrame(frameId);
         }
 
-        if (mode === "magnetic") {
-          node.style.translate = `${(nx * MAGNETIC_OFFSET).toFixed(2)}px ${(ny * MAGNETIC_OFFSET).toFixed(2)}px`;
-          node.style.scale = "1.02";
-        }
+        frameId = requestAnimationFrame(() => {
+          const rect = node.getBoundingClientRect();
+          const px = event.clientX - rect.left;
+          const py = event.clientY - rect.top;
+          const nx = px / rect.width - 0.5;
+          const ny = py / rect.height - 0.5;
+
+          node.style.setProperty("--glow-x", `${px}px`);
+          node.style.setProperty("--glow-y", `${py}px`);
+
+          if (mode === "tilt") {
+            node.style.transform = `perspective(1000px) rotateX(${(-ny * MAX_TILT_DEG).toFixed(2)}deg) rotateY(${(nx * MAX_TILT_DEG).toFixed(2)}deg) translateZ(0)`;
+            return;
+          }
+
+          if (mode === "magnetic") {
+            node.style.translate = `${(nx * MAGNETIC_OFFSET).toFixed(2)}px ${(ny * MAGNETIC_OFFSET).toFixed(2)}px`;
+            node.style.scale = "1.02";
+          }
+        });
       };
 
       const handleLeave = () => {
@@ -55,6 +65,10 @@ export default function usePremiumInteractions() {
       node.addEventListener("mouseleave", handleLeave);
 
       return () => {
+        if (frameId !== null) {
+          cancelAnimationFrame(frameId);
+        }
+
         node.removeEventListener("mousemove", handleMove);
         node.removeEventListener("mouseleave", handleLeave);
         node.style.transform = "";
@@ -64,5 +78,5 @@ export default function usePremiumInteractions() {
     });
 
     return () => cleanups.forEach((cleanup) => cleanup());
-  }, []);
+  }, [location]);
 }

@@ -238,7 +238,6 @@ export default function Home() {
               <motion.div
                 key={division.id}
                 variants={fadeUp(20)}
-                whileHover={hoverElevation}
                 className="premium-card bg-card/60 border border-white/10 rounded-lg overflow-hidden flex flex-col backdrop-blur-sm"
                 data-premium-interactive
                 data-premium-mode="tilt"
