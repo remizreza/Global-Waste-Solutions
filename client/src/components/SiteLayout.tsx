@@ -15,6 +15,7 @@ import { contactDetails, pageLinks } from "@/lib/siteContent";
 import CustomCursor from "@/components/CustomCursor";
 import SmoothScrollProvider from "@/components/SmoothScrollProvider";
 import FloatingChatbot from "@/components/FloatingChatbot";
+import usePremiumInteractions from "@/hooks/use-premium-interactions";
 
 type SiteLayoutProps = {
   children: ReactNode;
@@ -69,6 +70,8 @@ const correlationLinks = [
 ];
 
 export default function SiteLayout({ children }: SiteLayoutProps) {
+  usePremiumInteractions();
+
   return (
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden selection:bg-primary/30">
       <SmoothScrollProvider />

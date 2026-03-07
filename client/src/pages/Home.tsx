@@ -112,12 +112,18 @@ export default function Home() {
           </motion.p>
           <motion.div variants={fadeIn} className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href={pageLinks.services}>
-              <a className="btn-premium magnetic-button">
+              <a className="btn-premium magnetic-button" data-premium-interactive data-premium-mode="magnetic">
                 Explore Our Services <ArrowRight className="w-4 h-4" />
               </a>
             </Link>
             <Link href={pageLinks.about}>
-              <a className="btn-premium-outline magnetic-button">Learn About The Group</a>
+              <a
+                className="btn-premium-outline magnetic-button"
+                data-premium-interactive
+                data-premium-mode="magnetic"
+              >
+                Learn About The Group
+              </a>
             </Link>
           </motion.div>
         </motion.div>
@@ -234,6 +240,8 @@ export default function Home() {
                 variants={fadeUp(20)}
                 whileHover={hoverElevation}
                 className="premium-card bg-card/60 border border-white/10 rounded-lg overflow-hidden flex flex-col backdrop-blur-sm"
+                data-premium-interactive
+                data-premium-mode="tilt"
               >
                 <div className="aspect-video w-full bg-secondary/35 overflow-hidden">
                   <img
@@ -313,8 +321,10 @@ export default function Home() {
       </section>
 
       <section className="py-14 text-center">
-        <Link href={pageLinks.traction}>
-          <a className="btn-premium magnetic-button">View Our Growth and Financial Outlook</a>
+            <Link href={pageLinks.traction}>
+          <a className="btn-premium magnetic-button" data-premium-interactive data-premium-mode="magnetic">
+            View Our Growth and Financial Outlook
+          </a>
         </Link>
       </section>
     </SiteLayout>
