@@ -3,6 +3,8 @@ import { useEffect } from "react";
 const MAX_TILT_DEG = 5;
 const MAGNETIC_OFFSET = 10;
 
+const formatDeg = (value: number) => `${value.toFixed(2)}deg`;
+
 export default function usePremiumInteractions() {
   useEffect(() => {
     const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -29,17 +31,26 @@ export default function usePremiumInteractions() {
         node.style.setProperty("--glow-y", `${py}px`);
 
         if (mode === "tilt") {
-          node.style.transform = `perspective(1000px) rotateX(${(-ny * MAX_TILT_DEG).toFixed(2)}deg) rotateY(${(nx * MAX_TILT_DEG).toFixed(2)}deg) translateZ(0)`;
+          node.style.rotate = `x ${formatDeg(-ny * MAX_TILT_DEG)} y ${formatDeg(nx * MAX_TILT_DEG)}`;
           return;
         }
 
         if (mode === "magnetic") {
-          node.style.transform = `translate3d(${(nx * MAGNETIC_OFFSET).toFixed(2)}px, ${(ny * MAGNETIC_OFFSET).toFixed(2)}px, 0) scale(1.02)`;
+          node.style.translate = `${(nx * MAGNETIC_OFFSET).toFixed(2)}px ${(ny * MAGNETIC_OFFSET).toFixed(2)}px`;
+          node.style.scale = "1.02";
         }
       };
 
       const handleLeave = () => {
-        node.style.transform = "translate3d(0, 0, 0) rotateX(0deg) rotateY(0deg) scale(1)";
+        if (mode === "tilt") {
+          node.style.rotate = "x 0deg y 0deg";
+          return;
+        }
+
+        if (mode === "magnetic") {
+          node.style.translate = "0 0";
+          node.style.scale = "1";
+        }
       };
 
       node.addEventListener("mousemove", handleMove);
@@ -48,10 +59,12 @@ export default function usePremiumInteractions() {
       return () => {
         node.removeEventListener("mousemove", handleMove);
         node.removeEventListener("mouseleave", handleLeave);
+        node.style.rotate = "";
+        node.style.translate = "";
+        node.style.scale = "";
       };
     });
 
     return () => cleanups.forEach((cleanup) => cleanup());
   }, []);
 }
-

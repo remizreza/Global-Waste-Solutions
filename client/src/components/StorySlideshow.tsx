@@ -126,7 +126,7 @@ export default function StorySlideshow({
             </p>
           </div>
         </div>
-        <div className="flex items-center justify-center gap-2 p-4 bg-background/60">
+        <div className="flex flex-wrap items-center justify-center gap-2 px-4 py-4 bg-background/60">
           {slides.map((slide, index) => (
             <button
               key={slide.id}

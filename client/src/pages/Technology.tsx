@@ -18,7 +18,7 @@ export default function Technology() {
         <div className="absolute inset-0 z-0">
           <video
             className="bg-video-smooth absolute inset-0 w-full h-full object-cover opacity-48"
-            src="/assets/Technology.mp4"
+            src="/assets/hero-bg-20260226-v2.mp4"
             preload="auto"
             muted
             loop
