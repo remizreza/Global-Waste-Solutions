@@ -17,21 +17,21 @@ type BulletinResponse = {
 
 const fallbackItems: BulletinItem[] = [
   {
-    title: "REDOXY MTU 001 deployment pipeline accelerated for KSA programs.",
-    link: "/traction",
-    source: "REDOXY Update",
+    title: "IEA projects global oil demand growth moderating as efficiency and EV adoption scale.",
+    link: "https://www.iea.org/reports/oil-market-report",
+    source: "IEA Oil Market Report",
     publishedAt: new Date().toISOString(),
   },
   {
-    title: "Manarsdha contract stream positioned for modular waste treatment transformation.",
-    link: "/traction",
-    source: "REDOXY Update",
+    title: "IMO decarbonization rules continue to reshape bunker fuel and maritime logistics strategies.",
+    link: "https://www.imo.org/en/MediaCentre/HotTopics/Pages/Decarbonization.aspx",
+    source: "International Maritime Organization",
     publishedAt: new Date().toISOString(),
   },
   {
-    title: "Technology and R&D stream expanded across modular treatment initiatives.",
-    link: "/technology",
-    source: "REDOXY Update",
+    title: "Middle East downstream and circular-economy investments remain active across refining corridors.",
+    link: "https://www.reuters.com/markets/commodities/",
+    source: "Reuters Commodities",
     publishedAt: new Date().toISOString(),
   },
 ];

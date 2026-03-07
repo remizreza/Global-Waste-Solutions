@@ -7,7 +7,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import {
   pageLinks,
   rdAchievements,
-  storySlides,
+  technologyStorySlides,
   technologyModules,
 } from "@/lib/siteContent";
 
@@ -77,7 +77,7 @@ export default function Technology() {
                 viewport={{ once: true, amount: 0.2 }}
                 transition={{ duration: 0.45 }}
                 whileHover={{ y: -4 }}
-                className="border border-white/10 rounded-lg p-7 bg-card/50 flex flex-col backdrop-blur-sm"
+                className="border border-white/10 rounded-lg p-7 bg-secondary/45 flex flex-col backdrop-blur-sm"
               >
                 <div className="flex items-center gap-2 mb-3">
                   <h2 className="text-2xl text-white font-display">
@@ -113,7 +113,7 @@ export default function Technology() {
             ))}
           </div>
 
-          <div className="mt-10 border border-white/10 rounded-xl p-6 bg-card/50 backdrop-blur-sm">
+          <div className="mt-10 border border-white/10 rounded-xl p-6 brand-surface brand-hover-lift">
             <h3 className="text-2xl text-white font-display mb-4">
               R&D Achievements
             </h3>
@@ -130,7 +130,7 @@ export default function Technology() {
             </div>
           </div>
 
-          <div id="tech-mtu" className="mt-10 border border-white/10 rounded-xl p-6 bg-card/50 backdrop-blur-sm">
+          <div id="tech-mtu" className="mt-10 border border-white/10 rounded-xl p-6 brand-surface brand-hover-lift">
             <h3 className="text-2xl text-white font-display mb-3">
               Modular Treatment Units (MTU)
             </h3>
@@ -141,7 +141,7 @@ export default function Technology() {
             </p>
           </div>
 
-          <div id="tech-advanced-recycling" className="mt-10 border border-white/10 rounded-xl p-6 bg-card/50 backdrop-blur-sm">
+          <div id="tech-advanced-recycling" className="mt-10 border border-white/10 rounded-xl p-6 brand-surface brand-hover-lift">
             <h3 className="text-2xl text-white font-display mb-3">
               Advanced Oil Recycling
             </h3>
@@ -152,7 +152,7 @@ export default function Technology() {
             </p>
           </div>
 
-          <div className="mt-10 border border-white/10 rounded-xl overflow-hidden bg-card/50">
+          <div className="mt-10 border border-white/10 rounded-xl overflow-hidden bg-secondary/45">
             <img
               src="/story-assets/network-connectivity.jpg"
               alt="Redoxy network connectivity map"
@@ -175,7 +175,7 @@ export default function Technology() {
             <LiveStoriesBoard
               fallbackTitle="Technology & R&D Story Stream"
               fallbackSubtitle="Upload new updates in /live-stories to publish automatically."
-              fallbackSlides={storySlides}
+              fallbackSlides={technologyStorySlides}
             />
           </div>
 

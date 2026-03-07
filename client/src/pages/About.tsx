@@ -39,7 +39,7 @@ export default function About() {
                 viewport={{ once: true, amount: 0.2 }}
                 transition={{ duration: 0.45 }}
                 whileHover={{ y: -4 }}
-                className="border border-white/10 rounded-lg p-7 bg-card/50 backdrop-blur-sm"
+                className="border border-white/10 rounded-lg p-7 brand-surface brand-hover-lift"
               >
                 <h2 className="text-2xl text-white font-display mb-2">
                   {entity.entity}
@@ -57,7 +57,7 @@ export default function About() {
             ))}
           </div>
 
-          <div className="border border-white/10 rounded-xl p-6 bg-card/50 backdrop-blur-sm mb-12">
+          <div className="border border-white/10 rounded-xl p-6 brand-surface brand-hover-lift mb-12">
             <h2 className="text-2xl text-white font-display mb-4">
               Partnership Timeline
             </h2>
@@ -91,7 +91,7 @@ export default function About() {
               {["KSA Recycling Project A", "KSA Recycling Project B", "KSA Recycling Project C"].map((item) => (
                 <div
                   key={item}
-                  className="border border-white/10 rounded-lg p-5 bg-card/50 backdrop-blur-sm"
+                  className="border border-white/10 rounded-lg p-5 brand-surface brand-hover-lift"
                 >
                   <p className="text-primary text-xs font-tech uppercase tracking-[0.18em] mb-2">
                     Placeholder
@@ -118,7 +118,7 @@ export default function About() {
                 viewport={{ once: true, amount: 0.2 }}
                 transition={{ duration: 0.45 }}
                 whileHover={{ y: -4 }}
-                className="border border-white/10 rounded-lg p-6 bg-card/50 backdrop-blur-sm"
+                className="border border-white/10 rounded-lg p-6 brand-surface brand-hover-lift"
               >
                 <h3 className="text-xl font-display text-white mb-3">
                   {value.title}
@@ -141,7 +141,7 @@ export default function About() {
             <h2 className="text-3xl text-white font-display mb-6 text-center">
               Our Leadership
             </h2>
-            <div className="border border-white/10 rounded-xl p-6 bg-card/50 backdrop-blur-sm max-w-4xl mx-auto">
+            <div className="border border-white/10 rounded-xl p-6 brand-surface brand-hover-lift max-w-4xl mx-auto">
               <p className="text-primary text-xs font-tech uppercase tracking-[0.18em] mb-2">
                 Founder & Visionary
               </p>
@@ -173,7 +173,7 @@ export default function About() {
                   viewport={{ once: true, amount: 0.2 }}
                   transition={{ duration: 0.45 }}
                   whileHover={{ y: -4 }}
-                  className="border border-white/10 rounded-lg p-6 bg-card/50 backdrop-blur-sm"
+                  className="border border-white/10 rounded-lg p-6 brand-surface brand-hover-lift"
                 >
                   <h3 className="text-2xl font-display text-white mb-2">
                     {owner.name}

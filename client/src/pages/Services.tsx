@@ -136,7 +136,7 @@ export default function Services() {
         <div className="absolute inset-0 z-0">
           <video
             className="bg-video-smooth absolute inset-0 w-full h-full object-cover opacity-48"
-            src="/assets/Services.mp4"
+            src="/attached_assets/Services%20new.mp4"
             preload="auto"
             muted
             loop
@@ -168,14 +168,10 @@ export default function Services() {
             {serviceDivisions.map((division) => (
               <motion.div
                 key={division.id}
-                initial={{ opacity: 0, y: 24 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.2 }}
-                transition={{ duration: 0.5 }}
                 whileHover={{ y: -8, scale: 1.01 }}
-                className="bg-card/60 border border-white/10 rounded-xl overflow-hidden flex flex-col backdrop-blur-sm"
+                className="brand-surface brand-hover-lift rounded-xl overflow-hidden flex flex-col"
               >
-                <div className="aspect-video w-full bg-black/20">
+                <div className="aspect-video w-full bg-secondary/35">
                   <img
                     src={division.bgImage}
                     alt={division.title}

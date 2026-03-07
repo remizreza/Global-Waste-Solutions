@@ -32,7 +32,7 @@ export default function Contact() {
               transition={{ duration: 0.55 }}
               className="space-y-4"
             >
-              <div className="border border-white/10 rounded-lg p-6 bg-card/50 backdrop-blur-sm">
+              <div className="border border-white/10 rounded-lg p-6 brand-surface brand-hover-lift">
                 <p className="text-primary text-xs font-tech uppercase tracking-wider mb-2">
                   Strategy Office
                 </p>
@@ -66,7 +66,7 @@ export default function Contact() {
                   </a>
                 </div>
               </div>
-              <div className="border border-white/10 rounded-lg p-6 bg-card/50">
+              <div className="border border-white/10 rounded-lg p-6 bg-secondary/45">
                 <p className="flex items-center gap-2 text-white mb-2">
                   <Phone className="w-4 h-4 text-primary" />{" "}
                   {contactDetails.phoneUAE}
@@ -97,7 +97,7 @@ export default function Contact() {
                 triggerLabel="Preview engagement map"
               />
 
-              <div className="border border-white/10 rounded-lg p-6 bg-card/50 backdrop-blur-sm">
+              <div className="border border-white/10 rounded-lg p-6 brand-surface brand-hover-lift">
                 <p className="text-primary text-xs font-tech uppercase tracking-wider mb-2">
                   The Visionary
                 </p>
@@ -121,7 +121,7 @@ export default function Contact() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, amount: 0.2 }}
               transition={{ duration: 0.55, delay: 0.08 }}
-              className="border border-white/10 rounded-lg p-8 bg-card/50 backdrop-blur-sm"
+              className="border border-white/10 rounded-lg p-8 brand-surface brand-hover-lift"
             >
               <h2 className="text-2xl text-white font-display mb-5">
                 Quick Inquiry
