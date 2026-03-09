@@ -48,6 +48,8 @@ export default function usePremiumInteractions() {
         }
 
         frameId = requestAnimationFrame(() => {
+          frameId = null;
+
           const rect = node.getBoundingClientRect();
           const px = event.clientX - rect.left;
           const py = event.clientY - rect.top;
@@ -61,8 +63,8 @@ export default function usePremiumInteractions() {
             const rotateXDeg = -ny * MAX_TILT_DEG;
             const rotateYDeg = nx * MAX_TILT_DEG;
 
-            node.style.transform = "perspective(1000px) translateZ(0)";
             node.style.rotate = formatTiltRotate(rotateXDeg, rotateYDeg);
+            node.style.translate = "0 0 0.01px";
             return;
           }
 
@@ -74,9 +76,14 @@ export default function usePremiumInteractions() {
       };
 
       const handleLeave = () => {
+        if (frameId !== null) {
+          cancelAnimationFrame(frameId);
+          frameId = null;
+        }
+
         if (mode === "tilt") {
-          node.style.transform = "perspective(1000px) translateZ(0)";
           node.style.rotate = "0deg";
+          node.style.translate = initialTranslate;
           return;
         }
 
