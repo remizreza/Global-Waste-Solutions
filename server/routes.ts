@@ -1,6 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { createHmac, timingSafeEqual } from "crypto";
+import crypto from "crypto";
 import { storage } from "./storage";
 
 type BulletinItem = {
@@ -205,6 +206,26 @@ function createAdminToken(username: string) {
   const payload = `${username}|${expiresAt}`;
   const signature = signTokenPayload(payload);
   return Buffer.from(`${payload}|${signature}`).toString("base64url");
+const ADMIN_USERNAME = process.env.ADMIN_USERNAME;
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+const ADMIN_COOKIE_NAME = "admin_session";
+const ADMIN_TOKEN_TTL_MS = 1000 * 60 * 60 * 8;
+const activeAdminTokens = new Map<string, number>();
+
+function createAdminToken() {
+  return crypto.randomBytes(32).toString("hex");
+}
+
+function getCookieToken(cookieHeader: string | undefined): string | null {
+  if (!cookieHeader) return null;
+
+  const cookieToken = cookieHeader
+    .split(";")
+    .map((cookie) => cookie.trim())
+    .find((cookie) => cookie.startsWith(`${ADMIN_COOKIE_NAME}=`))
+    ?.split("=")[1];
+
+  return cookieToken ? decodeURIComponent(cookieToken) : null;
 }
 
 function getBearerToken(authorization: string | undefined): string | null {
@@ -238,6 +259,21 @@ function isAdminAuthorized(authorization: string | undefined): boolean {
   } catch {
     return false;
   }
+function isAdminTokenValid(token: string | null): boolean {
+  if (!token) return false;
+  const expiry = activeAdminTokens.get(token);
+  if (!expiry) return false;
+  if (Date.now() > expiry) {
+    activeAdminTokens.delete(token);
+    return false;
+  }
+  return true;
+}
+
+function resolveAdminToken(headers: Record<string, string | string[] | undefined>): string | null {
+  const cookieToken = getCookieToken(typeof headers.cookie === "string" ? headers.cookie : undefined);
+  if (cookieToken) return cookieToken;
+  return getBearerToken(typeof headers.authorization === "string" ? headers.authorization : undefined);
 }
 
 async function fetchYahooLiveQuotes() {
@@ -539,6 +575,36 @@ export async function registerRoutes(
 
   app.get("/api/admin/session", (req, res) => {
     const authorized = isAdminAuthorized(req.headers.authorization);
+    const { username, password } = req.body ?? {};
+
+    if (!ADMIN_USERNAME || !ADMIN_PASSWORD) {
+      return res.status(503).json({
+        ok: false,
+        error: "Admin credentials are not configured on the server",
+      });
+    }
+
+    if (username !== ADMIN_USERNAME || password !== ADMIN_PASSWORD) {
+      return res.status(401).json({ ok: false, error: "Invalid credentials" });
+    }
+
+    const token = createAdminToken();
+    activeAdminTokens.set(token, Date.now() + ADMIN_TOKEN_TTL_MS);
+
+    res.cookie(ADMIN_COOKIE_NAME, token, {
+      httpOnly: true,
+      sameSite: "strict",
+      secure: process.env.NODE_ENV === "production",
+      maxAge: ADMIN_TOKEN_TTL_MS,
+      path: "/",
+    });
+
+    return res.json({ ok: true, expiresInMs: ADMIN_TOKEN_TTL_MS });
+  });
+
+  app.get("/api/admin/session", (req, res) => {
+    const token = resolveAdminToken(req.headers);
+    const authorized = isAdminTokenValid(token);
     if (!authorized) {
       return res.status(401).json({ ok: false });
     }
@@ -547,6 +613,12 @@ export async function registerRoutes(
   });
 
   app.post("/api/admin/logout", (_req, res) => {
+  app.post("/api/admin/logout", (req, res) => {
+    const token = resolveAdminToken(req.headers);
+    if (token) {
+      activeAdminTokens.delete(token);
+    }
+    res.clearCookie(ADMIN_COOKIE_NAME, { path: "/" });
     return res.json({ ok: true });
   });
 
