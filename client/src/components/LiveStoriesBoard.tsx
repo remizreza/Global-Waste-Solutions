@@ -36,7 +36,10 @@ export default function LiveStoriesBoard({
 
     const loadStories = async () => {
       try {
-        const response = await fetch("/live-stories/stories.json");
+        const cacheBuster = Date.now();
+        const response = await fetch(`/live-stories/stories.json?v=${cacheBuster}`, {
+          cache: "no-store",
+        });
         if (!response.ok) return;
         const payload = (await response.json()) as LiveStoriesFile;
         if (!active) return;

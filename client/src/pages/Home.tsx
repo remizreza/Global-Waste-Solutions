@@ -30,6 +30,14 @@ const heroVideoFallbackSrc = "/assets/hero-bg-20260226-v2.mp4?v=1";
 export default function Home() {
   const reduceMotion = useReducedMotion();
 
+  const handleHeroVideoError = (
+    event: React.SyntheticEvent<HTMLVideoElement, Event>,
+  ) => {
+    const video = event.currentTarget;
+    if (video.src.includes(heroVideoFallbackSrc)) return;
+    video.src = heroVideoFallbackSrc;
+  };
+
   return (
     <SiteLayout>
       <section className="relative pt-24 pb-14 overflow-hidden bg-[#04070f]">
@@ -45,9 +53,7 @@ export default function Home() {
                 playsInline
                 autoPlay
                 poster="/assets/hero-fallback.jpg"
-                onError={(event) => {
-                  event.currentTarget.src = heroVideoFallbackSrc;
-                }}
+                onError={handleHeroVideoError}
               />
             </div>
           </div>

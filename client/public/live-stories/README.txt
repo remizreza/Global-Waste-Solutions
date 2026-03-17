@@ -16,9 +16,13 @@ LIVE STORIES UPLOAD GUIDE
    "mediaType": "video"
    "image": "/live-stories/media/your-video.mp4"
 
+   Example for this repo:
+   "image": "/live-stories/media/Live.mp4"
+
 3) Save file. Website checks this JSON automatically every 60 seconds.
 
 Notes:
 - Keep file names web-safe (letters, numbers, dashes).
 - Recommended image size: 1600x900 or larger.
 - Recommended video: MP4 (H.264), under 25MB for smoother loading.
+- File paths are case-sensitive on deploy targets.
