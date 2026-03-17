@@ -18,6 +18,24 @@ type CommoditySnapshot = {
   source: string;
 };
 
+type TraderPricing = {
+  product: "Diesel" | "Naphtha" | "Kerosene";
+  brent: number;
+  plats: number;
+  spread: number;
+  trend: "up" | "down";
+  updatedAt: string;
+  unit: "USD/bbl" | "USD/mt";
+  source: string;
+};
+
+type TraderBoardSnapshot = {
+  updatedAt: string;
+  tradersOnline: number;
+  marketPulse: "Bullish" | "Bearish" | "Neutral";
+  quotes: TraderPricing[];
+};
+
 const COMMODITIES_API_BASE = "https://commodities-api.com/api";
 const DEFAULT_COMMODITIES_KEY =
   process.env.COMMODITIES_API_KEY ??
@@ -172,6 +190,184 @@ function numberOrNull(value: unknown): number | null {
   return typeof value === "number" && Number.isFinite(value) ? value : null;
 }
 
+const ADMIN_USERNAME = process.env.ADMIN_USERNAME ?? "admin";
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? "ChangeMe123!";
+const ADMIN_TOKEN_TTL_MS = 1000 * 60 * 60 * 8;
+const activeAdminTokens = new Map<string, number>();
+
+function createAdminToken() {
+  return `${Math.random().toString(36).slice(2)}${Date.now().toString(36)}`;
+}
+
+function getBearerToken(authorization: string | undefined): string | null {
+  if (!authorization) return null;
+  const [scheme, token] = authorization.split(" ");
+  if (scheme?.toLowerCase() !== "bearer" || !token) return null;
+  return token;
+}
+
+function isAdminAuthorized(authorization: string | undefined): boolean {
+  const token = getBearerToken(authorization);
+  if (!token) return false;
+  const expiry = activeAdminTokens.get(token);
+  if (!expiry) return false;
+  if (Date.now() > expiry) {
+    activeAdminTokens.delete(token);
+    return false;
+  }
+  return true;
+}
+
+async function fetchYahooLiveQuotes() {
+  const response = await fetch(
+    "https://query1.finance.yahoo.com/v7/finance/quote?symbols=BZ%3DF,HO%3DF,RB%3DF",
+    { headers: { "user-agent": "redoxy-trader-dashboard/1.0" } },
+  );
+
+  if (!response.ok) {
+    throw new Error(`Yahoo quote fetch failed: ${response.status}`);
+  }
+
+  const payload = (await response.json()) as {
+    quoteResponse?: {
+      result?: Array<{ symbol?: string; regularMarketPrice?: number }>;
+    };
+  };
+
+  const rows = payload.quoteResponse?.result ?? [];
+  const bySymbol = new Map(rows.map((row) => [row.symbol, row.regularMarketPrice]));
+
+  const brent = numberOrNull(bySymbol.get("BZ=F"));
+  const heatingOil = numberOrNull(bySymbol.get("HO=F"));
+  const rbob = numberOrNull(bySymbol.get("RB=F"));
+
+  if (brent == null || heatingOil == null || rbob == null) {
+    throw new Error("Yahoo returned incomplete quote set");
+  }
+
+  return { brent, heatingOil, rbob };
+}
+
+async function fetchMiddleEastTradesQuotes(): Promise<Partial<Record<"diesel" | "naphtha" | "kerosene", number>>> {
+  const endpoint = process.env.MIDDLEEAST_TRADES_API_URL;
+  if (!endpoint) return {};
+
+  const response = await fetch(endpoint, {
+    headers: {
+      "user-agent": "redoxy-trader-dashboard/1.0",
+      ...(process.env.MIDDLEEAST_TRADES_API_KEY
+        ? { authorization: `Bearer ${process.env.MIDDLEEAST_TRADES_API_KEY}` }
+        : {}),
+    },
+  });
+
+  if (!response.ok) return {};
+
+  const payload = (await response.json()) as Record<string, unknown>;
+  return {
+    diesel: numberOrNull(payload.dieselPrice) ?? undefined,
+    naphtha: numberOrNull(payload.naphthaPrice) ?? undefined,
+    kerosene: numberOrNull(payload.kerosenePrice) ?? undefined,
+  };
+}
+
+async function fetchInvestingProxyQuotes(): Promise<Partial<Record<"brent", number>>> {
+  const endpoint = process.env.INVESTING_API_URL;
+  if (!endpoint) return {};
+
+  const response = await fetch(endpoint, {
+    headers: {
+      "user-agent": "redoxy-trader-dashboard/1.0",
+      ...(process.env.INVESTING_API_KEY
+        ? { authorization: `Bearer ${process.env.INVESTING_API_KEY}` }
+        : {}),
+    },
+  });
+
+  if (!response.ok) return {};
+
+  const payload = (await response.json()) as Record<string, unknown>;
+  return {
+    brent: numberOrNull(payload.brent) ?? numberOrNull(payload.brentPrice) ?? undefined,
+  };
+}
+
+async function createLiveTraderSnapshot(): Promise<TraderBoardSnapshot> {
+  const now = new Date();
+
+  let brent = 84.2;
+  let dieselBrent = 96.5;
+  let naphthaBrent = 71.4;
+  let keroseneBrent = 93.2;
+  let source = "commodities-api";
+
+  try {
+    const [commoditiesPayload, yahoo, middleEast, investing] = await Promise.all([
+      fetchCommoditiesJson<{ rates?: Record<string, unknown> }>("latest", {
+        base: "USD",
+        symbols: "CRUDE,DIESEL,NAPHTHA",
+      }).catch((): { rates: Record<string, unknown> } => ({ rates: {} })),
+      fetchYahooLiveQuotes().catch((): { brent: number; heatingOil: number; rbob: number } | null => null),
+      fetchMiddleEastTradesQuotes().catch((): Partial<Record<"diesel" | "naphtha" | "kerosene", number>> => ({})),
+      fetchInvestingProxyQuotes().catch((): Partial<Record<"brent", number>> => ({})),
+    ]);
+
+    const rates = commoditiesPayload.rates ?? {};
+    brent = investing.brent ?? yahoo?.brent ?? numberOrNull(rates.CRUDE) ?? brent;
+    dieselBrent = middleEast.diesel ?? numberOrNull(rates.DIESEL) ?? (yahoo ? yahoo.heatingOil * 42 : dieselBrent);
+    naphthaBrent = middleEast.naphtha ?? numberOrNull(rates.NAPHTHA) ?? (yahoo ? yahoo.rbob * 42 : naphthaBrent);
+    keroseneBrent = middleEast.kerosene ?? (yahoo ? yahoo.heatingOil * 41.3 : keroseneBrent);
+
+    if (middleEast.diesel || middleEast.naphtha || middleEast.kerosene) {
+      source = "middleeast-trades+commodities";
+    } else if (yahoo || investing.brent) {
+      source = "investing/yahoo+commodities";
+    }
+  } catch {
+    source = "fallback";
+  }
+
+  const quotes: TraderPricing[] = [
+    {
+      product: "Diesel",
+      brent: Number(dieselBrent.toFixed(2)),
+      plats: Number((dieselBrent + 4.25).toFixed(2)),
+      spread: 4.25,
+      trend: "up",
+      updatedAt: now.toISOString(),
+      unit: "USD/bbl",
+      source,
+    },
+    {
+      product: "Naphtha",
+      brent: Number(naphthaBrent.toFixed(2)),
+      plats: Number((naphthaBrent + 3.85).toFixed(2)),
+      spread: 3.85,
+      trend: "up",
+      updatedAt: now.toISOString(),
+      unit: "USD/bbl",
+      source,
+    },
+    {
+      product: "Kerosene",
+      brent: Number(keroseneBrent.toFixed(2)),
+      plats: Number((keroseneBrent + 4.05).toFixed(2)),
+      spread: 4.05,
+      trend: "up",
+      updatedAt: now.toISOString(),
+      unit: "USD/bbl",
+      source,
+    },
+  ];
+
+  return {
+    updatedAt: now.toISOString(),
+    tradersOnline: 20 + Math.floor((Math.sin(now.getTime() / 180000) + 1) * 4),
+    marketPulse: brent > 85 ? "Bullish" : brent < 80 ? "Bearish" : "Neutral",
+    quotes,
+  };
+}
+
 function parseSnapshotRates(rates: Record<string, unknown>): CommoditySnapshot {
   const crude = numberOrNull(rates.CRUDE) ?? numberOrNull(rates.crude);
   const diesel = numberOrNull(rates.DIESEL) ?? numberOrNull(rates.diesel);
@@ -302,6 +498,41 @@ export async function registerRoutes(
             : "Unable to load commodities news",
       });
     }
+  });
+
+  app.post("/api/admin/login", (req, res) => {
+    const { username, password } = req.body ?? {};
+
+    if (username !== ADMIN_USERNAME || password !== ADMIN_PASSWORD) {
+      return res.status(401).json({ ok: false, error: "Invalid credentials" });
+    }
+
+    const token = createAdminToken();
+    activeAdminTokens.set(token, Date.now() + ADMIN_TOKEN_TTL_MS);
+
+    return res.json({ ok: true, token, expiresInMs: ADMIN_TOKEN_TTL_MS });
+  });
+
+  app.get("/api/admin/session", (req, res) => {
+    const authorized = isAdminAuthorized(req.headers.authorization);
+    if (!authorized) {
+      return res.status(401).json({ ok: false });
+    }
+
+    return res.json({ ok: true });
+  });
+
+  app.post("/api/admin/logout", (req, res) => {
+    const token = getBearerToken(req.headers.authorization);
+    if (token) {
+      activeAdminTokens.delete(token);
+    }
+    return res.json({ ok: true });
+  });
+
+  app.get("/api/trader-dashboard", async (_req, res) => {
+    const snapshot = await createLiveTraderSnapshot();
+    res.json(snapshot);
   });
 
   return httpServer;
