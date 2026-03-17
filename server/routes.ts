@@ -192,6 +192,8 @@ function numberOrNull(value: unknown): number | null {
   return typeof value === "number" && Number.isFinite(value) ? value : null;
 }
 
+const ADMIN_USERNAME = process.env.ADMIN_USERNAME ?? "Remiz";
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? "Remiz123312";
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME ?? "admin";
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? "ChangeMe123!";
 const ADMIN_TOKEN_TTL_MS = 1000 * 60 * 60 * 8;

@@ -34,10 +34,20 @@ export default function AdminDashboard() {
   const [history, setHistory] = useState<Point[]>([]);
 
   useEffect(() => {
+    const token = localStorage.getItem("admin_token");
+    if (!token) {
+      setLocation("/admin/login");
+      return;
+    }
+
     let cancelled = false;
 
     const load = async () => {
       const session = await fetch("/api/admin/session", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!session.ok) {
+        localStorage.removeItem("admin_token");
         credentials: "include",
       });
       if (!session.ok) {
@@ -45,6 +55,7 @@ export default function AdminDashboard() {
         return;
       }
 
+      const response = await fetch("/api/trader-dashboard");
       const response = await fetch("/api/trader-dashboard", {
         credentials: "include",
       });
