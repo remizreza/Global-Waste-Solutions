@@ -10,8 +10,9 @@ const navItems = [
   { label: "Services", href: pageLinks.services },
   { label: "Technology", href: pageLinks.technology },
   { label: "Traction", href: pageLinks.traction },
-  { label: "About", href: pageLinks.about },
   { label: "Products", href: pageLinks.products },
+  { label: "Dashboard", href: pageLinks.dashboard },
+  { label: "Login", href: pageLinks.login },
   { label: "Contact", href: pageLinks.contact },
 ];
 
