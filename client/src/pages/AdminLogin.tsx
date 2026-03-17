@@ -19,6 +19,9 @@ export default function AdminLogin() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username: username.trim(), password: password.trim() }),
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
       });
 
       if (!response.ok) {
@@ -27,6 +30,7 @@ export default function AdminLogin() {
 
       const data = (await response.json()) as { token: string };
       localStorage.setItem("admin_token", data.token);
+      await response.json();
       setLocation("/admin/dashboard");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed");
