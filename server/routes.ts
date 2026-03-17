@@ -501,12 +501,9 @@ export async function registerRoutes(
   });
 
   app.post("/api/admin/login", (req, res) => {
-    const rawUsername = typeof req.body?.username === "string" ? req.body.username : "";
-    const rawPassword = typeof req.body?.password === "string" ? req.body.password : "";
-    const username = rawUsername.trim();
-    const password = rawPassword.trim();
+    const { username, password } = req.body ?? {};
 
-    if (username.toLowerCase() !== ADMIN_USERNAME.toLowerCase() || password !== ADMIN_PASSWORD) {
+    if (username !== ADMIN_USERNAME || password !== ADMIN_PASSWORD) {
       return res.status(401).json({ ok: false, error: "Invalid credentials" });
     }
 
