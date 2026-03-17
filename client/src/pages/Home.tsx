@@ -24,9 +24,19 @@ import sabicLogo from "@/assets/logos/sabic.png";
 import maadenLogo from "@/assets/logos/maaden.png";
 
 const heroHeading = "Sustainable Industrial & Energy Solutions".split(" ");
+const heroVideoSrc = "/assets/hero-introduction.mp4?v=1";
+const heroVideoFallbackSrc = "/assets/hero-bg-20260226-v2.mp4?v=1";
 
 export default function Home() {
   const reduceMotion = useReducedMotion();
+
+  const handleHeroVideoError = (
+    event: React.SyntheticEvent<HTMLVideoElement, Event>,
+  ) => {
+    const video = event.currentTarget;
+    if (video.src.includes(heroVideoFallbackSrc)) return;
+    video.src = heroVideoFallbackSrc;
+  };
 
   return (
     <SiteLayout>
@@ -36,13 +46,14 @@ export default function Home() {
             <div className="relative w-full max-w-[1680px] mx-auto rounded-none sm:rounded-2xl overflow-hidden shadow-[0_30px_120px_rgba(0,0,0,0.55)] border-y sm:border border-white/10 brand-surface">
               <video
                 className="bg-video-smooth w-full aspect-[16/8] object-cover contrast-[1.08] brightness-[1.08] saturate-[1.15]"
-                src="/assets/hero-bg-20260226-v2.mp4?v=1"
+                src={heroVideoSrc}
                 preload="auto"
                 muted
                 loop
                 playsInline
                 autoPlay
                 poster="/assets/hero-fallback.jpg"
+                onError={handleHeroVideoError}
               />
             </div>
           </div>
