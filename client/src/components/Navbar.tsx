@@ -13,7 +13,6 @@ const navItems = [
   { label: "Products", href: pageLinks.products },
   { label: "Dashboard", href: pageLinks.dashboard },
   { label: "Login", href: pageLinks.login },
-  { label: "Admin", href: pageLinks.adminLogin },
   { label: "Contact", href: pageLinks.contact },
 ];
 

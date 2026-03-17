@@ -25,8 +25,6 @@ type TraderPricing = {
   spread: number;
   trend: "up" | "down";
   updatedAt: string;
-  unit: "USD/bbl" | "USD/mt";
-  source: string;
 };
 
 type TraderBoardSnapshot = {
@@ -500,39 +498,8 @@ export async function registerRoutes(
     }
   });
 
-  app.post("/api/admin/login", (req, res) => {
-    const { username, password } = req.body ?? {};
-
-    if (username !== ADMIN_USERNAME || password !== ADMIN_PASSWORD) {
-      return res.status(401).json({ ok: false, error: "Invalid credentials" });
-    }
-
-    const token = createAdminToken();
-    activeAdminTokens.set(token, Date.now() + ADMIN_TOKEN_TTL_MS);
-
-    return res.json({ ok: true, token, expiresInMs: ADMIN_TOKEN_TTL_MS });
-  });
-
-  app.get("/api/admin/session", (req, res) => {
-    const authorized = isAdminAuthorized(req.headers.authorization);
-    if (!authorized) {
-      return res.status(401).json({ ok: false });
-    }
-
-    return res.json({ ok: true });
-  });
-
-  app.post("/api/admin/logout", (req, res) => {
-    const token = getBearerToken(req.headers.authorization);
-    if (token) {
-      activeAdminTokens.delete(token);
-    }
-    return res.json({ ok: true });
-  });
-
-  app.get("/api/trader-dashboard", async (_req, res) => {
-    const snapshot = await createLiveTraderSnapshot();
-    res.json(snapshot);
+  app.get("/api/trader-dashboard", (_req, res) => {
+    res.json(createLiveTraderSnapshot());
   });
 
   return httpServer;
