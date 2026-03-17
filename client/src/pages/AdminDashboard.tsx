@@ -2,24 +2,27 @@ import SiteLayout from "@/components/SiteLayout";
 import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "wouter";
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { z } from "zod";
 
-type TraderQuote = {
-  product: "Diesel" | "Naphtha" | "Kerosene";
-  brent: number;
-  plats: number;
-  spread: number;
-  trend: "up" | "down";
-  updatedAt: string;
-  unit: "USD/bbl" | "USD/mt";
-  source: string;
-};
+const traderQuoteSchema = z.object({
+  product: z.enum(["Diesel", "Naphtha", "Kerosene"]),
+  brent: z.number(),
+  plats: z.number(),
+  spread: z.number(),
+  trend: z.enum(["up", "down"]),
+  updatedAt: z.string(),
+  unit: z.enum(["USD/bbl", "USD/mt"]),
+  source: z.string(),
+});
 
-type TraderBoardSnapshot = {
-  updatedAt: string;
-  tradersOnline: number;
-  marketPulse: "Bullish" | "Bearish" | "Neutral";
-  quotes: TraderQuote[];
-};
+const traderBoardSnapshotSchema = z.object({
+  updatedAt: z.string(),
+  tradersOnline: z.number(),
+  marketPulse: z.enum(["Bullish", "Bearish", "Neutral"]),
+  quotes: z.array(traderQuoteSchema),
+});
+
+type TraderBoardSnapshot = z.infer<typeof traderBoardSnapshotSchema>;
 
 type Point = {
   time: string;
@@ -43,25 +46,31 @@ export default function AdminDashboard() {
     let cancelled = false;
 
     const load = async () => {
-      const session = await fetch("/api/admin/session", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!session.ok) {
-        localStorage.removeItem("admin_token");
-        setLocation("/admin/login");
-        return;
-      }
+      try {
+        const session = await fetch("/api/admin/session", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!session.ok) {
+          localStorage.removeItem("admin_token");
+          setLocation("/admin/login");
+          return;
+        }
 
-      const response = await fetch("/api/trader-dashboard");
-      if (!response.ok) return;
-      const data = (await response.json()) as TraderBoardSnapshot;
-      if (cancelled) return;
-      setSnapshot(data);
-      const row: Point = { time: new Date(data.updatedAt).toLocaleTimeString() };
-      for (const quote of data.quotes) {
-        row[quote.product] = quote.plats;
+        const response = await fetch("/api/trader-dashboard");
+        if (!response.ok) return;
+        const json = await response.json();
+        const data = traderBoardSnapshotSchema.parse(json);
+        if (cancelled) return;
+
+        setSnapshot(data);
+        const row: Point = { time: new Date(data.updatedAt).toLocaleTimeString() };
+        for (const quote of data.quotes) {
+          row[quote.product] = quote.plats;
+        }
+        setHistory((prev) => [...prev.slice(-35), row]);
+      } catch (error) {
+        console.error("Failed to load admin dashboard data:", error);
       }
-      setHistory((prev) => [...prev.slice(-35), row]);
     };
 
     load();

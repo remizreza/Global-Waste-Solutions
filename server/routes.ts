@@ -1,6 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { createHmac, timingSafeEqual } from "crypto";
+import crypto from "crypto";
 import { storage } from "./storage";
 
 type BulletinItem = {
@@ -191,26 +192,35 @@ function numberOrNull(value: unknown): number | null {
   return typeof value === "number" && Number.isFinite(value) ? value : null;
 }
 
-const ADMIN_USERNAME = process.env.ADMIN_USERNAME ?? "Remiz";
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? "Remiz123312";
+const ADMIN_USERNAME = process.env.ADMIN_USERNAME;
+const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH;
 const ADMIN_TOKEN_TTL_MS = 1000 * 60 * 60 * 8;
-const ADMIN_TOKEN_SECRET = process.env.ADMIN_TOKEN_SECRET ?? "redoxy-admin-token-secret-change-me";
+const ADMIN_TOKEN_SECRET = process.env.ADMIN_TOKEN_SECRET;
+const BARREL_GALLONS = 42;
+const KEROSENE_BARREL_GALLONS = 41.3;
+
+function hasAdminConfig() {
+  return Boolean(ADMIN_USERNAME && ADMIN_PASSWORD_HASH && ADMIN_TOKEN_SECRET);
+}
 
 function signTokenPayload(payload: string) {
-  return createHmac("sha256", ADMIN_TOKEN_SECRET).update(payload).digest("hex");
+  if (!ADMIN_TOKEN_SECRET) {
+    throw new Error('ADMIN_TOKEN_SECRET is not configured');
+  }
+  return createHmac('sha256', ADMIN_TOKEN_SECRET).update(payload).digest('hex');
 }
 
 function createAdminToken(username: string) {
   const expiresAt = Date.now() + ADMIN_TOKEN_TTL_MS;
   const payload = `${username}|${expiresAt}`;
   const signature = signTokenPayload(payload);
-  return Buffer.from(`${payload}|${signature}`).toString("base64url");
+  return Buffer.from(`${payload}|${signature}`).toString('base64url');
 }
 
 function getBearerToken(authorization: string | undefined): string | null {
   if (!authorization) return null;
-  const [scheme, token] = authorization.split(" ");
-  if (scheme?.toLowerCase() !== "bearer" || !token) return null;
+  const [scheme, token] = authorization.split(' ');
+  if (scheme?.toLowerCase() !== 'bearer' || !token) return null;
   return token;
 }
 
@@ -219,14 +229,14 @@ function isAdminAuthorized(authorization: string | undefined): boolean {
   if (!token) return false;
 
   try {
-    const decoded = Buffer.from(token, "base64url").toString("utf8");
-    const [username, expiresAtRaw, signature] = decoded.split("|");
+    const decoded = Buffer.from(token, 'base64url').toString('utf8');
+    const [username, expiresAtRaw, signature] = decoded.split('|');
     if (!username || !expiresAtRaw || !signature) return false;
 
     const payload = `${username}|${expiresAtRaw}`;
     const expectedSignature = signTokenPayload(payload);
-    const provided = Buffer.from(signature, "utf8");
-    const expected = Buffer.from(expectedSignature, "utf8");
+    const provided = Buffer.from(signature, 'utf8');
+    const expected = Buffer.from(expectedSignature, 'utf8');
     if (provided.length !== expected.length) return false;
     if (!timingSafeEqual(provided, expected)) return false;
 
@@ -240,43 +250,60 @@ function isAdminAuthorized(authorization: string | undefined): boolean {
   }
 }
 
+function verifyPassword(password: string): boolean {
+  if (!ADMIN_PASSWORD_HASH) return false;
+
+  const [salt, expectedHex] = ADMIN_PASSWORD_HASH.split(':');
+  if (!salt || !expectedHex) return false;
+
+  const derived = crypto.scryptSync(password, salt, 64).toString('hex');
+  const provided = Buffer.from(derived, 'hex');
+  const expected = Buffer.from(expectedHex, 'hex');
+  if (provided.length !== expected.length) return false;
+  return timingSafeEqual(provided, expected);
+}
+
 async function fetchYahooLiveQuotes() {
   const response = await fetch(
-    "https://query1.finance.yahoo.com/v7/finance/quote?symbols=BZ%3DF,HO%3DF,RB%3DF",
-    { headers: { "user-agent": "redoxy-trader-dashboard/1.0" } },
+    'https://query1.finance.yahoo.com/v7/finance/quote?symbols=BZ%3DF,HO%3DF,RB%3DF',
+    { headers: { 'user-agent': 'redoxy-trader-dashboard/1.0' } },
   );
 
   if (!response.ok) {
     throw new Error(`Yahoo quote fetch failed: ${response.status}`);
   }
 
-  const payload = (await response.json()) as {
-    quoteResponse?: {
-      result?: Array<{ symbol?: string; regularMarketPrice?: number }>;
-    };
-  };
+  const payload = (await response.json()) as unknown;
+  const rows =
+    typeof payload === 'object' &&
+    payload !== null &&
+    'quoteResponse' in payload &&
+    typeof (payload as { quoteResponse?: unknown }).quoteResponse === 'object' &&
+    (payload as { quoteResponse: { result?: unknown } }).quoteResponse !== null &&
+    Array.isArray((payload as { quoteResponse: { result?: unknown[] } }).quoteResponse.result)
+      ? (payload as { quoteResponse: { result: Array<{ symbol?: string; regularMarketPrice?: unknown }> } }).quoteResponse.result
+      : [];
 
-  const rows = payload.quoteResponse?.result ?? [];
   const bySymbol = new Map(rows.map((row) => [row.symbol, row.regularMarketPrice]));
 
-  const brent = numberOrNull(bySymbol.get("BZ=F"));
-  const heatingOil = numberOrNull(bySymbol.get("HO=F"));
-  const rbob = numberOrNull(bySymbol.get("RB=F"));
+  const brent = numberOrNull(bySymbol.get('BZ=F'));
+  const heatingOil = numberOrNull(bySymbol.get('HO=F'));
+  const rbob = numberOrNull(bySymbol.get('RB=F'));
 
   if (brent == null || heatingOil == null || rbob == null) {
-    throw new Error("Yahoo returned incomplete quote set");
+    throw new Error('Yahoo returned incomplete quote set');
   }
 
   return { brent, heatingOil, rbob };
 }
 
-async function fetchMiddleEastTradesQuotes(): Promise<Partial<Record<"diesel" | "naphtha" | "kerosene", number>>> {
+async function fetchMiddleEastTradesQuotes(): Promise<Partial<Record<'diesel' | 'naphtha' | 'kerosene', number>>> {
   const endpoint = process.env.MIDDLEEAST_TRADES_API_URL;
   if (!endpoint) return {};
 
   const response = await fetch(endpoint, {
     headers: {
-      "user-agent": "redoxy-trader-dashboard/1.0",
+      'user-agent': 'redoxy-trader-dashboard/1.0',
       ...(process.env.MIDDLEEAST_TRADES_API_KEY
         ? { authorization: `Bearer ${process.env.MIDDLEEAST_TRADES_API_KEY}` }
         : {}),
@@ -293,13 +320,13 @@ async function fetchMiddleEastTradesQuotes(): Promise<Partial<Record<"diesel" | 
   };
 }
 
-async function fetchInvestingProxyQuotes(): Promise<Partial<Record<"brent", number>>> {
+async function fetchInvestingProxyQuotes(): Promise<Partial<Record<'brent', number>>> {
   const endpoint = process.env.INVESTING_API_URL;
   if (!endpoint) return {};
 
   const response = await fetch(endpoint, {
     headers: {
-      "user-agent": "redoxy-trader-dashboard/1.0",
+      'user-agent': 'redoxy-trader-dashboard/1.0',
       ...(process.env.INVESTING_API_KEY
         ? { authorization: `Bearer ${process.env.INVESTING_API_KEY}` }
         : {}),
@@ -321,63 +348,63 @@ async function createLiveTraderSnapshot(): Promise<TraderBoardSnapshot> {
   let dieselBrent = 96.5;
   let naphthaBrent = 71.4;
   let keroseneBrent = 93.2;
-  let source = "commodities-api";
+  let source = 'commodities-api';
 
   try {
     const [commoditiesPayload, yahoo, middleEast, investing] = await Promise.all([
-      fetchCommoditiesJson<{ rates?: Record<string, unknown> }>("latest", {
-        base: "USD",
-        symbols: "CRUDE,DIESEL,NAPHTHA",
+      fetchCommoditiesJson<{ rates?: Record<string, unknown> }>('latest', {
+        base: 'USD',
+        symbols: 'CRUDE,DIESEL,NAPHTHA',
       }).catch((): { rates: Record<string, unknown> } => ({ rates: {} })),
       fetchYahooLiveQuotes().catch((): { brent: number; heatingOil: number; rbob: number } | null => null),
-      fetchMiddleEastTradesQuotes().catch((): Partial<Record<"diesel" | "naphtha" | "kerosene", number>> => ({})),
-      fetchInvestingProxyQuotes().catch((): Partial<Record<"brent", number>> => ({})),
+      fetchMiddleEastTradesQuotes().catch((): Partial<Record<'diesel' | 'naphtha' | 'kerosene', number>> => ({})),
+      fetchInvestingProxyQuotes().catch((): Partial<Record<'brent', number>> => ({})),
     ]);
 
     const rates = commoditiesPayload.rates ?? {};
     brent = investing.brent ?? yahoo?.brent ?? numberOrNull(rates.CRUDE) ?? brent;
-    dieselBrent = middleEast.diesel ?? numberOrNull(rates.DIESEL) ?? (yahoo ? yahoo.heatingOil * 42 : dieselBrent);
-    naphthaBrent = middleEast.naphtha ?? numberOrNull(rates.NAPHTHA) ?? (yahoo ? yahoo.rbob * 42 : naphthaBrent);
-    keroseneBrent = middleEast.kerosene ?? (yahoo ? yahoo.heatingOil * 41.3 : keroseneBrent);
+    dieselBrent = middleEast.diesel ?? numberOrNull(rates.DIESEL) ?? (yahoo ? yahoo.heatingOil * BARREL_GALLONS : dieselBrent);
+    naphthaBrent = middleEast.naphtha ?? numberOrNull(rates.NAPHTHA) ?? (yahoo ? yahoo.rbob * BARREL_GALLONS : naphthaBrent);
+    keroseneBrent = middleEast.kerosene ?? (yahoo ? yahoo.heatingOil * KEROSENE_BARREL_GALLONS : keroseneBrent);
 
     if (middleEast.diesel || middleEast.naphtha || middleEast.kerosene) {
-      source = "middleeast-trades+commodities";
+      source = 'middleeast-trades+commodities';
     } else if (yahoo || investing.brent) {
-      source = "investing/yahoo+commodities";
+      source = 'investing/yahoo+commodities';
     }
   } catch {
-    source = "fallback";
+    source = 'fallback';
   }
 
   const quotes: TraderPricing[] = [
     {
-      product: "Diesel",
+      product: 'Diesel',
       brent: Number(dieselBrent.toFixed(2)),
       plats: Number((dieselBrent + 4.25).toFixed(2)),
       spread: 4.25,
-      trend: "up",
+      trend: 'up',
       updatedAt: now.toISOString(),
-      unit: "USD/bbl",
+      unit: 'USD/bbl',
       source,
     },
     {
-      product: "Naphtha",
+      product: 'Naphtha',
       brent: Number(naphthaBrent.toFixed(2)),
       plats: Number((naphthaBrent + 3.85).toFixed(2)),
       spread: 3.85,
-      trend: "up",
+      trend: 'up',
       updatedAt: now.toISOString(),
-      unit: "USD/bbl",
+      unit: 'USD/bbl',
       source,
     },
     {
-      product: "Kerosene",
+      product: 'Kerosene',
       brent: Number(keroseneBrent.toFixed(2)),
       plats: Number((keroseneBrent + 4.05).toFixed(2)),
       spread: 4.05,
-      trend: "up",
+      trend: 'up',
       updatedAt: now.toISOString(),
-      unit: "USD/bbl",
+      unit: 'USD/bbl',
       source,
     },
   ];
@@ -385,7 +412,7 @@ async function createLiveTraderSnapshot(): Promise<TraderBoardSnapshot> {
   return {
     updatedAt: now.toISOString(),
     tradersOnline: 20 + Math.floor((Math.sin(now.getTime() / 180000) + 1) * 4),
-    marketPulse: brent > 85 ? "Bullish" : brent < 80 ? "Bearish" : "Neutral",
+    marketPulse: brent > 85 ? 'Bullish' : brent < 80 ? 'Bearish' : 'Neutral',
     quotes,
   };
 }
@@ -523,21 +550,36 @@ export async function registerRoutes(
   });
 
   app.post("/api/admin/login", (req, res) => {
-    const rawUsername = typeof req.body?.username === "string" ? req.body.username : "";
-    const rawPassword = typeof req.body?.password === "string" ? req.body.password : "";
+    if (!hasAdminConfig() || !ADMIN_USERNAME) {
+      return res.status(503).json({
+        ok: false,
+        error: "Admin auth is not configured on the server",
+      });
+    }
+
+    const rawUsername =
+      typeof req.body?.username === "string" ? req.body.username : "";
+    const rawPassword =
+      typeof req.body?.password === "string" ? req.body.password : "";
     const username = rawUsername.trim();
     const password = rawPassword.trim();
 
-    if (username.toLowerCase() !== ADMIN_USERNAME.toLowerCase() || password !== ADMIN_PASSWORD) {
+    if (
+      username.toLowerCase() !== ADMIN_USERNAME.toLowerCase() ||
+      !verifyPassword(password)
+    ) {
       return res.status(401).json({ ok: false, error: "Invalid credentials" });
     }
 
     const token = createAdminToken(username);
-
     return res.json({ ok: true, token, expiresInMs: ADMIN_TOKEN_TTL_MS });
   });
 
   app.get("/api/admin/session", (req, res) => {
+    if (!hasAdminConfig()) {
+      return res.status(503).json({ ok: false, error: "Admin auth unavailable" });
+    }
+
     const authorized = isAdminAuthorized(req.headers.authorization);
     if (!authorized) {
       return res.status(401).json({ ok: false });
