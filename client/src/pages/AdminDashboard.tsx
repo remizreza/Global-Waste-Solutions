@@ -48,11 +48,17 @@ export default function AdminDashboard() {
       });
       if (!session.ok) {
         localStorage.removeItem("admin_token");
+        credentials: "include",
+      });
+      if (!session.ok) {
         setLocation("/admin/login");
         return;
       }
 
       const response = await fetch("/api/trader-dashboard");
+      const response = await fetch("/api/trader-dashboard", {
+        credentials: "include",
+      });
       if (!response.ok) return;
       const data = (await response.json()) as TraderBoardSnapshot;
       if (cancelled) return;
