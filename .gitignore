@@ -13,3 +13,5 @@ vite.config.ts.*
 !.env.vault
 .vercel
 .env*.local
+
+!.env.example
