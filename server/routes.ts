@@ -1,5 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import { createHmac, timingSafeEqual } from "crypto";
 import { storage } from "./storage";
 
 type BulletinItem = {
@@ -16,6 +17,24 @@ type CommoditySnapshot = {
   recoveryOils: number;
   timestamp: string;
   source: string;
+};
+
+type TraderPricing = {
+  product: "Diesel" | "Naphtha" | "Kerosene";
+  brent: number;
+  plats: number;
+  spread: number;
+  trend: "up" | "down";
+  updatedAt: string;
+  unit: "USD/bbl" | "USD/mt";
+  source: string;
+};
+
+type TraderBoardSnapshot = {
+  updatedAt: string;
+  tradersOnline: number;
+  marketPulse: "Bullish" | "Bearish" | "Neutral";
+  quotes: TraderPricing[];
 };
 
 const COMMODITIES_API_BASE = "https://commodities-api.com/api";
@@ -172,6 +191,205 @@ function numberOrNull(value: unknown): number | null {
   return typeof value === "number" && Number.isFinite(value) ? value : null;
 }
 
+const ADMIN_USERNAME = process.env.ADMIN_USERNAME ?? "Remiz";
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD ?? "Remiz123312";
+const ADMIN_TOKEN_TTL_MS = 1000 * 60 * 60 * 8;
+const ADMIN_TOKEN_SECRET = process.env.ADMIN_TOKEN_SECRET ?? "redoxy-admin-token-secret-change-me";
+
+function signTokenPayload(payload: string) {
+  return createHmac("sha256", ADMIN_TOKEN_SECRET).update(payload).digest("hex");
+}
+
+function createAdminToken(username: string) {
+  const expiresAt = Date.now() + ADMIN_TOKEN_TTL_MS;
+  const payload = `${username}|${expiresAt}`;
+  const signature = signTokenPayload(payload);
+  return Buffer.from(`${payload}|${signature}`).toString("base64url");
+}
+
+function getBearerToken(authorization: string | undefined): string | null {
+  if (!authorization) return null;
+  const [scheme, token] = authorization.split(" ");
+  if (scheme?.toLowerCase() !== "bearer" || !token) return null;
+  return token;
+}
+
+function isAdminAuthorized(authorization: string | undefined): boolean {
+  const token = getBearerToken(authorization);
+  if (!token) return false;
+
+  try {
+    const decoded = Buffer.from(token, "base64url").toString("utf8");
+    const [username, expiresAtRaw, signature] = decoded.split("|");
+    if (!username || !expiresAtRaw || !signature) return false;
+
+    const payload = `${username}|${expiresAtRaw}`;
+    const expectedSignature = signTokenPayload(payload);
+    const provided = Buffer.from(signature, "utf8");
+    const expected = Buffer.from(expectedSignature, "utf8");
+    if (provided.length !== expected.length) return false;
+    if (!timingSafeEqual(provided, expected)) return false;
+
+    const expiresAt = Number(expiresAtRaw);
+    if (!Number.isFinite(expiresAt)) return false;
+    if (Date.now() > expiresAt) return false;
+
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function fetchYahooLiveQuotes() {
+  const response = await fetch(
+    "https://query1.finance.yahoo.com/v7/finance/quote?symbols=BZ%3DF,HO%3DF,RB%3DF",
+    { headers: { "user-agent": "redoxy-trader-dashboard/1.0" } },
+  );
+
+  if (!response.ok) {
+    throw new Error(`Yahoo quote fetch failed: ${response.status}`);
+  }
+
+  const payload = (await response.json()) as {
+    quoteResponse?: {
+      result?: Array<{ symbol?: string; regularMarketPrice?: number }>;
+    };
+  };
+
+  const rows = payload.quoteResponse?.result ?? [];
+  const bySymbol = new Map(rows.map((row) => [row.symbol, row.regularMarketPrice]));
+
+  const brent = numberOrNull(bySymbol.get("BZ=F"));
+  const heatingOil = numberOrNull(bySymbol.get("HO=F"));
+  const rbob = numberOrNull(bySymbol.get("RB=F"));
+
+  if (brent == null || heatingOil == null || rbob == null) {
+    throw new Error("Yahoo returned incomplete quote set");
+  }
+
+  return { brent, heatingOil, rbob };
+}
+
+async function fetchMiddleEastTradesQuotes(): Promise<Partial<Record<"diesel" | "naphtha" | "kerosene", number>>> {
+  const endpoint = process.env.MIDDLEEAST_TRADES_API_URL;
+  if (!endpoint) return {};
+
+  const response = await fetch(endpoint, {
+    headers: {
+      "user-agent": "redoxy-trader-dashboard/1.0",
+      ...(process.env.MIDDLEEAST_TRADES_API_KEY
+        ? { authorization: `Bearer ${process.env.MIDDLEEAST_TRADES_API_KEY}` }
+        : {}),
+    },
+  });
+
+  if (!response.ok) return {};
+
+  const payload = (await response.json()) as Record<string, unknown>;
+  return {
+    diesel: numberOrNull(payload.dieselPrice) ?? undefined,
+    naphtha: numberOrNull(payload.naphthaPrice) ?? undefined,
+    kerosene: numberOrNull(payload.kerosenePrice) ?? undefined,
+  };
+}
+
+async function fetchInvestingProxyQuotes(): Promise<Partial<Record<"brent", number>>> {
+  const endpoint = process.env.INVESTING_API_URL;
+  if (!endpoint) return {};
+
+  const response = await fetch(endpoint, {
+    headers: {
+      "user-agent": "redoxy-trader-dashboard/1.0",
+      ...(process.env.INVESTING_API_KEY
+        ? { authorization: `Bearer ${process.env.INVESTING_API_KEY}` }
+        : {}),
+    },
+  });
+
+  if (!response.ok) return {};
+
+  const payload = (await response.json()) as Record<string, unknown>;
+  return {
+    brent: numberOrNull(payload.brent) ?? numberOrNull(payload.brentPrice) ?? undefined,
+  };
+}
+
+async function createLiveTraderSnapshot(): Promise<TraderBoardSnapshot> {
+  const now = new Date();
+
+  let brent = 84.2;
+  let dieselBrent = 96.5;
+  let naphthaBrent = 71.4;
+  let keroseneBrent = 93.2;
+  let source = "commodities-api";
+
+  try {
+    const [commoditiesPayload, yahoo, middleEast, investing] = await Promise.all([
+      fetchCommoditiesJson<{ rates?: Record<string, unknown> }>("latest", {
+        base: "USD",
+        symbols: "CRUDE,DIESEL,NAPHTHA",
+      }).catch((): { rates: Record<string, unknown> } => ({ rates: {} })),
+      fetchYahooLiveQuotes().catch((): { brent: number; heatingOil: number; rbob: number } | null => null),
+      fetchMiddleEastTradesQuotes().catch((): Partial<Record<"diesel" | "naphtha" | "kerosene", number>> => ({})),
+      fetchInvestingProxyQuotes().catch((): Partial<Record<"brent", number>> => ({})),
+    ]);
+
+    const rates = commoditiesPayload.rates ?? {};
+    brent = investing.brent ?? yahoo?.brent ?? numberOrNull(rates.CRUDE) ?? brent;
+    dieselBrent = middleEast.diesel ?? numberOrNull(rates.DIESEL) ?? (yahoo ? yahoo.heatingOil * 42 : dieselBrent);
+    naphthaBrent = middleEast.naphtha ?? numberOrNull(rates.NAPHTHA) ?? (yahoo ? yahoo.rbob * 42 : naphthaBrent);
+    keroseneBrent = middleEast.kerosene ?? (yahoo ? yahoo.heatingOil * 41.3 : keroseneBrent);
+
+    if (middleEast.diesel || middleEast.naphtha || middleEast.kerosene) {
+      source = "middleeast-trades+commodities";
+    } else if (yahoo || investing.brent) {
+      source = "investing/yahoo+commodities";
+    }
+  } catch {
+    source = "fallback";
+  }
+
+  const quotes: TraderPricing[] = [
+    {
+      product: "Diesel",
+      brent: Number(dieselBrent.toFixed(2)),
+      plats: Number((dieselBrent + 4.25).toFixed(2)),
+      spread: 4.25,
+      trend: "up",
+      updatedAt: now.toISOString(),
+      unit: "USD/bbl",
+      source,
+    },
+    {
+      product: "Naphtha",
+      brent: Number(naphthaBrent.toFixed(2)),
+      plats: Number((naphthaBrent + 3.85).toFixed(2)),
+      spread: 3.85,
+      trend: "up",
+      updatedAt: now.toISOString(),
+      unit: "USD/bbl",
+      source,
+    },
+    {
+      product: "Kerosene",
+      brent: Number(keroseneBrent.toFixed(2)),
+      plats: Number((keroseneBrent + 4.05).toFixed(2)),
+      spread: 4.05,
+      trend: "up",
+      updatedAt: now.toISOString(),
+      unit: "USD/bbl",
+      source,
+    },
+  ];
+
+  return {
+    updatedAt: now.toISOString(),
+    tradersOnline: 20 + Math.floor((Math.sin(now.getTime() / 180000) + 1) * 4),
+    marketPulse: brent > 85 ? "Bullish" : brent < 80 ? "Bearish" : "Neutral",
+    quotes,
+  };
+}
+
 function parseSnapshotRates(rates: Record<string, unknown>): CommoditySnapshot {
   const crude = numberOrNull(rates.CRUDE) ?? numberOrNull(rates.crude);
   const diesel = numberOrNull(rates.DIESEL) ?? numberOrNull(rates.diesel);
@@ -302,6 +520,39 @@ export async function registerRoutes(
             : "Unable to load commodities news",
       });
     }
+  });
+
+  app.post("/api/admin/login", (req, res) => {
+    const rawUsername = typeof req.body?.username === "string" ? req.body.username : "";
+    const rawPassword = typeof req.body?.password === "string" ? req.body.password : "";
+    const username = rawUsername.trim();
+    const password = rawPassword.trim();
+
+    if (username.toLowerCase() !== ADMIN_USERNAME.toLowerCase() || password !== ADMIN_PASSWORD) {
+      return res.status(401).json({ ok: false, error: "Invalid credentials" });
+    }
+
+    const token = createAdminToken(username);
+
+    return res.json({ ok: true, token, expiresInMs: ADMIN_TOKEN_TTL_MS });
+  });
+
+  app.get("/api/admin/session", (req, res) => {
+    const authorized = isAdminAuthorized(req.headers.authorization);
+    if (!authorized) {
+      return res.status(401).json({ ok: false });
+    }
+
+    return res.json({ ok: true });
+  });
+
+  app.post("/api/admin/logout", (_req, res) => {
+    return res.json({ ok: true });
+  });
+
+  app.get("/api/trader-dashboard", async (_req, res) => {
+    const snapshot = await createLiveTraderSnapshot();
+    res.json(snapshot);
   });
 
   return httpServer;

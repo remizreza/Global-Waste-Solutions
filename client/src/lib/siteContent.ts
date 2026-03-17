@@ -15,6 +15,11 @@ export const pageLinks = {
   traction: "/traction",
   contact: "/contact",
   products: "/products",
+  login: "/login",
+  signup: "/signup",
+  dashboard: "/dashboard",
+  adminLogin: "/admin/login",
+  adminDashboard: "/admin/dashboard",
 };
 
 export const homeStats = [
