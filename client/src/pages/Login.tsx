@@ -43,6 +43,10 @@ export default function Login() {
               </Link>
             </form>
 
+            <p className="mt-3 text-xs text-gray-400">
+              Admin? Use <a className="text-primary hover:underline" href="#/admin/login">Admin Login</a>.
+            </p>
+
             <p className="mt-6 text-sm text-gray-300">
               New trader?{" "}
               <Link href={pageLinks.signup}>
