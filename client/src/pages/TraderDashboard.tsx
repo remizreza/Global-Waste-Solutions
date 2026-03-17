@@ -1,23 +1,26 @@
 import SiteLayout from "@/components/SiteLayout";
 import { useEffect, useMemo, useState } from "react";
+import { z } from "zod";
 
-type TraderQuote = {
-  product: "Diesel" | "Naphtha" | "Kerosene";
-  brent: number;
-  plats: number;
-  spread: number;
-  trend: "up" | "down";
-  updatedAt: string;
-  unit: "USD/bbl" | "USD/mt";
-  source: string;
-};
+const traderQuoteSchema = z.object({
+  product: z.enum(["Diesel", "Naphtha", "Kerosene"]),
+  brent: z.number(),
+  plats: z.number(),
+  spread: z.number(),
+  trend: z.enum(["up", "down"]),
+  updatedAt: z.string(),
+  unit: z.enum(["USD/bbl", "USD/mt"]),
+  source: z.string(),
+});
 
-type TraderBoardSnapshot = {
-  updatedAt: string;
-  tradersOnline: number;
-  marketPulse: "Bullish" | "Bearish" | "Neutral";
-  quotes: TraderQuote[];
-};
+const traderBoardSnapshotSchema = z.object({
+  updatedAt: z.string(),
+  tradersOnline: z.number(),
+  marketPulse: z.enum(["Bullish", "Bearish", "Neutral"]),
+  quotes: z.array(traderQuoteSchema),
+});
+
+type TraderBoardSnapshot = z.infer<typeof traderBoardSnapshotSchema>;
 
 const fallback: TraderBoardSnapshot = {
   updatedAt: new Date().toISOString(),
@@ -40,10 +43,11 @@ export default function TraderDashboard() {
       try {
         const response = await fetch("/api/trader-dashboard");
         if (!response.ok) throw new Error("Unable to load");
-        const data = (await response.json()) as TraderBoardSnapshot;
+        const json = await response.json();
+        const data = traderBoardSnapshotSchema.parse(json);
         if (!cancelled) setSnapshot(data);
-      } catch {
-        // fallback retained
+      } catch (error) {
+        console.error("Failed to load trader dashboard data:", error);
       }
     };
 
