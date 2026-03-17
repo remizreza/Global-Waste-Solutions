@@ -18,6 +18,22 @@ type CommoditySnapshot = {
   source: string;
 };
 
+type TraderPricing = {
+  product: "Diesel" | "Naphtha" | "Kerosene";
+  brent: number;
+  plats: number;
+  spread: number;
+  trend: "up" | "down";
+  updatedAt: string;
+};
+
+type TraderBoardSnapshot = {
+  updatedAt: string;
+  tradersOnline: number;
+  marketPulse: "Bullish" | "Bearish" | "Neutral";
+  quotes: TraderPricing[];
+};
+
 const COMMODITIES_API_BASE = "https://commodities-api.com/api";
 const DEFAULT_COMMODITIES_KEY =
   process.env.COMMODITIES_API_KEY ??
@@ -172,6 +188,43 @@ function numberOrNull(value: unknown): number | null {
   return typeof value === "number" && Number.isFinite(value) ? value : null;
 }
 
+function createLiveTraderSnapshot(): TraderBoardSnapshot {
+  const now = new Date();
+  const minuteSignal = Math.sin(now.getTime() / 120000);
+
+  const products: Array<{ product: TraderPricing["product"]; brentBase: number; platsBase: number }> = [
+    { product: "Diesel", brentBase: 88.4, platsBase: 93.1 },
+    { product: "Naphtha", brentBase: 81.7, platsBase: 85.9 },
+    { product: "Kerosene", brentBase: 86.2, platsBase: 90.4 },
+  ];
+
+  const quotes = products.map((item, index) => {
+    const localWave = Math.sin(now.getTime() / 90000 + index) * 0.8;
+    const drift = minuteSignal * 0.65;
+    const brent = Number((item.brentBase + localWave + drift).toFixed(2));
+    const plats = Number((item.platsBase + localWave * 1.15 + drift).toFixed(2));
+    const spread = Number((plats - brent).toFixed(2));
+
+    return {
+      product: item.product,
+      brent,
+      plats,
+      spread,
+      trend: spread >= 4 ? "up" : "down",
+      updatedAt: now.toISOString(),
+    } satisfies TraderPricing;
+  });
+
+  const avgSpread = quotes.reduce((acc, quote) => acc + quote.spread, 0) / quotes.length;
+
+  return {
+    updatedAt: now.toISOString(),
+    tradersOnline: 18 + Math.floor(((minuteSignal + 1) / 2) * 11),
+    marketPulse: avgSpread > 4.1 ? "Bullish" : avgSpread < 3.8 ? "Bearish" : "Neutral",
+    quotes,
+  };
+}
+
 function parseSnapshotRates(rates: Record<string, unknown>): CommoditySnapshot {
   const crude = numberOrNull(rates.CRUDE) ?? numberOrNull(rates.crude);
   const diesel = numberOrNull(rates.DIESEL) ?? numberOrNull(rates.diesel);
@@ -302,6 +355,10 @@ export async function registerRoutes(
             : "Unable to load commodities news",
       });
     }
+  });
+
+  app.get("/api/trader-dashboard", (_req, res) => {
+    res.json(createLiveTraderSnapshot());
   });
 
   return httpServer;
