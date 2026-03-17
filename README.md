@@ -18,3 +18,15 @@ Workflow file: `.github/workflows/main.yml`.
 3. Run the app (`npm run dev`) or production build (`npm run build`) to verify the video plays.
 
 The Home page now points to `/assets/hero-introduction.mp4` and automatically falls back to `/assets/hero-bg-20260226-v2.mp4` if the new upload is missing or fails to load.
+
+## Admin dashboard environment variables
+Set these in Vercel Project Settings (and optionally GitHub Actions secrets if your workflow needs them):
+- `ADMIN_USERNAME`
+- `ADMIN_PASSWORD`
+- `ADMIN_TOKEN_SECRET`
+
+Optional upstream market data connectors:
+- `INVESTING_API_URL`
+- `INVESTING_API_KEY`
+- `MIDDLEEAST_TRADES_API_URL`
+- `MIDDLEEAST_TRADES_API_KEY`
