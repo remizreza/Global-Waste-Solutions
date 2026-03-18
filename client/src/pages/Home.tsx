@@ -1,5 +1,6 @@
 import { Link } from "wouter";
 import { ArrowRight, Leaf, ShieldCheck } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import SiteLayout from "@/components/SiteLayout";
 import InfoPreviewDialog from "@/components/InfoPreviewDialog";
@@ -26,9 +27,82 @@ import maadenLogo from "@/assets/logos/maaden.png";
 const heroHeading = "Sustainable Industrial & Energy Solutions".split(" ");
 const heroVideoSrc = "/assets/hero-introduction.mp4?v=1";
 const heroVideoFallbackSrc = "/assets/hero-bg-20260226-v2.mp4?v=1";
+const cinematicLeadLine =
+  "Industrial motion • Trading intelligence • Environmental execution";
+const cinematicTypeLine =
+  "A cinematic introduction to REDOXY's industrial, energy, and environmental platform.";
 
 export default function Home() {
   const reduceMotion = useReducedMotion();
+  const heroVideoRef = useRef<HTMLVideoElement | null>(null);
+  const [hasCompletedIntroLoop, setHasCompletedIntroLoop] = useState(false);
+  const [typedCinematicLine, setTypedCinematicLine] = useState(
+    reduceMotion ? cinematicTypeLine : "",
+  );
+
+  useEffect(() => {
+    const video = heroVideoRef.current;
+    if (!video) return;
+
+    const ensurePlayback = () => {
+      video.muted = true;
+      video.defaultMuted = true;
+      video.playsInline = true;
+      video.setAttribute("muted", "");
+      video.setAttribute("playsinline", "");
+      void video.play().catch(() => undefined);
+    };
+
+    const handleEnded = () => {
+      setHasCompletedIntroLoop(true);
+      video.currentTime = 0;
+      ensurePlayback();
+    };
+
+    ensurePlayback();
+    video.addEventListener("loadeddata", ensurePlayback);
+    video.addEventListener("canplay", ensurePlayback);
+    video.addEventListener("ended", handleEnded);
+    window.addEventListener("pageshow", ensurePlayback);
+    document.addEventListener("visibilitychange", ensurePlayback);
+
+    return () => {
+      video.removeEventListener("loadeddata", ensurePlayback);
+      video.removeEventListener("canplay", ensurePlayback);
+      video.removeEventListener("ended", handleEnded);
+      window.removeEventListener("pageshow", ensurePlayback);
+      document.removeEventListener("visibilitychange", ensurePlayback);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (reduceMotion) {
+      setTypedCinematicLine(cinematicTypeLine);
+      return;
+    }
+
+    setTypedCinematicLine("");
+
+    let intervalId: number | undefined;
+    let index = 0;
+
+    const startDelay = window.setTimeout(() => {
+      intervalId = window.setInterval(() => {
+        index += 1;
+        setTypedCinematicLine(cinematicTypeLine.slice(0, index));
+        if (index >= cinematicTypeLine.length && intervalId) {
+          window.clearInterval(intervalId);
+        }
+      }, 42);
+    }, 1325);
+
+    return () => {
+      window.clearTimeout(startDelay);
+      if (intervalId) {
+        window.clearInterval(intervalId);
+      }
+    };
+  }, [reduceMotion]);
 
   const handleHeroVideoError = (
     event: React.SyntheticEvent<HTMLVideoElement, Event>,
@@ -36,6 +110,8 @@ export default function Home() {
     const video = event.currentTarget;
     if (video.src.includes(heroVideoFallbackSrc)) return;
     video.src = heroVideoFallbackSrc;
+    video.load();
+    void video.play().catch(() => undefined);
   };
 
   return (
@@ -45,21 +121,94 @@ export default function Home() {
           <div className="absolute inset-x-0 top-24 px-0 sm:px-4 lg:px-8">
             <div className="relative w-full max-w-[1680px] mx-auto rounded-none sm:rounded-2xl overflow-hidden shadow-[0_30px_120px_rgba(0,0,0,0.55)] border-y sm:border border-white/10 brand-surface">
               <video
-                className="bg-video-smooth w-full aspect-[16/8] object-cover contrast-[1.08] brightness-[1.08] saturate-[1.15]"
+                ref={heroVideoRef}
+                className="bg-video-smooth w-full aspect-[16/8] object-cover contrast-[1.14] brightness-[1.18] saturate-[1.32]"
                 src={heroVideoSrc}
                 preload="auto"
                 muted
-                loop
                 playsInline
                 autoPlay
                 poster="/assets/hero-fallback.jpg"
                 onError={handleHeroVideoError}
               />
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#03060d]/72 via-[#08101b]/20 to-transparent" />
+              <div className="pointer-events-none absolute inset-0 flex items-end justify-center px-6 pb-[10%] md:pb-[8%]">
+                <motion.div
+                  initial={{ opacity: 0, y: 28 }}
+                  animate={
+                    hasCompletedIntroLoop
+                      ? { opacity: 0, y: -10, filter: "blur(10px)" }
+                      : { opacity: 1, y: 0, filter: "blur(0px)" }
+                  }
+                  transition={{
+                    duration: reduceMotion ? 0.01 : 1.6,
+                    delay: reduceMotion ? 0 : 0.55,
+                    ease: MOTION_EASE,
+                  }}
+                  className="max-w-3xl text-center"
+                >
+                  <motion.p
+                    initial={{ opacity: 0, letterSpacing: "0.36em", y: 16 }}
+                    animate={{ opacity: 1, letterSpacing: "0.18em", y: 0 }}
+                    transition={{
+                      duration: reduceMotion ? 0.01 : 2.2,
+                      delay: reduceMotion ? 0 : 0.8,
+                      ease: MOTION_EASE,
+                    }}
+                    className="font-tech text-[10px] uppercase tracking-[0.22em] text-orange-100/90 md:text-xs"
+                  >
+                    {cinematicLeadLine}
+                  </motion.p>
+                  <div className="mt-4 min-h-[3rem] md:min-h-[3.6rem]">
+                    <motion.p
+                      initial={{ opacity: 0, y: 18, filter: "blur(12px)" }}
+                      animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                      transition={{
+                        duration: reduceMotion ? 0.01 : 2.4,
+                        delay: reduceMotion ? 0 : 1.15,
+                        ease: MOTION_EASE,
+                      }}
+                      className="text-sm font-light tracking-[0.14em] text-white/88 md:text-lg"
+                    >
+                      {typedCinematicLine}
+                      {!reduceMotion &&
+                      !hasCompletedIntroLoop &&
+                      typedCinematicLine.length < cinematicTypeLine.length ? (
+                        <motion.span
+                          aria-hidden="true"
+                          animate={{ opacity: [0, 1, 1, 0] }}
+                          transition={{ duration: 0.9, repeat: Infinity, ease: "linear" }}
+                          className="ml-1 inline-block text-primary"
+                        >
+                          |
+                        </motion.span>
+                      ) : null}
+                    </motion.p>
+                  </div>
+                  <motion.div
+                    initial={{ opacity: 0, y: 22, scale: 0.96 }}
+                    animate={
+                      hasCompletedIntroLoop
+                        ? { opacity: 1, y: 0, scale: 1 }
+                        : { opacity: 0, y: 22, scale: 0.96 }
+                    }
+                    transition={{
+                      duration: reduceMotion ? 0.01 : 1.8,
+                      ease: MOTION_EASE,
+                    }}
+                    className="mt-6"
+                  >
+                    <span className="inline-flex items-center rounded-full border border-orange-300/35 bg-black/30 px-5 py-2 font-display text-xl tracking-[0.45em] text-white shadow-[0_0_35px_rgba(255,122,0,0.18)] md:text-3xl">
+                      REDOXY
+                    </span>
+                  </motion.div>
+                </motion.div>
+              </div>
             </div>
           </div>
           <div className="absolute inset-0 bg-[#05070c]/25" />
-          <div className="hero-heat-haze absolute inset-0 mix-blend-soft-light opacity-45" />
-          <div className="hero-noise absolute inset-0 opacity-18" />
+          <div className="hero-heat-haze absolute inset-0 mix-blend-screen opacity-55" />
+          <div className="hero-noise absolute inset-0 opacity-14" />
 
           {!reduceMotion ? (
             <>
@@ -105,18 +254,45 @@ export default function Home() {
           >
             THE GLOBAL PARTNER
           </motion.p>
-          <motion.h1
-            variants={staggerContainer(0.05)}
-            className="hero-glitch text-4xl md:text-6xl font-display font-bold text-white leading-tight mb-6"
-          >
-            {heroHeading.map((word) => (
-              <motion.span key={word} variants={fadeUp(18)} className="inline-block mr-3">
+          <motion.h1 className="hero-glitch text-4xl md:text-6xl font-display font-bold text-white leading-tight mb-6">
+            {heroHeading.map((word, index) => (
+              <motion.span
+                key={`${word}-${index}`}
+                initial={{ opacity: 0, y: 26, filter: "blur(8px)" }}
+                animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                transition={{
+                  duration: reduceMotion ? 0.01 : 0.85,
+                  ease: MOTION_EASE,
+                  delay: reduceMotion ? 0 : 0.55 + index * 0.18,
+                }}
+                className="inline-block mr-3"
+              >
                 {word}
               </motion.span>
             ))}
+            <motion.span
+              aria-hidden="true"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: [0, 1, 1, 0] }}
+              transition={{
+                duration: reduceMotion ? 0.01 : 1.3,
+                delay: reduceMotion ? 0 : 0.85 + heroHeading.length * 0.18,
+                repeat: reduceMotion ? 0 : Infinity,
+                repeatDelay: reduceMotion ? 0 : 0.25,
+              }}
+              className="inline-block align-middle text-primary"
+            >
+              |
+            </motion.span>
           </motion.h1>
           <motion.p
-            variants={fadeUp(20)}
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{
+              duration: reduceMotion ? 0.01 : 0.95,
+              delay: reduceMotion ? 0 : 1.55,
+              ease: MOTION_EASE,
+            }}
             className="text-base md:text-xl text-gray-200 max-w-3xl mx-auto mb-10"
           >
             Integrated industrial, environmental, and trading services across GCC, Asia, and Africa.
