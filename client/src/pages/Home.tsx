@@ -36,6 +36,10 @@ export default function Home() {
     const video = heroVideoRef.current;
     if (!video) return;
 
+    const revealHeadline = () => {
+      setHasVideoStarted(true);
+    };
+
     const ensurePlayback = () => {
       video.muted = true;
       video.defaultMuted = true;
@@ -44,24 +48,39 @@ export default function Home() {
       video.setAttribute("muted", "");
       video.setAttribute("loop", "");
       video.setAttribute("playsinline", "");
-      void video.play().catch(() => undefined);
+
+      const playAttempt = video.play();
+      if (playAttempt) {
+        void playAttempt.catch(() => {
+          revealHeadline();
+        });
+      }
     };
 
-    const handlePlaying = () => {
-      setHasVideoStarted(true);
+    const handlePlaybackState = () => {
+      const hasFrameReady = video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA;
+      const isActivelyPlaying = !video.paused && !video.ended;
+
+      if (hasFrameReady || isActivelyPlaying) {
+        revealHeadline();
+      }
     };
 
-    ensurePlayback();
-    video.addEventListener("loadeddata", ensurePlayback);
-    video.addEventListener("canplay", ensurePlayback);
-    video.addEventListener("playing", handlePlaying);
+    video.addEventListener("loadeddata", handlePlaybackState);
+    video.addEventListener("canplay", handlePlaybackState);
+    video.addEventListener("playing", handlePlaybackState);
+    video.addEventListener("error", revealHeadline);
     window.addEventListener("pageshow", ensurePlayback);
     document.addEventListener("visibilitychange", ensurePlayback);
 
+    handlePlaybackState();
+    ensurePlayback();
+
     return () => {
-      video.removeEventListener("loadeddata", ensurePlayback);
-      video.removeEventListener("canplay", ensurePlayback);
-      video.removeEventListener("playing", handlePlaying);
+      video.removeEventListener("loadeddata", handlePlaybackState);
+      video.removeEventListener("canplay", handlePlaybackState);
+      video.removeEventListener("playing", handlePlaybackState);
+      video.removeEventListener("error", revealHeadline);
       window.removeEventListener("pageshow", ensurePlayback);
       document.removeEventListener("visibilitychange", ensurePlayback);
     };
