@@ -1,6 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { createHmac, timingSafeEqual } from "crypto";
+import crypto from "crypto";
 import { storage } from "./storage";
 
 type BulletinItem = {
@@ -35,48 +36,6 @@ type TraderBoardSnapshot = {
   tradersOnline: number;
   marketPulse: "Bullish" | "Bearish" | "Neutral";
   quotes: TraderPricing[];
-};
-
-type AdminServiceStatus = {
-  id: string;
-  label: string;
-  status: "healthy" | "degraded" | "offline";
-  detail: string;
-};
-
-type AdminActionDefinition = {
-  id: "sync-market-feeds" | "refresh-bulletin" | "issue-runtime-check";
-  label: string;
-  description: string;
-  impact: string;
-};
-
-type AdminActionLog = {
-  id: string;
-  actionId: AdminActionDefinition["id"];
-  label: string;
-  status: "completed" | "queued";
-  detail: string;
-  createdAt: string;
-};
-
-type AdminControlCenterPayload = {
-  session: {
-    ok: true;
-    user: string;
-    expiresAt: string;
-  };
-  host: {
-    appName: string;
-    environment: string;
-    uptimeSeconds: number;
-    regionHint: string;
-    apiBasePath: string;
-  };
-  services: AdminServiceStatus[];
-  actions: AdminActionDefinition[];
-  actionHistory: AdminActionLog[];
-  latestSnapshot: TraderBoardSnapshot;
 };
 
 const COMMODITIES_API_BASE = "https://commodities-api.com/api";
@@ -233,175 +192,118 @@ function numberOrNull(value: unknown): number | null {
   return typeof value === "number" && Number.isFinite(value) ? value : null;
 }
 
-type AdminCredentialCandidate = {
-  username: string;
-  password: string;
-  source: "env" | "fallback";
-};
-
-function normalizeCredentialValue(value: string) {
-  return value
-    .replace(/[\u200B-\u200D\uFEFF]/g, "")
-    .trim()
-    .replace(/^['"]+|['"]+$/g, "");
-}
-
-function buildAdminCredentialCandidates(): AdminCredentialCandidate[] {
-  const candidates: AdminCredentialCandidate[] = [];
-  const seen = new Set<string>();
-
-  const pushCandidate = (
-    username: string | undefined,
-    password: string | undefined,
-    source: AdminCredentialCandidate["source"],
-  ) => {
-    const normalizedUsername = normalizeCredentialValue(username ?? "");
-    const normalizedPassword = normalizeCredentialValue(password ?? "");
-    if (!normalizedUsername || !normalizedPassword) return;
-
-    const key = `${normalizedUsername.toLowerCase()}::${normalizedPassword}`;
-    if (seen.has(key)) return;
-    seen.add(key);
-    candidates.push({
-      username: normalizedUsername,
-      password: normalizedPassword,
-      source,
-    });
-  };
-
-  pushCandidate(process.env.ADMIN_USERNAME, process.env.ADMIN_PASSWORD, "env");
-  pushCandidate("Remiz", "Remiz123312", "fallback");
-  pushCandidate("admin", "ChangeMe123!", "fallback");
-
-  return candidates;
-}
-
+const ADMIN_USERNAME = process.env.ADMIN_USERNAME;
+const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH;
 const ADMIN_TOKEN_TTL_MS = 1000 * 60 * 60 * 8;
-const ADMIN_TOKEN_SECRET = process.env.ADMIN_TOKEN_SECRET ?? "redoxy-admin-token-secret-change-me";
-const ADMIN_CREDENTIAL_CANDIDATES = buildAdminCredentialCandidates();
+const ADMIN_TOKEN_SECRET = process.env.ADMIN_TOKEN_SECRET;
+const BARREL_GALLONS = 42;
+const KEROSENE_BARREL_GALLONS = 41.3;
 
-function validateAdminCredentials(username: string, password: string) {
-  const normalizedUsername = normalizeCredentialValue(username);
-  const normalizedPassword = normalizeCredentialValue(password);
-
-  return ADMIN_CREDENTIAL_CANDIDATES.find(
-    (candidate) =>
-      candidate.username.toLowerCase() === normalizedUsername.toLowerCase() &&
-      candidate.password === normalizedPassword,
-  );
+function hasAdminConfig() {
+  return Boolean(ADMIN_USERNAME && ADMIN_PASSWORD_HASH && ADMIN_TOKEN_SECRET);
 }
 
 function signTokenPayload(payload: string) {
-  return createHmac("sha256", ADMIN_TOKEN_SECRET).update(payload).digest("hex");
+  if (!ADMIN_TOKEN_SECRET) {
+    throw new Error('ADMIN_TOKEN_SECRET is not configured');
+  }
+  return createHmac('sha256', ADMIN_TOKEN_SECRET).update(payload).digest('hex');
 }
 
 function createAdminToken(username: string) {
   const expiresAt = Date.now() + ADMIN_TOKEN_TTL_MS;
   const payload = `${username}|${expiresAt}`;
   const signature = signTokenPayload(payload);
-  return Buffer.from(`${payload}|${signature}`).toString("base64url");
+  return Buffer.from(`${payload}|${signature}`).toString('base64url');
 }
 
 function getBearerToken(authorization: string | undefined): string | null {
   if (!authorization) return null;
-  const [scheme, token] = authorization.split(" ");
-  if (scheme?.toLowerCase() !== "bearer" || !token) return null;
+  const [scheme, token] = authorization.split(' ');
+  if (scheme?.toLowerCase() !== 'bearer' || !token) return null;
   return token;
 }
 
-function parseAdminToken(authorization: string | undefined) {
+function isAdminAuthorized(authorization: string | undefined): boolean {
   const token = getBearerToken(authorization);
-  if (!token) return null;
+  if (!token) return false;
 
   try {
-    const decoded = Buffer.from(token, "base64url").toString("utf8");
-    const [username, expiresAtRaw, signature] = decoded.split("|");
-    if (!username || !expiresAtRaw || !signature) return null;
+    const decoded = Buffer.from(token, 'base64url').toString('utf8');
+    const [username, expiresAtRaw, signature] = decoded.split('|');
+    if (!username || !expiresAtRaw || !signature) return false;
 
     const payload = `${username}|${expiresAtRaw}`;
     const expectedSignature = signTokenPayload(payload);
-    const provided = Buffer.from(signature, "utf8");
-    const expected = Buffer.from(expectedSignature, "utf8");
-    if (provided.length !== expected.length) return null;
-    if (!timingSafeEqual(provided, expected)) return null;
+    const provided = Buffer.from(signature, 'utf8');
+    const expected = Buffer.from(expectedSignature, 'utf8');
+    if (provided.length !== expected.length) return false;
+    if (!timingSafeEqual(provided, expected)) return false;
 
     const expiresAt = Number(expiresAtRaw);
-    if (!Number.isFinite(expiresAt)) return null;
-    if (Date.now() > expiresAt) return null;
+    if (!Number.isFinite(expiresAt)) return false;
+    if (Date.now() > expiresAt) return false;
 
-    return {
-      username,
-      expiresAt,
-    };
+    return true;
   } catch {
-    return null;
+    return false;
   }
 }
 
-function isAdminAuthorized(authorization: string | undefined): boolean {
-  return parseAdminToken(authorization) != null;
+function verifyPassword(password: string): boolean {
+  if (!ADMIN_PASSWORD_HASH) return false;
+
+  const [salt, expectedHex] = ADMIN_PASSWORD_HASH.split(':');
+  if (!salt || !expectedHex) return false;
+
+  const derived = crypto.scryptSync(password, salt, 64).toString('hex');
+  const provided = Buffer.from(derived, 'hex');
+  const expected = Buffer.from(expectedHex, 'hex');
+  if (provided.length !== expected.length) return false;
+  return timingSafeEqual(provided, expected);
 }
-
-const ADMIN_ACTIONS: AdminActionDefinition[] = [
-  {
-    id: "sync-market-feeds",
-    label: "Sync market feeds",
-    description: "Pull fresh Brent, Platts, and regional feed snapshots for the hosted control plane.",
-    impact: "Refreshes feed cache and improves dashboard freshness.",
-  },
-  {
-    id: "refresh-bulletin",
-    label: "Refresh live bulletin",
-    description: "Rebuild the news and intelligence bulletin used by trading operators.",
-    impact: "Updates market intelligence items for operators.",
-  },
-  {
-    id: "issue-runtime-check",
-    label: "Run runtime check",
-    description: "Validate backend host health, auth, and API readiness for more complex app actions.",
-    impact: "Confirms backend hosting readiness and session handling.",
-  },
-];
-
-const adminActionHistory: AdminActionLog[] = [];
 
 async function fetchYahooLiveQuotes() {
   const response = await fetch(
-    "https://query1.finance.yahoo.com/v7/finance/quote?symbols=BZ%3DF,HO%3DF,RB%3DF",
-    { headers: { "user-agent": "redoxy-trader-dashboard/1.0" } },
+    'https://query1.finance.yahoo.com/v7/finance/quote?symbols=BZ%3DF,HO%3DF,RB%3DF',
+    { headers: { 'user-agent': 'redoxy-trader-dashboard/1.0' } },
   );
 
   if (!response.ok) {
     throw new Error(`Yahoo quote fetch failed: ${response.status}`);
   }
 
-  const payload = (await response.json()) as {
-    quoteResponse?: {
-      result?: Array<{ symbol?: string; regularMarketPrice?: number }>;
-    };
-  };
+  const payload = (await response.json()) as unknown;
+  const rows =
+    typeof payload === 'object' &&
+    payload !== null &&
+    'quoteResponse' in payload &&
+    typeof (payload as { quoteResponse?: unknown }).quoteResponse === 'object' &&
+    (payload as { quoteResponse: { result?: unknown } }).quoteResponse !== null &&
+    Array.isArray((payload as { quoteResponse: { result?: unknown[] } }).quoteResponse.result)
+      ? (payload as { quoteResponse: { result: Array<{ symbol?: string; regularMarketPrice?: unknown }> } }).quoteResponse.result
+      : [];
 
-  const rows = payload.quoteResponse?.result ?? [];
   const bySymbol = new Map(rows.map((row) => [row.symbol, row.regularMarketPrice]));
 
-  const brent = numberOrNull(bySymbol.get("BZ=F"));
-  const heatingOil = numberOrNull(bySymbol.get("HO=F"));
-  const rbob = numberOrNull(bySymbol.get("RB=F"));
+  const brent = numberOrNull(bySymbol.get('BZ=F'));
+  const heatingOil = numberOrNull(bySymbol.get('HO=F'));
+  const rbob = numberOrNull(bySymbol.get('RB=F'));
 
   if (brent == null || heatingOil == null || rbob == null) {
-    throw new Error("Yahoo returned incomplete quote set");
+    throw new Error('Yahoo returned incomplete quote set');
   }
 
   return { brent, heatingOil, rbob };
 }
 
-async function fetchMiddleEastTradesQuotes(): Promise<Partial<Record<"diesel" | "naphtha" | "kerosene", number>>> {
+async function fetchMiddleEastTradesQuotes(): Promise<Partial<Record<'diesel' | 'naphtha' | 'kerosene', number>>> {
   const endpoint = process.env.MIDDLEEAST_TRADES_API_URL;
   if (!endpoint) return {};
 
   const response = await fetch(endpoint, {
     headers: {
-      "user-agent": "redoxy-trader-dashboard/1.0",
+      'user-agent': 'redoxy-trader-dashboard/1.0',
       ...(process.env.MIDDLEEAST_TRADES_API_KEY
         ? { authorization: `Bearer ${process.env.MIDDLEEAST_TRADES_API_KEY}` }
         : {}),
@@ -418,13 +320,13 @@ async function fetchMiddleEastTradesQuotes(): Promise<Partial<Record<"diesel" | 
   };
 }
 
-async function fetchInvestingProxyQuotes(): Promise<Partial<Record<"brent", number>>> {
+async function fetchInvestingProxyQuotes(): Promise<Partial<Record<'brent', number>>> {
   const endpoint = process.env.INVESTING_API_URL;
   if (!endpoint) return {};
 
   const response = await fetch(endpoint, {
     headers: {
-      "user-agent": "redoxy-trader-dashboard/1.0",
+      'user-agent': 'redoxy-trader-dashboard/1.0',
       ...(process.env.INVESTING_API_KEY
         ? { authorization: `Bearer ${process.env.INVESTING_API_KEY}` }
         : {}),
@@ -439,87 +341,6 @@ async function fetchInvestingProxyQuotes(): Promise<Partial<Record<"brent", numb
   };
 }
 
-function createActionLog(action: AdminActionDefinition, detail: string): AdminActionLog {
-  return {
-    id: `${action.id}-${Date.now().toString(36)}`,
-    actionId: action.id,
-    label: action.label,
-    status: "completed",
-    detail,
-    createdAt: new Date().toISOString(),
-  };
-}
-
-function recordAdminAction(actionId: AdminActionDefinition["id"]): AdminActionLog {
-  const action = ADMIN_ACTIONS.find((item) => item.id === actionId);
-  if (!action) {
-    throw new Error("Unknown action");
-  }
-
-  const detailByAction: Record<AdminActionDefinition["id"], string> = {
-    "sync-market-feeds": "Market connectors have been polled and the hosted trading cache has been refreshed.",
-    "refresh-bulletin": "Bulletin refresh requested for refinery and energy intelligence feeds.",
-    "issue-runtime-check": "Backend host runtime, auth token handling, and API action plane verified.",
-  };
-
-  const log = createActionLog(action, detailByAction[actionId]);
-  adminActionHistory.unshift(log);
-  adminActionHistory.splice(12);
-  return log;
-}
-
-function buildAdminServices(snapshot: TraderBoardSnapshot): AdminServiceStatus[] {
-  return [
-    {
-      id: "auth",
-      label: "Admin auth gateway",
-      status: "healthy",
-      detail: "Signed token session active and accepted credential set verified.",
-    },
-    {
-      id: "market-data",
-      label: "Market data aggregation",
-      status: snapshot.quotes.some((quote) => quote.source === "fallback") ? "degraded" : "healthy",
-      detail: `Primary market source: ${snapshot.quotes[0]?.source ?? "unavailable"}.`,
-    },
-    {
-      id: "backend-host",
-      label: "Backend host capability",
-      status: "healthy",
-      detail: "Express API is ready to host additional admin actions and app workflows.",
-    },
-    {
-      id: "connectors",
-      label: "External connectors",
-      status: process.env.INVESTING_API_URL || process.env.MIDDLEEAST_TRADES_API_URL ? "healthy" : "degraded",
-      detail: process.env.INVESTING_API_URL || process.env.MIDDLEEAST_TRADES_API_URL
-        ? "At least one advanced upstream connector is configured."
-        : "Only default market connectors are active; add provider env vars for more complex actions.",
-    },
-  ];
-}
-
-function buildAdminControlCenter(session: { username: string; expiresAt: number }, snapshot: TraderBoardSnapshot): AdminControlCenterPayload {
-  return {
-    session: {
-      ok: true,
-      user: session.username,
-      expiresAt: new Date(session.expiresAt).toISOString(),
-    },
-    host: {
-      appName: "REDOXY Control Plane",
-      environment: process.env.NODE_ENV ?? "development",
-      uptimeSeconds: Math.round(process.uptime()),
-      regionHint: process.env.VERCEL_REGION ?? "local-runtime",
-      apiBasePath: "/api",
-    },
-    services: buildAdminServices(snapshot),
-    actions: ADMIN_ACTIONS,
-    actionHistory: adminActionHistory,
-    latestSnapshot: snapshot,
-  };
-}
-
 async function createLiveTraderSnapshot(): Promise<TraderBoardSnapshot> {
   const now = new Date();
 
@@ -527,63 +348,63 @@ async function createLiveTraderSnapshot(): Promise<TraderBoardSnapshot> {
   let dieselBrent = 96.5;
   let naphthaBrent = 71.4;
   let keroseneBrent = 93.2;
-  let source = "commodities-api";
+  let source = 'commodities-api';
 
   try {
     const [commoditiesPayload, yahoo, middleEast, investing] = await Promise.all([
-      fetchCommoditiesJson<{ rates?: Record<string, unknown> }>("latest", {
-        base: "USD",
-        symbols: "CRUDE,DIESEL,NAPHTHA",
+      fetchCommoditiesJson<{ rates?: Record<string, unknown> }>('latest', {
+        base: 'USD',
+        symbols: 'CRUDE,DIESEL,NAPHTHA',
       }).catch((): { rates: Record<string, unknown> } => ({ rates: {} })),
       fetchYahooLiveQuotes().catch((): { brent: number; heatingOil: number; rbob: number } | null => null),
-      fetchMiddleEastTradesQuotes().catch((): Partial<Record<"diesel" | "naphtha" | "kerosene", number>> => ({})),
-      fetchInvestingProxyQuotes().catch((): Partial<Record<"brent", number>> => ({})),
+      fetchMiddleEastTradesQuotes().catch((): Partial<Record<'diesel' | 'naphtha' | 'kerosene', number>> => ({})),
+      fetchInvestingProxyQuotes().catch((): Partial<Record<'brent', number>> => ({})),
     ]);
 
     const rates = commoditiesPayload.rates ?? {};
     brent = investing.brent ?? yahoo?.brent ?? numberOrNull(rates.CRUDE) ?? brent;
-    dieselBrent = middleEast.diesel ?? numberOrNull(rates.DIESEL) ?? (yahoo ? yahoo.heatingOil * 42 : dieselBrent);
-    naphthaBrent = middleEast.naphtha ?? numberOrNull(rates.NAPHTHA) ?? (yahoo ? yahoo.rbob * 42 : naphthaBrent);
-    keroseneBrent = middleEast.kerosene ?? (yahoo ? yahoo.heatingOil * 41.3 : keroseneBrent);
+    dieselBrent = middleEast.diesel ?? numberOrNull(rates.DIESEL) ?? (yahoo ? yahoo.heatingOil * BARREL_GALLONS : dieselBrent);
+    naphthaBrent = middleEast.naphtha ?? numberOrNull(rates.NAPHTHA) ?? (yahoo ? yahoo.rbob * BARREL_GALLONS : naphthaBrent);
+    keroseneBrent = middleEast.kerosene ?? (yahoo ? yahoo.heatingOil * KEROSENE_BARREL_GALLONS : keroseneBrent);
 
     if (middleEast.diesel || middleEast.naphtha || middleEast.kerosene) {
-      source = "middleeast-trades+commodities";
+      source = 'middleeast-trades+commodities';
     } else if (yahoo || investing.brent) {
-      source = "investing/yahoo+commodities";
+      source = 'investing/yahoo+commodities';
     }
   } catch {
-    source = "fallback";
+    source = 'fallback';
   }
 
   const quotes: TraderPricing[] = [
     {
-      product: "Diesel",
+      product: 'Diesel',
       brent: Number(dieselBrent.toFixed(2)),
       plats: Number((dieselBrent + 4.25).toFixed(2)),
       spread: 4.25,
-      trend: "up",
+      trend: 'up',
       updatedAt: now.toISOString(),
-      unit: "USD/bbl",
+      unit: 'USD/bbl',
       source,
     },
     {
-      product: "Naphtha",
+      product: 'Naphtha',
       brent: Number(naphthaBrent.toFixed(2)),
       plats: Number((naphthaBrent + 3.85).toFixed(2)),
       spread: 3.85,
-      trend: "up",
+      trend: 'up',
       updatedAt: now.toISOString(),
-      unit: "USD/bbl",
+      unit: 'USD/bbl',
       source,
     },
     {
-      product: "Kerosene",
+      product: 'Kerosene',
       brent: Number(keroseneBrent.toFixed(2)),
       plats: Number((keroseneBrent + 4.05).toFixed(2)),
       spread: 4.05,
-      trend: "up",
+      trend: 'up',
       updatedAt: now.toISOString(),
-      unit: "USD/bbl",
+      unit: 'USD/bbl',
       source,
     },
   ];
@@ -591,7 +412,7 @@ async function createLiveTraderSnapshot(): Promise<TraderBoardSnapshot> {
   return {
     updatedAt: now.toISOString(),
     tradersOnline: 20 + Math.floor((Math.sin(now.getTime() / 180000) + 1) * 4),
-    marketPulse: brent > 85 ? "Bullish" : brent < 80 ? "Bearish" : "Neutral",
+    marketPulse: brent > 85 ? 'Bullish' : brent < 80 ? 'Bearish' : 'Neutral',
     quotes,
   };
 }
@@ -729,73 +550,42 @@ export async function registerRoutes(
   });
 
   app.post("/api/admin/login", (req, res) => {
-    const rawUsername = typeof req.body?.username === "string" ? req.body.username : "";
-    const rawPassword = typeof req.body?.password === "string" ? req.body.password : "";
-    const username = rawUsername.trim();
-    const password = rawPassword.trim();
-
-    const matchedCredential = validateAdminCredentials(username, password);
-    if (!matchedCredential) {
-      return res.status(401).json({
+    if (!hasAdminConfig() || !ADMIN_USERNAME) {
+      return res.status(503).json({
         ok: false,
-        error:
-          "Invalid credentials. Use your Vercel ADMIN_USERNAME / ADMIN_PASSWORD values, or the fallback Remiz / Remiz123312 if env vars are not active yet.",
+        error: "Admin auth is not configured on the server",
       });
     }
 
-    const token = createAdminToken(matchedCredential.username);
+    const rawUsername =
+      typeof req.body?.username === "string" ? req.body.username : "";
+    const rawPassword =
+      typeof req.body?.password === "string" ? req.body.password : "";
+    const username = rawUsername.trim();
+    const password = rawPassword.trim();
 
+    if (
+      username.toLowerCase() !== ADMIN_USERNAME.toLowerCase() ||
+      !verifyPassword(password)
+    ) {
+      return res.status(401).json({ ok: false, error: "Invalid credentials" });
+    }
+
+    const token = createAdminToken(username);
     return res.json({ ok: true, token, expiresInMs: ADMIN_TOKEN_TTL_MS });
   });
 
   app.get("/api/admin/session", (req, res) => {
-    const session = parseAdminToken(req.headers.authorization);
-    if (!session) {
+    if (!hasAdminConfig()) {
+      return res.status(503).json({ ok: false, error: "Admin auth unavailable" });
+    }
+
+    const authorized = isAdminAuthorized(req.headers.authorization);
+    if (!authorized) {
       return res.status(401).json({ ok: false });
     }
 
-    return res.json({
-      ok: true,
-      user: session.username,
-      expiresAt: new Date(session.expiresAt).toISOString(),
-    });
-  });
-
-  app.get("/api/admin/control-center", async (req, res) => {
-    const session = parseAdminToken(req.headers.authorization);
-    if (!session) {
-      return res.status(401).json({ ok: false });
-    }
-
-    const snapshot = await createLiveTraderSnapshot();
-    return res.json(buildAdminControlCenter(session, snapshot));
-  });
-
-  app.post("/api/admin/actions", async (req, res) => {
-    const session = parseAdminToken(req.headers.authorization);
-    if (!session) {
-      return res.status(401).json({ ok: false });
-    }
-
-    const actionId = req.body?.actionId;
-    if (typeof actionId !== "string") {
-      return res.status(400).json({ ok: false, error: "actionId is required" });
-    }
-
-    try {
-      const snapshot = await createLiveTraderSnapshot();
-      const log = recordAdminAction(actionId as AdminActionDefinition["id"]);
-      return res.json({
-        ok: true,
-        log,
-        controlCenter: buildAdminControlCenter(session, snapshot),
-      });
-    } catch (error) {
-      return res.status(400).json({
-        ok: false,
-        error: error instanceof Error ? error.message : "Unable to execute admin action",
-      });
-    }
+    return res.json({ ok: true });
   });
 
   app.post("/api/admin/logout", (_req, res) => {
