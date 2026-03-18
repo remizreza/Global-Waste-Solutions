@@ -41,12 +41,6 @@ export default function AdminLogin() {
         <div className="container mx-auto max-w-xl rounded-2xl border border-white/15 bg-card/60 p-8">
           <p className="text-primary font-tech text-xs tracking-[0.22em] uppercase mb-3">Admin Access</p>
           <h1 className="text-3xl font-display text-white mb-4">Admin Login</h1>
-          <p className="text-xs text-gray-400 mb-4">
-            Sign in to the hosted backend control center for advanced actions, runtime checks, and market-feed operations.
-          </p>
-          <p className="text-xs text-gray-400 mb-4">
-            If environment variables are not set, default credentials are <span className="text-white">Remiz</span> / <span className="text-white">Remiz123312</span>.
-          </p>
           <form className="space-y-4" onSubmit={onSubmit}>
             <input className="w-full rounded-lg border border-white/15 bg-black/20 px-4 py-3 text-white" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="admin username" required />
             <input className="w-full rounded-lg border border-white/15 bg-black/20 px-4 py-3 text-white" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="password" required />

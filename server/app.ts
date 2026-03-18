@@ -20,6 +20,25 @@ export function log(message: string, source = "express") {
   console.log(`${formattedTime} [${source}] ${message}`);
 }
 
+function sanitizeLogPayload(payload: unknown): unknown {
+  if (!payload || typeof payload !== "object") return payload;
+
+  if (Array.isArray(payload)) {
+    return payload.map((item) => sanitizeLogPayload(item));
+  }
+
+  const redactedKeys = new Set(["token", "authorization", "password", "admin_token"]);
+  const sanitized: Record<string, unknown> = {};
+
+  for (const [key, value] of Object.entries(payload as Record<string, unknown>)) {
+    sanitized[key] = redactedKeys.has(key.toLowerCase())
+      ? "[REDACTED]"
+      : sanitizeLogPayload(value);
+  }
+
+  return sanitized;
+}
+
 export async function createApp(options?: { serveClient?: boolean }) {
   const app = express();
   const httpServer = createServer(app);
@@ -51,7 +70,7 @@ export async function createApp(options?: { serveClient?: boolean }) {
       if (path.startsWith("/api")) {
         let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
         if (capturedJsonResponse) {
-          logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
+          logLine += ` :: ${JSON.stringify(sanitizeLogPayload(capturedJsonResponse))}`;
         }
 
         log(logLine);
