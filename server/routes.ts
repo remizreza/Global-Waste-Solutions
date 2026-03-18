@@ -348,32 +348,70 @@ async function createLiveTraderSnapshot(): Promise<TraderBoardSnapshot> {
   let dieselBrent = 96.5;
   let naphthaBrent = 71.4;
   let keroseneBrent = 93.2;
-  let source = 'commodities-api';
+  let source = 'fallback';
 
-  try {
-    const [commoditiesPayload, yahoo, middleEast, investing] = await Promise.all([
-      fetchCommoditiesJson<{ rates?: Record<string, unknown> }>('latest', {
-        base: 'USD',
-        symbols: 'CRUDE,DIESEL,NAPHTHA',
-      }).catch((): { rates: Record<string, unknown> } => ({ rates: {} })),
-      fetchYahooLiveQuotes().catch((): { brent: number; heatingOil: number; rbob: number } | null => null),
-      fetchMiddleEastTradesQuotes().catch((): Partial<Record<'diesel' | 'naphtha' | 'kerosene', number>> => ({})),
-      fetchInvestingProxyQuotes().catch((): Partial<Record<'brent', number>> => ({})),
-    ]);
+  const [commoditiesResult, yahooResult, middleEastResult, investingResult] = await Promise.allSettled([
+    fetchCommoditiesJson<{ rates?: Record<string, unknown> }>('latest', {
+      base: 'USD',
+      symbols: 'CRUDE,DIESEL,NAPHTHA',
+    }),
+    fetchYahooLiveQuotes(),
+    fetchMiddleEastTradesQuotes(),
+    fetchInvestingProxyQuotes(),
+  ]);
 
-    const rates = commoditiesPayload.rates ?? {};
-    brent = investing.brent ?? yahoo?.brent ?? numberOrNull(rates.CRUDE) ?? brent;
-    dieselBrent = middleEast.diesel ?? numberOrNull(rates.DIESEL) ?? (yahoo ? yahoo.heatingOil * BARREL_GALLONS : dieselBrent);
-    naphthaBrent = middleEast.naphtha ?? numberOrNull(rates.NAPHTHA) ?? (yahoo ? yahoo.rbob * BARREL_GALLONS : naphthaBrent);
-    keroseneBrent = middleEast.kerosene ?? (yahoo ? yahoo.heatingOil * KEROSENE_BARREL_GALLONS : keroseneBrent);
+  const rates =
+    commoditiesResult.status === 'fulfilled' ? commoditiesResult.value.rates ?? {} : {};
+  const yahoo = yahooResult.status === 'fulfilled' ? yahooResult.value : null;
+  const middleEast =
+    middleEastResult.status === 'fulfilled' ? middleEastResult.value : {};
+  const investing =
+    investingResult.status === 'fulfilled' ? investingResult.value : {};
 
-    if (middleEast.diesel || middleEast.naphtha || middleEast.kerosene) {
+  const commodityBrent = numberOrNull(rates.CRUDE);
+  const commodityDiesel = numberOrNull(rates.DIESEL);
+  const commodityNaphtha = numberOrNull(rates.NAPHTHA);
+  const middleEastHasQuotes = [
+    middleEast.diesel,
+    middleEast.naphtha,
+    middleEast.kerosene,
+  ].some((value) => value != null);
+
+  const hasLiveBrent =
+    investing.brent != null || yahoo?.brent != null || commodityBrent != null;
+  const hasLiveDiesel =
+    middleEast.diesel != null || commodityDiesel != null || yahoo != null;
+  const hasLiveNaphtha =
+    middleEast.naphtha != null || commodityNaphtha != null || yahoo != null;
+  const hasLiveKerosene = middleEast.kerosene != null || yahoo != null;
+  const hasAnyLiveQuotes =
+    hasLiveBrent || hasLiveDiesel || hasLiveNaphtha || hasLiveKerosene;
+  const hasCompleteLiveQuotes =
+    hasLiveBrent && hasLiveDiesel && hasLiveNaphtha && hasLiveKerosene;
+
+  brent = investing.brent ?? yahoo?.brent ?? commodityBrent ?? brent;
+  dieselBrent =
+    middleEast.diesel ??
+    commodityDiesel ??
+    (yahoo ? yahoo.heatingOil * BARREL_GALLONS : dieselBrent);
+  naphthaBrent =
+    middleEast.naphtha ??
+    commodityNaphtha ??
+    (yahoo ? yahoo.rbob * BARREL_GALLONS : naphthaBrent);
+  keroseneBrent =
+    middleEast.kerosene ??
+    (yahoo ? yahoo.heatingOil * KEROSENE_BARREL_GALLONS : keroseneBrent);
+
+  if (hasCompleteLiveQuotes) {
+    if (middleEastHasQuotes) {
       source = 'middleeast-trades+commodities';
-    } else if (yahoo || investing.brent) {
+    } else if (yahoo || investing.brent != null) {
       source = 'investing/yahoo+commodities';
+    } else {
+      source = 'commodities-api';
     }
-  } catch {
-    source = 'fallback';
+  } else if (hasAnyLiveQuotes) {
+    source = 'partial-fallback';
   }
 
   const quotes: TraderPricing[] = [
