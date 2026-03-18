@@ -30,9 +30,3 @@ Optional upstream market data connectors:
 - `INVESTING_API_KEY`
 - `MIDDLEEAST_TRADES_API_URL`
 - `MIDDLEEAST_TRADES_API_KEY`
-
-## Admin control center endpoints
-The hosted admin backend now exposes these protected endpoints:
-- `GET /api/admin/session` — validate signed admin session and expiry
-- `GET /api/admin/control-center` — load hosted backend status, services, actions, logs, and latest market snapshot
-- `POST /api/admin/actions` — run backend actions such as feed sync, bulletin refresh, and runtime checks
