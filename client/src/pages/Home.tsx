@@ -126,18 +126,6 @@ export default function Home() {
               transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
             />
           </motion.div>
-          <motion.p
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{
-              duration: reduceMotion ? 0.01 : 0.7,
-              delay: reduceMotion ? 0 : 0.18,
-              ease: MOTION_EASE,
-            }}
-            className="mb-4 text-[11px] md:text-xs font-tech uppercase tracking-[0.42em] text-white/85"
-          >
-            THE GLOBAL PARTNER
-          </motion.p>
           <motion.h1 className="hero-glitch text-4xl md:text-6xl font-display font-bold text-white leading-tight mb-6">
             {heroHeading.map((word, index) => (
               <motion.span
