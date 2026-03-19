@@ -22,7 +22,7 @@ The Home page now points to `/assets/hero-introduction.mp4` and automatically fa
 ## Admin dashboard environment variables
 Set these in Vercel Project Settings (and optionally GitHub Actions secrets if your workflow needs them):
 - `ADMIN_USERNAME`
-- `ADMIN_PASSWORD`
+- `ADMIN_PASSWORD` (or `ADMIN_PASSWORD_HASH` for a scrypt hash in `salt:hex` format)
 - `ADMIN_TOKEN_SECRET`
 
 Optional upstream market data connectors:
