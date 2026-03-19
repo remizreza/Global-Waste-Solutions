@@ -44,7 +44,7 @@ export default function Login() {
             </form>
 
             <p className="mt-3 text-xs text-gray-400">
-              Admin? Use <a className="text-primary hover:underline" href="#/admin/login">Admin Login</a>.
+              Admin? Use <Link href={pageLinks.adminLogin}><a className="text-primary hover:underline">Admin Login</a></Link>.
             </p>
 
             <p className="mt-6 text-sm text-gray-300">
