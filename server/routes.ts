@@ -193,6 +193,7 @@ function numberOrNull(value: unknown): number | null {
 }
 
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME;
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH;
 const ADMIN_TOKEN_TTL_MS = 1000 * 60 * 60 * 8;
 const ADMIN_TOKEN_SECRET = process.env.ADMIN_TOKEN_SECRET;
@@ -200,7 +201,7 @@ const BARREL_GALLONS = 42;
 const KEROSENE_BARREL_GALLONS = 41.3;
 
 function hasAdminConfig() {
-  return Boolean(ADMIN_USERNAME && ADMIN_PASSWORD_HASH && ADMIN_TOKEN_SECRET);
+  return Boolean(ADMIN_USERNAME && ADMIN_TOKEN_SECRET && (ADMIN_PASSWORD || ADMIN_PASSWORD_HASH));
 }
 
 function signTokenPayload(payload: string) {
@@ -250,7 +251,18 @@ function isAdminAuthorized(authorization: string | undefined): boolean {
   }
 }
 
+function timingSafeEqualText(left: string, right: string): boolean {
+  const provided = Buffer.from(left, 'utf8');
+  const expected = Buffer.from(right, 'utf8');
+  if (provided.length !== expected.length) return false;
+  return timingSafeEqual(provided, expected);
+}
+
 function verifyPassword(password: string): boolean {
+  if (typeof ADMIN_PASSWORD === 'string' && ADMIN_PASSWORD.length > 0) {
+    return timingSafeEqualText(password, ADMIN_PASSWORD);
+  }
+
   if (!ADMIN_PASSWORD_HASH) return false;
 
   const [salt, expectedHex] = ADMIN_PASSWORD_HASH.split(':');
