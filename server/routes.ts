@@ -1,8 +1,13 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import { createHmac, timingSafeEqual } from "crypto";
-import crypto from "crypto";
 import { storage } from "./storage";
+import {
+  createAdminToken,
+  getAdminTokenTtlMs,
+  isAdminAuthorized,
+  isAdminAuthConfigured,
+  validateAdminCredentials,
+} from "./adminAuth";
 
 type BulletinItem = {
   title: string;
@@ -192,76 +197,8 @@ function numberOrNull(value: unknown): number | null {
   return typeof value === "number" && Number.isFinite(value) ? value : null;
 }
 
-const ADMIN_USERNAME = process.env.ADMIN_USERNAME;
-const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD_HASH;
-const ADMIN_TOKEN_TTL_MS = 1000 * 60 * 60 * 8;
-const ADMIN_TOKEN_SECRET = process.env.ADMIN_TOKEN_SECRET;
 const BARREL_GALLONS = 42;
 const KEROSENE_BARREL_GALLONS = 41.3;
-
-function hasAdminConfig() {
-  return Boolean(ADMIN_USERNAME && ADMIN_PASSWORD_HASH && ADMIN_TOKEN_SECRET);
-}
-
-function signTokenPayload(payload: string) {
-  if (!ADMIN_TOKEN_SECRET) {
-    throw new Error('ADMIN_TOKEN_SECRET is not configured');
-  }
-  return createHmac('sha256', ADMIN_TOKEN_SECRET).update(payload).digest('hex');
-}
-
-function createAdminToken(username: string) {
-  const expiresAt = Date.now() + ADMIN_TOKEN_TTL_MS;
-  const payload = `${username}|${expiresAt}`;
-  const signature = signTokenPayload(payload);
-  return Buffer.from(`${payload}|${signature}`).toString('base64url');
-}
-
-function getBearerToken(authorization: string | undefined): string | null {
-  if (!authorization) return null;
-  const [scheme, token] = authorization.split(' ');
-  if (scheme?.toLowerCase() !== 'bearer' || !token) return null;
-  return token;
-}
-
-function isAdminAuthorized(authorization: string | undefined): boolean {
-  const token = getBearerToken(authorization);
-  if (!token) return false;
-
-  try {
-    const decoded = Buffer.from(token, 'base64url').toString('utf8');
-    const [username, expiresAtRaw, signature] = decoded.split('|');
-    if (!username || !expiresAtRaw || !signature) return false;
-
-    const payload = `${username}|${expiresAtRaw}`;
-    const expectedSignature = signTokenPayload(payload);
-    const provided = Buffer.from(signature, 'utf8');
-    const expected = Buffer.from(expectedSignature, 'utf8');
-    if (provided.length !== expected.length) return false;
-    if (!timingSafeEqual(provided, expected)) return false;
-
-    const expiresAt = Number(expiresAtRaw);
-    if (!Number.isFinite(expiresAt)) return false;
-    if (Date.now() > expiresAt) return false;
-
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-function verifyPassword(password: string): boolean {
-  if (!ADMIN_PASSWORD_HASH) return false;
-
-  const [salt, expectedHex] = ADMIN_PASSWORD_HASH.split(':');
-  if (!salt || !expectedHex) return false;
-
-  const derived = crypto.scryptSync(password, salt, 64).toString('hex');
-  const provided = Buffer.from(derived, 'hex');
-  const expected = Buffer.from(expectedHex, 'hex');
-  if (provided.length !== expected.length) return false;
-  return timingSafeEqual(provided, expected);
-}
 
 async function fetchYahooLiveQuotes() {
   const response = await fetch(
@@ -588,7 +525,7 @@ export async function registerRoutes(
   });
 
   app.post("/api/admin/login", (req, res) => {
-    if (!hasAdminConfig() || !ADMIN_USERNAME) {
+    if (!isAdminAuthConfigured()) {
       return res.status(503).json({
         ok: false,
         error: "Admin auth is not configured on the server",
@@ -602,19 +539,16 @@ export async function registerRoutes(
     const username = rawUsername.trim();
     const password = rawPassword.trim();
 
-    if (
-      username.toLowerCase() !== ADMIN_USERNAME.toLowerCase() ||
-      !verifyPassword(password)
-    ) {
+    if (!validateAdminCredentials(username, password)) {
       return res.status(401).json({ ok: false, error: "Invalid credentials" });
     }
 
     const token = createAdminToken(username);
-    return res.json({ ok: true, token, expiresInMs: ADMIN_TOKEN_TTL_MS });
+    return res.json({ ok: true, token, expiresInMs: getAdminTokenTtlMs() });
   });
 
   app.get("/api/admin/session", (req, res) => {
-    if (!hasAdminConfig()) {
+    if (!isAdminAuthConfigured()) {
       return res.status(503).json({ ok: false, error: "Admin auth unavailable" });
     }
 

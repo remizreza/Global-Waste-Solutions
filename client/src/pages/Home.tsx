@@ -133,17 +133,32 @@ export default function Home() {
         >
           <motion.div
             variants={scaleIn(0.72)}
-            transition={{ duration: motionDuration.hero, ease: MOTION_EASE }}
-            className="relative mx-auto mb-6 w-fit"
+            className="relative mx-auto mb-6 flex w-fit flex-col items-center gap-3"
+            animate={reduceMotion ? undefined : { y: [18, -10, 18] }}
+            transition={reduceMotion ? undefined : { duration: 4.2, repeat: Infinity, ease: "easeInOut" }}
+            style={{ willChange: reduceMotion ? undefined : "transform" }}
           >
-            <span className="absolute inset-0 rounded-full bg-orange-500/40 blur-2xl" />
-            <motion.img
-              src="/redoxy-icon.png"
-              alt="REDOXY emblem"
-              className="relative mx-auto h-16 w-16 md:h-20 md:w-20 object-contain drop-shadow-[0_0_24px_rgba(255,122,0,0.75)]"
-              animate={reduceMotion ? undefined : { y: [0, -6, 0] }}
-              transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
-            />
+            <div className="relative">
+              <span className="absolute inset-0 rounded-full bg-orange-500/45 blur-2xl" />
+              <motion.img
+                src="/redoxy-icon.png"
+                alt="REDOXY emblem"
+                className="relative mx-auto h-16 w-16 md:h-20 md:w-20 object-contain drop-shadow-[0_0_28px_rgba(255,122,0,0.8)]"
+                transition={{ duration: motionDuration.hero, ease: MOTION_EASE }}
+              />
+            </div>
+            <motion.p
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{
+                duration: reduceMotion ? 0.01 : 0.7,
+                delay: reduceMotion ? 0 : 0.22,
+                ease: MOTION_EASE,
+              }}
+              className="rounded-full border border-white/20 bg-black/30 px-4 py-1.5 text-[11px] font-tech uppercase tracking-[0.42em] text-white shadow-[0_0_28px_rgba(0,0,0,0.28)] backdrop-blur-sm md:text-xs"
+            >
+              THE GLOBAL PARTNER
+            </motion.p>
           </motion.div>
           <motion.h1 className="hero-glitch text-4xl md:text-6xl font-display font-bold text-white leading-tight mb-6">
             {heroHeading.map((word, index) => (
