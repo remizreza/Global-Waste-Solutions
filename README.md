@@ -30,3 +30,20 @@ Optional upstream market data connectors:
 - `INVESTING_API_KEY`
 - `MIDDLEEAST_TRADES_API_URL`
 - `MIDDLEEAST_TRADES_API_KEY`
+
+## IG live market connector
+To source trader dashboard prices from IG, set these in Vercel Project Settings:
+- `IG_API_KEY`
+- `IG_USERNAME`
+- `IG_PASSWORD`
+- `IG_ACCOUNT_ID`
+- `IG_API_BASE` (optional, defaults to `https://api.ig.com/gateway/deal`)
+- `IG_EPIC_BRENT`
+- `IG_EPIC_DIESEL`
+- `IG_EPIC_NAPHTHA`
+- `IG_EPIC_KEROSENE`
+
+Notes:
+- IG login requires username and password in addition to the API key.
+- The dashboard will only use IG for markets whose epics are configured.
+- If IG is unavailable or not fully configured, the dashboard falls back to the other configured sources.

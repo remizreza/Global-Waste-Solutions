@@ -43,6 +43,18 @@ type TraderBoardSnapshot = {
   quotes: TraderPricing[];
 };
 
+type IgSession = {
+  accessToken: string;
+  expiresAt: number;
+};
+
+type IgMarketQuote = {
+  bid: number | null;
+  offer: number | null;
+  updatedAt: string | null;
+  epic: string;
+};
+
 const COMMODITIES_API_BASE = "https://commodities-api.com/api";
 const DEFAULT_COMMODITIES_KEY =
   process.env.COMMODITIES_API_KEY ??
@@ -199,6 +211,173 @@ function numberOrNull(value: unknown): number | null {
 
 const BARREL_GALLONS = 42;
 const KEROSENE_BARREL_GALLONS = 41.3;
+const IG_API_BASE = process.env.IG_API_BASE?.trim() || "https://api.ig.com/gateway/deal";
+const IG_LOGIN_BUFFER_MS = 60_000;
+
+let igSessionCache: IgSession | null = null;
+
+function getIgConfiguredEpics() {
+  return {
+    brent: process.env.IG_EPIC_BRENT?.trim(),
+    diesel: process.env.IG_EPIC_DIESEL?.trim(),
+    naphtha: process.env.IG_EPIC_NAPHTHA?.trim(),
+    kerosene: process.env.IG_EPIC_KEROSENE?.trim(),
+  };
+}
+
+function isIgConfigured() {
+  return Boolean(
+    process.env.IG_API_KEY?.trim() &&
+      process.env.IG_USERNAME?.trim() &&
+      process.env.IG_PASSWORD?.trim(),
+  );
+}
+
+async function getIgAccessToken() {
+  if (!isIgConfigured()) {
+    return null;
+  }
+
+  const cached = igSessionCache;
+  if (cached && cached.expiresAt > Date.now() + IG_LOGIN_BUFFER_MS) {
+    return cached.accessToken;
+  }
+
+  const response = await fetch(`${IG_API_BASE}/session`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json; charset=UTF-8",
+      Version: "3",
+      "X-IG-API-KEY": process.env.IG_API_KEY!.trim(),
+    },
+    body: JSON.stringify({
+      identifier: process.env.IG_USERNAME!.trim(),
+      password: process.env.IG_PASSWORD!.trim(),
+      encryptedPassword: false,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`IG session failed: ${response.status}`);
+  }
+
+  const payload = (await response.json()) as {
+    oauthToken?: {
+      access_token?: string;
+      expires_in?: string;
+      token_type?: string;
+    };
+  };
+
+  const accessToken = payload.oauthToken?.access_token?.trim();
+  const expiresInRaw = Number(payload.oauthToken?.expires_in ?? "0");
+
+  if (!accessToken || !Number.isFinite(expiresInRaw) || expiresInRaw <= 0) {
+    throw new Error("IG session did not return a usable OAuth token");
+  }
+
+  const session: IgSession = {
+    accessToken,
+    expiresAt: Date.now() + expiresInRaw * 1000,
+  };
+  igSessionCache = session;
+  return session.accessToken;
+}
+
+async function fetchIgMarketQuote(epic: string): Promise<IgMarketQuote | null> {
+  const accessToken = await getIgAccessToken();
+  if (!accessToken) {
+    return null;
+  }
+
+  const response = await fetch(`${IG_API_BASE}/markets/${encodeURIComponent(epic)}`, {
+    headers: {
+      Accept: "application/json; charset=UTF-8",
+      Version: "3",
+      Authorization: `Bearer ${accessToken}`,
+      "IG-ACCOUNT-ID": process.env.IG_ACCOUNT_ID?.trim() || "",
+      "X-IG-API-KEY": process.env.IG_API_KEY!.trim(),
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`IG market ${epic} failed: ${response.status}`);
+  }
+
+  const payload = (await response.json()) as {
+    snapshot?: {
+      bid?: unknown;
+      offer?: unknown;
+      updateTime?: unknown;
+      updateTimestampUTC?: unknown;
+    };
+  };
+
+  const snapshot = payload.snapshot ?? {};
+  const updateTimestampUtc = numberOrNull(snapshot.updateTimestampUTC);
+  const updateAt =
+    typeof snapshot.updateTime === "string" && snapshot.updateTime.trim()
+      ? snapshot.updateTime.trim()
+      : updateTimestampUtc != null
+        ? new Date(updateTimestampUtc * 1000).toISOString()
+        : null;
+
+  return {
+    bid: numberOrNull(snapshot.bid),
+    offer: numberOrNull(snapshot.offer),
+    updatedAt: updateAt,
+    epic,
+  };
+}
+
+async function fetchIgQuotes(): Promise<
+  Partial<Record<"brent" | "diesel" | "naphtha" | "kerosene", number>> & {
+    source?: string;
+    updatedAt?: string;
+  }
+> {
+  const epics = getIgConfiguredEpics();
+  const configuredEntries = Object.entries(epics).filter((entry): entry is [keyof typeof epics, string] => Boolean(entry[1]));
+
+  if (configuredEntries.length === 0 || !isIgConfigured()) {
+    return {};
+  }
+
+  const results = await Promise.allSettled(
+    configuredEntries.map(async ([key, epic]) => [key, await fetchIgMarketQuote(epic)] as const),
+  );
+
+  const quotes: Partial<Record<"brent" | "diesel" | "naphtha" | "kerosene", number>> = {};
+  let latestUpdateAt: string | undefined;
+
+  for (const result of results) {
+    if (result.status !== "fulfilled") continue;
+    const [key, quote] = result.value;
+    const mid =
+      quote?.bid != null && quote.offer != null
+        ? Number(((quote.bid + quote.offer) / 2).toFixed(2))
+        : quote?.bid ?? quote?.offer ?? null;
+
+    if (mid != null) {
+      quotes[key] = mid;
+    }
+
+    if (quote?.updatedAt && (!latestUpdateAt || quote.updatedAt > latestUpdateAt)) {
+      latestUpdateAt = quote.updatedAt;
+    }
+  }
+
+  if (Object.keys(quotes).length === 0) {
+    return {};
+  }
+
+  return {
+    ...quotes,
+    source: "ig-markets",
+    updatedAt: latestUpdateAt,
+  };
+}
 
 async function fetchYahooLiveQuotes() {
   const response = await fetch(
@@ -287,7 +466,7 @@ async function createLiveTraderSnapshot(): Promise<TraderBoardSnapshot> {
   let keroseneBrent = 93.2;
   let source = 'fallback';
 
-  const [commoditiesResult, yahooResult, middleEastResult, investingResult] = await Promise.allSettled([
+  const [commoditiesResult, yahooResult, middleEastResult, investingResult, igResult] = await Promise.allSettled([
     fetchCommoditiesJson<{ rates?: Record<string, unknown> }>('latest', {
       base: 'USD',
       symbols: 'CRUDE,DIESEL,NAPHTHA',
@@ -295,6 +474,7 @@ async function createLiveTraderSnapshot(): Promise<TraderBoardSnapshot> {
     fetchYahooLiveQuotes(),
     fetchMiddleEastTradesQuotes(),
     fetchInvestingProxyQuotes(),
+    fetchIgQuotes(),
   ]);
 
   const rates =
@@ -304,6 +484,7 @@ async function createLiveTraderSnapshot(): Promise<TraderBoardSnapshot> {
     middleEastResult.status === 'fulfilled' ? middleEastResult.value : {};
   const investing =
     investingResult.status === 'fulfilled' ? investingResult.value : {};
+  const ig = igResult.status === 'fulfilled' ? igResult.value : {};
 
   const commodityBrent = numberOrNull(rates.CRUDE);
   const commodityDiesel = numberOrNull(rates.DIESEL);
@@ -315,32 +496,37 @@ async function createLiveTraderSnapshot(): Promise<TraderBoardSnapshot> {
   ].some((value) => value != null);
 
   const hasLiveBrent =
-    investing.brent != null || yahoo?.brent != null || commodityBrent != null;
+    ig.brent != null || investing.brent != null || yahoo?.brent != null || commodityBrent != null;
   const hasLiveDiesel =
-    middleEast.diesel != null || commodityDiesel != null || yahoo != null;
+    ig.diesel != null || middleEast.diesel != null || commodityDiesel != null || yahoo != null;
   const hasLiveNaphtha =
-    middleEast.naphtha != null || commodityNaphtha != null || yahoo != null;
-  const hasLiveKerosene = middleEast.kerosene != null || yahoo != null;
+    ig.naphtha != null || middleEast.naphtha != null || commodityNaphtha != null || yahoo != null;
+  const hasLiveKerosene = ig.kerosene != null || middleEast.kerosene != null || yahoo != null;
   const hasAnyLiveQuotes =
     hasLiveBrent || hasLiveDiesel || hasLiveNaphtha || hasLiveKerosene;
   const hasCompleteLiveQuotes =
     hasLiveBrent && hasLiveDiesel && hasLiveNaphtha && hasLiveKerosene;
 
-  brent = investing.brent ?? yahoo?.brent ?? commodityBrent ?? brent;
+  brent = ig.brent ?? investing.brent ?? yahoo?.brent ?? commodityBrent ?? brent;
   dieselBrent =
+    ig.diesel ??
     middleEast.diesel ??
     commodityDiesel ??
     (yahoo ? yahoo.heatingOil * BARREL_GALLONS : dieselBrent);
   naphthaBrent =
+    ig.naphtha ??
     middleEast.naphtha ??
     commodityNaphtha ??
     (yahoo ? yahoo.rbob * BARREL_GALLONS : naphthaBrent);
   keroseneBrent =
+    ig.kerosene ??
     middleEast.kerosene ??
     (yahoo ? yahoo.heatingOil * KEROSENE_BARREL_GALLONS : keroseneBrent);
 
   if (hasCompleteLiveQuotes) {
-    if (middleEastHasQuotes) {
+    if (ig.source) {
+      source = ig.source;
+    } else if (middleEastHasQuotes) {
       source = 'middleeast-trades+commodities';
     } else if (yahoo || investing.brent != null) {
       source = 'investing/yahoo+commodities';
