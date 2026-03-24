@@ -53,6 +53,7 @@ type IgMarketQuote = {
   offer: number | null;
   updatedAt: string | null;
   epic: string;
+  instrumentName: string | null;
 };
 
 const COMMODITIES_API_BASE = "https://commodities-api.com/api";
@@ -306,6 +307,9 @@ async function fetchIgMarketQuote(epic: string): Promise<IgMarketQuote | null> {
   }
 
   const payload = (await response.json()) as {
+    instrument?: {
+      name?: unknown;
+    };
     snapshot?: {
       bid?: unknown;
       offer?: unknown;
@@ -328,6 +332,29 @@ async function fetchIgMarketQuote(epic: string): Promise<IgMarketQuote | null> {
     offer: numberOrNull(snapshot.offer),
     updatedAt: updateAt,
     epic,
+    instrumentName:
+      typeof payload.instrument?.name === "string" ? payload.instrument.name : null,
+  };
+}
+
+function normalizeIgMidPrice(key: "brent" | "diesel" | "naphtha" | "kerosene", mid: number) {
+  if (key === "brent") {
+    return {
+      price: Number((mid / 100).toFixed(2)),
+      unit: "USD/bbl" as const,
+    };
+  }
+
+  if (key === "diesel") {
+    return {
+      price: Number(mid.toFixed(2)),
+      unit: "USD/mt" as const,
+    };
+  }
+
+  return {
+    price: Number(mid.toFixed(2)),
+    unit: "USD/bbl" as const,
   };
 }
 
@@ -335,6 +362,7 @@ async function fetchIgQuotes(): Promise<
   Partial<Record<"brent" | "diesel" | "naphtha" | "kerosene", number>> & {
     source?: string;
     updatedAt?: string;
+    units?: Partial<Record<"brent" | "diesel" | "naphtha" | "kerosene", "USD/bbl" | "USD/mt">>;
   }
 > {
   const epics = getIgConfiguredEpics();
@@ -349,6 +377,7 @@ async function fetchIgQuotes(): Promise<
   );
 
   const quotes: Partial<Record<"brent" | "diesel" | "naphtha" | "kerosene", number>> = {};
+  const units: Partial<Record<"brent" | "diesel" | "naphtha" | "kerosene", "USD/bbl" | "USD/mt">> = {};
   let latestUpdateAt: string | undefined;
 
   for (const result of results) {
@@ -360,7 +389,9 @@ async function fetchIgQuotes(): Promise<
         : quote?.bid ?? quote?.offer ?? null;
 
     if (mid != null) {
-      quotes[key] = mid;
+      const normalized = normalizeIgMidPrice(key, mid);
+      quotes[key] = normalized.price;
+      units[key] = normalized.unit;
     }
 
     if (quote?.updatedAt && (!latestUpdateAt || quote.updatedAt > latestUpdateAt)) {
@@ -376,6 +407,7 @@ async function fetchIgQuotes(): Promise<
     ...quotes,
     source: "ig-markets",
     updatedAt: latestUpdateAt,
+    units,
   };
 }
 
@@ -464,6 +496,9 @@ async function createLiveTraderSnapshot(): Promise<TraderBoardSnapshot> {
   let dieselBrent = 96.5;
   let naphthaBrent = 71.4;
   let keroseneBrent = 93.2;
+  let dieselUnit: "USD/bbl" | "USD/mt" = "USD/bbl";
+  let naphthaUnit: "USD/bbl" | "USD/mt" = "USD/bbl";
+  let keroseneUnit: "USD/bbl" | "USD/mt" = "USD/bbl";
   let source = 'fallback';
 
   const [commoditiesResult, yahooResult, middleEastResult, investingResult, igResult] = await Promise.allSettled([
@@ -523,6 +558,10 @@ async function createLiveTraderSnapshot(): Promise<TraderBoardSnapshot> {
     middleEast.kerosene ??
     (yahoo ? yahoo.heatingOil * KEROSENE_BARREL_GALLONS : keroseneBrent);
 
+  dieselUnit = ig.units?.diesel ?? dieselUnit;
+  naphthaUnit = ig.units?.naphtha ?? naphthaUnit;
+  keroseneUnit = ig.units?.kerosene ?? keroseneUnit;
+
   if (hasCompleteLiveQuotes) {
     if (ig.source) {
       source = ig.source;
@@ -545,7 +584,7 @@ async function createLiveTraderSnapshot(): Promise<TraderBoardSnapshot> {
       spread: 4.25,
       trend: 'up',
       updatedAt: now.toISOString(),
-      unit: 'USD/bbl',
+      unit: dieselUnit,
       source,
     },
     {
@@ -555,7 +594,7 @@ async function createLiveTraderSnapshot(): Promise<TraderBoardSnapshot> {
       spread: 3.85,
       trend: 'up',
       updatedAt: now.toISOString(),
-      unit: 'USD/bbl',
+      unit: naphthaUnit,
       source,
     },
     {
@@ -565,7 +604,7 @@ async function createLiveTraderSnapshot(): Promise<TraderBoardSnapshot> {
       spread: 4.05,
       trend: 'up',
       updatedAt: now.toISOString(),
-      unit: 'USD/bbl',
+      unit: keroseneUnit,
       source,
     },
   ];
