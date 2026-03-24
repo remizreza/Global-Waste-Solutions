@@ -1,13 +1,13 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import { storage } from "./storage.ts";
+import { storage } from "./storage.js";
 import {
   createAdminToken,
   getAdminTokenTtlMs,
   isAdminAuthorized,
   isAdminAuthConfigured,
   validateAdminCredentials,
-} from "./adminAuth.ts";
+} from "./adminAuth.js";
 
 type BulletinItem = {
   title: string;
