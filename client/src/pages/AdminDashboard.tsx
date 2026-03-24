@@ -48,7 +48,12 @@ export default function AdminDashboard() {
     const load = async () => {
       try {
         const session = await fetch("/api/admin/session", {
-          headers: { Authorization: `Bearer ${token}` },
+          cache: "no-store",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Cache-Control": "no-cache",
+            Pragma: "no-cache",
+          },
         });
         if (!session.ok) {
           localStorage.removeItem("admin_token");
@@ -56,7 +61,13 @@ export default function AdminDashboard() {
           return;
         }
 
-        const response = await fetch("/api/trader-dashboard");
+        const response = await fetch("/api/trader-dashboard", {
+          cache: "no-store",
+          headers: {
+            "Cache-Control": "no-cache",
+            Pragma: "no-cache",
+          },
+        });
         if (!response.ok) return;
         const json = await response.json();
         const data = traderBoardSnapshotSchema.parse(json);

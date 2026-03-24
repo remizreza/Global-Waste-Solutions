@@ -41,7 +41,13 @@ export default function TraderDashboard() {
 
     const load = async () => {
       try {
-        const response = await fetch("/api/trader-dashboard");
+        const response = await fetch("/api/trader-dashboard", {
+          cache: "no-store",
+          headers: {
+            "Cache-Control": "no-cache",
+            Pragma: "no-cache",
+          },
+        });
         if (!response.ok) throw new Error("Unable to load");
         const json = await response.json();
         const data = traderBoardSnapshotSchema.parse(json);
