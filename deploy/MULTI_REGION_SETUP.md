@@ -5,6 +5,18 @@
 - KSA: `https://ksa.redoxyksa.com`
 - UAE: `https://uae.redoxyksa.com`
 
+## Odoo Versions
+
+- KSA source: Odoo `17.0 Enterprise`
+- UAE source: Odoo `19.0 SaaS`
+
+The app must keep these sources fully separate. Do not share:
+
+- `server/data`
+- live `.env`
+- Odoo users, API keys, or report passwords
+- host-based settings records
+
 ## Server Layout
 
 - `/var/www/redoxy-erp-ksa`

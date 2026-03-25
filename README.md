@@ -124,6 +124,18 @@ server/
 - KSA: `https://ksa.redoxyksa.com`
 - UAE: `https://uae.redoxyksa.com`
 
+## Region / Odoo Versions
+
+- KSA runs against Odoo `17.0 Enterprise`
+- UAE runs against Odoo `19.0 SaaS`
+
+Keep the regions operationally separate:
+
+- separate `.env`
+- separate `server/data`
+- separate PM2 app/process
+- separate Odoo credentials and settings
+
 Do not use `go.redoxyksa.com` as the operational ERP entrypoint.
 
 ## Safe Deploy Rule
