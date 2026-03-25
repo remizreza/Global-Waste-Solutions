@@ -34,6 +34,23 @@ type Point = {
   "Gasoline"?: number;
 };
 
+function getBasisExplanation(product: TraderBoardSnapshot["quotes"][number]["product"], rawPrice: number, rawUnit: TraderBoardSnapshot["quotes"][number]["rawUnit"]) {
+  const formattedPrice = rawPrice.toFixed(rawUnit === "USD/gal" ? 4 : rawUnit === "USD/MMBtu" ? 3 : 2);
+
+  switch (product) {
+    case "WTI Crude":
+      return `WTI crude tracks US light sweet crude. Example: ${formattedPrice} ${rawUnit} is the base market quote used to convert this card into USD/mt.`;
+    case "Brent Crude":
+      return `Brent crude tracks the global seaborne oil benchmark. ${formattedPrice} ${rawUnit} is the base market quote behind this converted USD/mt price.`;
+    case "Natural Gas":
+      return `Natural gas is quoted on an energy basis. ${formattedPrice} ${rawUnit} is converted into USD/mt equivalent for easier board comparison.`;
+    case "Heating Oil":
+      return `Heating oil is quoted per gallon in the market. ${formattedPrice} ${rawUnit} is converted into USD/mt for this board.`;
+    case "Gasoline":
+      return `Gasoline is quoted per gallon in the market. ${formattedPrice} ${rawUnit} is converted into USD/mt for this board.`;
+  }
+}
+
 export default function AdminDashboard() {
   const [, setLocation] = useLocation();
   const [snapshot, setSnapshot] = useState<TraderBoardSnapshot | null>(null);
@@ -104,7 +121,7 @@ export default function AdminDashboard() {
         <div className="container mx-auto max-w-6xl space-y-6">
           <div className="rounded-2xl border border-white/15 bg-card/60 p-6">
             <p className="text-primary text-xs font-tech uppercase tracking-[0.2em] mb-2">Admin Dashboard</p>
-            <h1 className="text-3xl font-display text-white">IG Energy Feed</h1>
+            <h1 className="text-3xl font-display text-white">REDOXY ENERGY DASHBOARD</h1>
             <p className="text-gray-300 text-sm mt-2">Updated: {updated}</p>
           </div>
 
@@ -113,7 +130,7 @@ export default function AdminDashboard() {
               <article key={quote.product} className="rounded-2xl border border-white/15 bg-secondary/70 p-5">
                 <p className="text-primary text-xs font-tech uppercase tracking-[0.18em] mb-2">{quote.product}</p>
                 <p className="text-white text-2xl font-display">${quote.price.toFixed(2)}</p>
-                <p className="text-sm text-gray-300">Raw IG basis ${quote.rawPrice.toFixed(quote.rawUnit === "USD/gal" ? 4 : quote.rawUnit === "USD/MMBtu" ? 3 : 2)} {quote.rawUnit}</p>
+                <p className="text-sm text-gray-300">{getBasisExplanation(quote.product, quote.rawPrice, quote.rawUnit)}</p>
                 <p className="text-sm text-gray-400">Unit: {quote.unit} • Source: {quote.source}</p>
                 {quote.note ? <p className="text-xs text-gray-500 mt-1">{quote.note}</p> : null}
               </article>
