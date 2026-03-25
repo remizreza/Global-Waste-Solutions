@@ -1,0 +1,16 @@
+[Unit]
+Description=REDOXY ERP API
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/var/www/redoxy-erp
+ExecStart=/usr/bin/node /var/www/redoxy-erp/server/index.js
+Restart=always
+RestartSec=5
+EnvironmentFile=/var/www/redoxy-erp/.env
+User=www-data
+Group=www-data
+
+[Install]
+WantedBy=multi-user.target

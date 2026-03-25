@@ -1,0 +1,11 @@
+REDOXY ERP KSA URL
+https://ksa.redoxyksa.com
+
+Admin username
+ajmal@redoxyksa.com
+
+Admin password
+RedoxyKSA123!
+
+Action required
+Change this password immediately after first login.

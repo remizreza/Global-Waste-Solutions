@@ -1,0 +1,11 @@
+REDOXY ERP URL
+https://go.redoxyksa.com
+
+Admin username
+admin@redoxyksa.com
+
+Admin password
+RedoxyAdmin123!
+
+Action required
+Change this password immediately after first login.
