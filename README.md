@@ -49,3 +49,34 @@ Notes:
 - The board converts IG raw prices into `USD/mt` or `USD/mt eq` using product-specific assumptions.
 - Natural gas is shown as LNG-equivalent using `52 MMBtu/mt`.
 - If IG is unavailable or not fully configured, the dashboard falls back to internal defaults.
+
+## Brent + Dubai proxy pricing script
+A ready-to-run pricing helper is available at `script/redoxy_pricing_model.py`.
+
+### What it does
+- Pulls Brent (`function=BRENT`, daily) from Alpha Vantage.
+- Pulls Dubai proxy (`DBLc1`) from Commodities-API.
+- Applies REDOXY pricing formula:
+  - `final_offer_usd_mt = benchmark_converted_usd_mt + broker_premium + freight + margin`
+
+### Configure API keys
+```bash
+export ALPHA_VANTAGE_API_KEY="your_alpha_vantage_key"
+export COMMODITIES_API_KEY="your_commodities_api_key"
+```
+
+### Example usage
+```bash
+python3 script/redoxy_pricing_model.py \
+  --benchmark dubai \
+  --broker-premium 18 \
+  --freight 42 \
+  --margin 15
+```
+
+Optional historical proxy pull:
+```bash
+python3 script/redoxy_pricing_model.py --benchmark dubai --commodities-date 2026-03-25
+```
+
+Note: `DBLc1` is a futures proxy and should not be treated as the licensed Platts Dubai/Oman physical assessment.
