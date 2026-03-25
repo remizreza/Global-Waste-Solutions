@@ -39,11 +39,13 @@ To source trader dashboard prices from IG, set these in Vercel Project Settings:
 - `IG_ACCOUNT_ID`
 - `IG_API_BASE` (optional, defaults to `https://api.ig.com/gateway/deal`)
 - `IG_EPIC_BRENT`
-- `IG_EPIC_DIESEL`
-- `IG_EPIC_NAPHTHA`
-- `IG_EPIC_KEROSENE`
+- `IG_EPIC_WTI`
+- `IG_EPIC_NATURAL_GAS`
+- `IG_EPIC_HEATING_OIL`
+- `IG_EPIC_GASOLINE`
 
 Notes:
 - IG login requires username and password in addition to the API key.
-- The dashboard will only use IG for markets whose epics are configured.
-- If IG is unavailable or not fully configured, the dashboard falls back to the other configured sources.
+- The board converts IG raw prices into `USD/mt` or `USD/mt eq` using product-specific assumptions.
+- Natural gas is shown as LNG-equivalent using `52 MMBtu/mt`.
+- If IG is unavailable or not fully configured, the dashboard falls back to internal defaults.

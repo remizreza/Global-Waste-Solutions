@@ -26,14 +26,15 @@ type CommoditySnapshot = {
 };
 
 type TraderPricing = {
-  product: "Diesel" | "Naphtha" | "Kerosene";
-  brent: number;
-  plats: number;
-  spread: number;
+  product: "Brent Crude" | "WTI Crude" | "Natural Gas" | "Heating Oil" | "Gasoline";
+  price: number;
+  rawPrice: number;
+  rawUnit: "USD/bbl" | "USD/gal" | "USD/MMBtu";
   trend: "up" | "down";
   updatedAt: string;
-  unit: "USD/bbl" | "USD/mt";
+  unit: "USD/mt" | "USD/mt eq";
   source: string;
+  note?: string;
 };
 
 type TraderBoardSnapshot = {
@@ -42,6 +43,8 @@ type TraderBoardSnapshot = {
   marketPulse: "Bullish" | "Bearish" | "Neutral";
   quotes: TraderPricing[];
 };
+
+type EnergyProductKey = "brent" | "wti" | "naturalGas" | "heatingOil" | "gasoline";
 
 type IgSession = {
   accessToken: string;
@@ -219,10 +222,11 @@ let igSessionCache: IgSession | null = null;
 
 function getIgConfiguredEpics() {
   return {
-    brent: process.env.IG_EPIC_BRENT?.trim(),
-    diesel: process.env.IG_EPIC_DIESEL?.trim(),
-    naphtha: process.env.IG_EPIC_NAPHTHA?.trim(),
-    kerosene: process.env.IG_EPIC_KEROSENE?.trim(),
+    brent: process.env.IG_EPIC_BRENT?.trim() || "CC.D.LCO.UNC.IP",
+    wti: process.env.IG_EPIC_WTI?.trim() || "CC.D.CL.UNC.IP",
+    naturalGas: process.env.IG_EPIC_NATURAL_GAS?.trim() || "CC.D.NG.UNC.IP",
+    heatingOil: process.env.IG_EPIC_HEATING_OIL?.trim() || "CC.D.HO.UNC.IP",
+    gasoline: process.env.IG_EPIC_GASOLINE?.trim() || "CC.D.RB.UNC.IP",
   };
 }
 
@@ -337,32 +341,66 @@ async function fetchIgMarketQuote(epic: string): Promise<IgMarketQuote | null> {
   };
 }
 
-function normalizeIgMidPrice(key: "brent" | "diesel" | "naphtha" | "kerosene", mid: number) {
-  if (key === "brent") {
-    return {
-      price: Number((mid / 100).toFixed(2)),
-      unit: "USD/bbl" as const,
-    };
+function normalizeIgEnergyPrice(key: EnergyProductKey, mid: number) {
+  switch (key) {
+    case "brent": {
+      const rawPrice = mid / 100;
+      return {
+        product: "Brent Crude" as const,
+        price: Number((rawPrice * 7.33).toFixed(2)),
+        rawPrice: Number(rawPrice.toFixed(2)),
+        rawUnit: "USD/bbl" as const,
+        unit: "USD/mt" as const,
+      };
+    }
+    case "wti": {
+      const rawPrice = mid / 100;
+      return {
+        product: "WTI Crude" as const,
+        price: Number((rawPrice * 7.62).toFixed(2)),
+        rawPrice: Number(rawPrice.toFixed(2)),
+        rawUnit: "USD/bbl" as const,
+        unit: "USD/mt" as const,
+      };
+    }
+    case "naturalGas": {
+      const rawPrice = mid / 1000;
+      return {
+        product: "Natural Gas" as const,
+        price: Number((rawPrice * 52).toFixed(2)),
+        rawPrice: Number(rawPrice.toFixed(3)),
+        rawUnit: "USD/MMBtu" as const,
+        unit: "USD/mt eq" as const,
+        note: "LNG equivalent using 52 MMBtu/mt",
+      };
+    }
+    case "heatingOil": {
+      const rawPrice = mid / 10000;
+      return {
+        product: "Heating Oil" as const,
+        price: Number((rawPrice * 313.32).toFixed(2)),
+        rawPrice: Number(rawPrice.toFixed(4)),
+        rawUnit: "USD/gal" as const,
+        unit: "USD/mt" as const,
+      };
+    }
+    case "gasoline": {
+      const rawPrice = mid / 10000;
+      return {
+        product: "Gasoline" as const,
+        price: Number((rawPrice * 358.26).toFixed(2)),
+        rawPrice: Number(rawPrice.toFixed(4)),
+        rawUnit: "USD/gal" as const,
+        unit: "USD/mt" as const,
+      };
+    }
   }
-
-  if (key === "diesel") {
-    return {
-      price: Number(mid.toFixed(2)),
-      unit: "USD/mt" as const,
-    };
-  }
-
-  return {
-    price: Number(mid.toFixed(2)),
-    unit: "USD/bbl" as const,
-  };
 }
 
 async function fetchIgQuotes(): Promise<
-  Partial<Record<"brent" | "diesel" | "naphtha" | "kerosene", number>> & {
+  Partial<Record<EnergyProductKey, TraderPricing>> & {
     source?: string;
     updatedAt?: string;
-    units?: Partial<Record<"brent" | "diesel" | "naphtha" | "kerosene", "USD/bbl" | "USD/mt">>;
   }
 > {
   const epics = getIgConfiguredEpics();
@@ -376,8 +414,7 @@ async function fetchIgQuotes(): Promise<
     configuredEntries.map(async ([key, epic]) => [key, await fetchIgMarketQuote(epic)] as const),
   );
 
-  const quotes: Partial<Record<"brent" | "diesel" | "naphtha" | "kerosene", number>> = {};
-  const units: Partial<Record<"brent" | "diesel" | "naphtha" | "kerosene", "USD/bbl" | "USD/mt">> = {};
+  const quotes: Partial<Record<EnergyProductKey, TraderPricing>> = {};
   let latestUpdateAt: string | undefined;
 
   for (const result of results) {
@@ -389,9 +426,18 @@ async function fetchIgQuotes(): Promise<
         : quote?.bid ?? quote?.offer ?? null;
 
     if (mid != null) {
-      const normalized = normalizeIgMidPrice(key, mid);
-      quotes[key] = normalized.price;
-      units[key] = normalized.unit;
+      const normalized = normalizeIgEnergyPrice(key, mid);
+      quotes[key] = {
+        product: normalized.product,
+        price: normalized.price,
+        rawPrice: normalized.rawPrice,
+        rawUnit: normalized.rawUnit,
+        trend: "up",
+        updatedAt: quote?.updatedAt ?? new Date().toISOString(),
+        unit: normalized.unit,
+        source: "ig-live",
+        note: "note" in normalized ? normalized.note : undefined,
+      };
     }
 
     if (quote?.updatedAt && (!latestUpdateAt || quote.updatedAt > latestUpdateAt)) {
@@ -407,7 +453,6 @@ async function fetchIgQuotes(): Promise<
     ...quotes,
     source: "ig-markets",
     updatedAt: latestUpdateAt,
-    units,
   };
 }
 
@@ -491,129 +536,74 @@ async function fetchInvestingProxyQuotes(): Promise<Partial<Record<'brent', numb
 
 async function createLiveTraderSnapshot(): Promise<TraderBoardSnapshot> {
   const now = new Date();
+  const [igResult] = await Promise.allSettled([fetchIgQuotes()]);
+  const ig = igResult.status === "fulfilled" ? igResult.value : {};
 
-  let brent = 84.2;
-  let dieselBrent = 96.5;
-  let naphthaBrent = 71.4;
-  let keroseneBrent = 93.2;
-  let dieselUnit: "USD/bbl" | "USD/mt" = "USD/bbl";
-  let naphthaUnit: "USD/bbl" | "USD/mt" = "USD/bbl";
-  let keroseneUnit: "USD/bbl" | "USD/mt" = "USD/bbl";
-  let source = 'fallback';
-
-  const [commoditiesResult, yahooResult, middleEastResult, investingResult, igResult] = await Promise.allSettled([
-    fetchCommoditiesJson<{ rates?: Record<string, unknown> }>('latest', {
-      base: 'USD',
-      symbols: 'CRUDE,DIESEL,NAPHTHA',
-    }),
-    fetchYahooLiveQuotes(),
-    fetchMiddleEastTradesQuotes(),
-    fetchInvestingProxyQuotes(),
-    fetchIgQuotes(),
-  ]);
-
-  const rates =
-    commoditiesResult.status === 'fulfilled' ? commoditiesResult.value.rates ?? {} : {};
-  const yahoo = yahooResult.status === 'fulfilled' ? yahooResult.value : null;
-  const middleEast =
-    middleEastResult.status === 'fulfilled' ? middleEastResult.value : {};
-  const investing =
-    investingResult.status === 'fulfilled' ? investingResult.value : {};
-  const ig = igResult.status === 'fulfilled' ? igResult.value : {};
-
-  const commodityBrent = numberOrNull(rates.CRUDE);
-  const commodityDiesel = numberOrNull(rates.DIESEL);
-  const commodityNaphtha = numberOrNull(rates.NAPHTHA);
-  const middleEastHasQuotes = [
-    middleEast.diesel,
-    middleEast.naphtha,
-    middleEast.kerosene,
-  ].some((value) => value != null);
-
-  const hasLiveBrent =
-    ig.brent != null || investing.brent != null || yahoo?.brent != null || commodityBrent != null;
-  const hasLiveDiesel =
-    ig.diesel != null || middleEast.diesel != null || commodityDiesel != null || yahoo != null;
-  const hasLiveNaphtha =
-    ig.naphtha != null || middleEast.naphtha != null || commodityNaphtha != null || yahoo != null;
-  const hasLiveKerosene = ig.kerosene != null || middleEast.kerosene != null || yahoo != null;
-  const hasAnyLiveQuotes =
-    hasLiveBrent || hasLiveDiesel || hasLiveNaphtha || hasLiveKerosene;
-  const hasCompleteLiveQuotes =
-    hasLiveBrent && hasLiveDiesel && hasLiveNaphtha && hasLiveKerosene;
-
-  brent = ig.brent ?? investing.brent ?? yahoo?.brent ?? commodityBrent ?? brent;
-  dieselBrent =
-    ig.diesel ??
-    middleEast.diesel ??
-    commodityDiesel ??
-    (yahoo ? yahoo.heatingOil * BARREL_GALLONS : dieselBrent);
-  naphthaBrent =
-    ig.naphtha ??
-    middleEast.naphtha ??
-    commodityNaphtha ??
-    (yahoo ? yahoo.rbob * BARREL_GALLONS : naphthaBrent);
-  keroseneBrent =
-    ig.kerosene ??
-    middleEast.kerosene ??
-    (yahoo ? yahoo.heatingOil * KEROSENE_BARREL_GALLONS : keroseneBrent);
-
-  dieselUnit = ig.units?.diesel ?? dieselUnit;
-  naphthaUnit = ig.units?.naphtha ?? naphthaUnit;
-  keroseneUnit = ig.units?.kerosene ?? keroseneUnit;
-
-  if (hasCompleteLiveQuotes) {
-    if (ig.source) {
-      source = ig.source;
-    } else if (middleEastHasQuotes) {
-      source = 'middleeast-trades+commodities';
-    } else if (yahoo || investing.brent != null) {
-      source = 'investing/yahoo+commodities';
-    } else {
-      source = 'commodities-api';
-    }
-  } else if (hasAnyLiveQuotes) {
-    source = 'partial-fallback';
-  }
-
-  const quotes: TraderPricing[] = [
+  const fallbackQuotes: TraderPricing[] = [
     {
-      product: 'Diesel',
-      brent: Number(dieselBrent.toFixed(2)),
-      plats: Number((dieselBrent + 4.25).toFixed(2)),
-      spread: 4.25,
-      trend: 'up',
+      product: "Brent Crude",
+      price: 700,
+      rawPrice: 95.5,
+      rawUnit: "USD/bbl",
+      trend: "up",
       updatedAt: now.toISOString(),
-      unit: dieselUnit,
-      source,
+      unit: "USD/mt",
+      source: "fallback",
     },
     {
-      product: 'Naphtha',
-      brent: Number(naphthaBrent.toFixed(2)),
-      plats: Number((naphthaBrent + 3.85).toFixed(2)),
-      spread: 3.85,
-      trend: 'up',
+      product: "WTI Crude",
+      price: 675,
+      rawPrice: 88.6,
+      rawUnit: "USD/bbl",
+      trend: "up",
       updatedAt: now.toISOString(),
-      unit: naphthaUnit,
-      source,
+      unit: "USD/mt",
+      source: "fallback",
     },
     {
-      product: 'Kerosene',
-      brent: Number(keroseneBrent.toFixed(2)),
-      plats: Number((keroseneBrent + 4.05).toFixed(2)),
-      spread: 4.05,
-      trend: 'up',
+      product: "Natural Gas",
+      price: 149,
+      rawPrice: 2.867,
+      rawUnit: "USD/MMBtu",
+      trend: "up",
       updatedAt: now.toISOString(),
-      unit: keroseneUnit,
-      source,
+      unit: "USD/mt eq",
+      source: "fallback",
+      note: "LNG equivalent using 52 MMBtu/mt",
+    },
+    {
+      product: "Heating Oil",
+      price: 1193,
+      rawPrice: 3.8094,
+      rawUnit: "USD/gal",
+      trend: "up",
+      updatedAt: now.toISOString(),
+      unit: "USD/mt",
+      source: "fallback",
+    },
+    {
+      product: "Gasoline",
+      price: 1059,
+      rawPrice: 2.955,
+      rawUnit: "USD/gal",
+      trend: "up",
+      updatedAt: now.toISOString(),
+      unit: "USD/mt",
+      source: "fallback",
     },
   ];
+
+  const quoteOrder: EnergyProductKey[] = ["brent", "wti", "naturalGas", "heatingOil", "gasoline"];
+  const quotes = quoteOrder.map((key) => ig[key] ?? fallbackQuotes[quoteOrder.indexOf(key)]);
+  const liveCount = quoteOrder.filter((key) => Boolean(ig[key])).length;
+  const source = liveCount === quoteOrder.length ? "ig-live" : liveCount > 0 ? "partial-fallback" : "fallback";
+  const oilBench = ig.brent?.rawPrice ?? fallbackQuotes[0].rawPrice;
 
   return {
     updatedAt: now.toISOString(),
     tradersOnline: 20 + Math.floor((Math.sin(now.getTime() / 180000) + 1) * 4),
-    marketPulse: brent > 85 ? 'Bullish' : brent < 80 ? 'Bearish' : 'Neutral',
-    quotes,
+    marketPulse: oilBench > 85 ? 'Bullish' : oilBench < 80 ? 'Bearish' : 'Neutral',
+    quotes: quotes.map((quote) => ({ ...quote, source: quote.source === "fallback" && source === "partial-fallback" ? "partial-fallback" : quote.source })),
   };
 }
 
