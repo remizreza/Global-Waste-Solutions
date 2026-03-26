@@ -75,6 +75,7 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
   return (
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden selection:bg-primary/30">
       <SmoothScrollProvider />
+      <CustomCursor />
       <Navbar />
       <main className="relative">
         <div className="site-ambient pointer-events-none fixed inset-0 -z-10" />
@@ -135,9 +136,7 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
                   <ul className="space-y-2">
                     {column.links.map((linkItem) => (
                       <li key={linkItem.label}>
-                        <Link href={linkItem.href}>
-                          <a className="text-gray-300 hover:text-primary transition-colors">{linkItem.label}</a>
-                        </Link>
+                        <Link href={linkItem.href} className="text-gray-300 hover:text-primary transition-colors">{linkItem.label}</Link>
                       </li>
                     ))}
                   </ul>
@@ -153,13 +152,9 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
                     <p className="text-white font-medium">{item.title}</p>
                     <p className="text-sm text-gray-300 mb-2">{item.description}</p>
                     <div className="flex flex-wrap items-center gap-2 text-sm">
-                      <Link href={item.from}>
-                        <a className="text-primary hover:underline">{item.from}</a>
-                      </Link>
+                      <Link href={item.from} className="text-primary hover:underline">{item.from}</Link>
                       <ArrowRight className="h-4 w-4 text-gray-400" />
-                      <Link href={item.to}>
-                        <a className="text-primary hover:underline">{item.to}</a>
-                      </Link>
+                      <Link href={item.to} className="text-primary hover:underline">{item.to}</Link>
                     </div>
                   </div>
                 ))}
