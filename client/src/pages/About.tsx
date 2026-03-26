@@ -152,11 +152,9 @@ export default function About() {
                 Driving REDOXY’s industrial strategy, modular treatment roadmap, and
                 cross-border petrochemical trading vision.
               </p>
-              <Link href={pageLinks.contact}>
-                <a className="btn-premium-outline !px-4 !py-2 !text-xs !font-tech">
+              <Link href={pageLinks.contact} className="btn-premium-outline !px-4 !py-2 !text-xs !font-tech">
                   Contact Executive Office
-                </a>
-              </Link>
+                </Link>
             </div>
           </div>
 
@@ -209,22 +207,16 @@ export default function About() {
           </div>
 
           <div className="grid md:grid-cols-3 gap-4">
-            <Link href={pageLinks.services}>
-              <a className="link-premium flex items-center gap-2">
+            <Link href={pageLinks.services} className="link-premium flex items-center gap-2">
                 <Building2 className="w-4 h-4 text-primary" /> Linked Services
-              </a>
-            </Link>
-            <Link href={pageLinks.technology}>
-              <a className="link-premium flex items-center gap-2">
+              </Link>
+            <Link href={pageLinks.technology} className="link-premium flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-primary" /> Technology
                 Methodology
-              </a>
-            </Link>
-            <Link href={pageLinks.traction}>
-              <a className="link-premium flex items-center gap-2">
+              </Link>
+            <Link href={pageLinks.traction} className="link-premium flex items-center gap-2">
                 <Compass className="w-4 h-4 text-primary" /> Growth Outlook
-              </a>
-            </Link>
+              </Link>
           </div>
         </div>
       </section>

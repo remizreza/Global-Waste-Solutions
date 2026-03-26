@@ -194,20 +194,15 @@ export default function Home() {
             Integrated industrial, environmental, and trading services across GCC, Asia, and Africa.
           </motion.p>
           <motion.div variants={fadeIn} className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href={pageLinks.services}>
-              <a className="btn-premium magnetic-button" data-premium-interactive data-premium-mode="magnetic">
+            <Link href={pageLinks.services} className="btn-premium magnetic-button" data-premium-interactive data-premium-mode="magnetic">
                 Explore Our Services <ArrowRight className="w-4 h-4" />
-              </a>
-            </Link>
-            <Link href={pageLinks.about}>
-              <a
+              </Link>
+            <Link href={pageLinks.about} 
                 className="btn-premium-outline magnetic-button"
                 data-premium-interactive
-                data-premium-mode="magnetic"
-              >
+                data-premium-mode="magnetic">
                 Learn About The Group
-              </a>
-            </Link>
+              </Link>
           </motion.div>
         </motion.div>
       </section>
@@ -348,9 +343,7 @@ export default function Home() {
                       ctaLabel="Open linked page"
                       triggerLabel="Preview"
                     />
-                    <Link href={division.route}>
-                      <a className="btn-premium-outline !px-3 !py-2 !text-xs !font-tech">Go to section</a>
-                    </Link>
+                    <Link href={division.route} className="btn-premium-outline !px-3 !py-2 !text-xs !font-tech">Go to section</Link>
                   </div>
                 </div>
               </motion.div>
@@ -371,11 +364,9 @@ export default function Home() {
                 <ShieldCheck className="text-primary w-5 h-5" /> ISO 14001 certified environmental practices
               </p>
             </div>
-            <Link href={pageLinks.technology}>
-              <a className="btn-premium-outline mt-5 !px-4 !py-2 !text-xs !font-tech magnetic-button">
+            <Link href={pageLinks.technology} className="btn-premium-outline mt-5 !px-4 !py-2 !text-xs !font-tech magnetic-button">
                 See Our Technology
-              </a>
-            </Link>
+              </Link>
           </div>
           <motion.div
             className="grid sm:grid-cols-2 gap-4"
@@ -403,11 +394,9 @@ export default function Home() {
       </section>
 
       <section className="py-14 text-center">
-            <Link href={pageLinks.traction}>
-          <a className="btn-premium magnetic-button" data-premium-interactive data-premium-mode="magnetic">
+            <Link href={pageLinks.traction} className="btn-premium magnetic-button" data-premium-interactive data-premium-mode="magnetic">
             View Our Growth and Financial Outlook
-          </a>
-        </Link>
+          </Link>
       </section>
     </SiteLayout>
   );

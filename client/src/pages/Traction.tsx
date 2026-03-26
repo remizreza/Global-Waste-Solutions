@@ -136,23 +136,17 @@ export default function Traction() {
           </div>
 
           <div className="mt-10 grid md:grid-cols-2 gap-4">
-            <Link href={pageLinks.technology}>
-              <a className="link-premium">
+            <Link href={pageLinks.technology} className="link-premium">
                 Review enabling technology
-              </a>
-            </Link>
-            <Link href={pageLinks.services}>
-              <a className="link-premium">
+              </Link>
+            <Link href={pageLinks.services} className="link-premium">
                 Connect roadmap to service lines
-              </a>
-            </Link>
+              </Link>
           </div>
 
           <p className="mt-6 text-sm text-gray-300">
             Technology insights power the live roadmap.{" "}
-            <Link href={pageLinks.technology}>
-              <a className="text-primary underline">Explore the technology stack</a>
-            </Link>{" "}
+            <Link href={pageLinks.technology} className="text-primary underline">Explore the technology stack</Link>{" "}
             for the engineering behind each milestone.
           </p>
         </div>

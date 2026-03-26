@@ -45,11 +45,9 @@ export default function Signup() {
                 />
               </label>
 
-              <Link href={pageLinks.login}>
-                <a className="inline-flex w-full items-center justify-center rounded-lg bg-primary px-4 py-3 text-sm font-tech uppercase tracking-[0.16em] text-black transition hover:brightness-105">
+              <Link href={pageLinks.login} className="inline-flex w-full items-center justify-center rounded-lg bg-primary px-4 py-3 text-sm font-tech uppercase tracking-[0.16em] text-black transition hover:brightness-105">
                   Continue to Login
-                </a>
-              </Link>
+                </Link>
             </form>
           </div>
         </div>
