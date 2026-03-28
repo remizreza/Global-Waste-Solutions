@@ -424,46 +424,9 @@ export default function Home() {
               filter: heroCardFilter,
             }}
           >
-            <motion.div className="mb-4 overflow-hidden" style={{ y: taglineBlockY, opacity: taglineBlockOpacity }}>
-              <p className="section-label text-[10px] sm:text-[11px] lg:text-xs">
-                {heroTagline.map((word, index) => {
-                  return (
-                    <HeroTaglineWord
-                      key={`${word}-${index}`}
-                      word={word}
-                      index={index}
-                      scrollYProgress={scrollYProgress}
-                      reduceMotion={!!reduceMotion}
-                    />
-                  );
-                })}
-              </p>
-            </motion.div>
-            <motion.h1 className="mx-auto mb-4 max-w-[14ch] text-balance text-[2.35rem] font-display font-semibold leading-[0.98] tracking-[-0.035em] text-white sm:text-[2.8rem] md:max-w-[12ch] md:text-[3.35rem] lg:mb-5 lg:max-w-[16ch] lg:text-[4.6rem]">
-              {heroHeading.map((word, index) => (
-                <HeroHeadlineWord
-                  key={`${word}-${index}`}
-                  word={word}
-                  index={index}
-                  active={!!reduceMotion || hasVideoStarted}
-                  reduceMotion={!!reduceMotion}
-                />
-              ))}
-            </motion.h1>
-            <motion.p
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{
-                duration: reduceMotion ? 0.01 : 0.95,
-                delay: reduceMotion ? 0 : 1.55,
-                ease: MOTION_EASE,
-              }}
-              className="editorial-copy mx-auto mb-7 max-w-2xl text-[0.98rem] sm:text-base md:max-w-[34rem] md:text-[1rem] lg:mb-8 lg:max-w-3xl lg:text-[1.05rem]"
-            >
-              Integrated industrial, environmental, and trading services across GCC, Asia, and Africa.
-            </motion.p>
-            <div className="premium-divider mb-6 lg:mb-8" />
-            <motion.div variants={fadeIn} className="flex flex-col justify-center gap-3 sm:flex-row sm:gap-4">
+            Integrated industrial, environmental, and trading services across GCC, Asia, and Africa.
+          </motion.p>
+          <motion.div variants={fadeIn} className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href={pageLinks.services} className="btn-premium magnetic-button" data-premium-interactive data-premium-mode="magnetic">
                 Explore Our Services <ArrowRight className="w-4 h-4" />
               </Link>
@@ -473,7 +436,6 @@ export default function Home() {
                 data-premium-mode="magnetic">
                 Learn About The Group
               </Link>
-            </motion.div>
           </motion.div>
         </motion.div>
       </section>
@@ -670,7 +632,7 @@ export default function Home() {
             <Link href={pageLinks.technology} className="btn-premium-outline mt-5 !px-4 !py-2 !text-xs !font-tech magnetic-button">
                 See Our Technology
               </Link>
-          </motion.div>
+          </div>
           <motion.div
             className="grid items-start gap-4 sm:grid-cols-2 lg:col-span-7 lg:grid-cols-12"
             initial="hidden"
@@ -710,20 +672,11 @@ export default function Home() {
         </div>
       </ScrollStage>
 
-      <ScrollStage className="py-18 text-center" direction="left" mode="elegant">
-        <div className="container mx-auto max-w-4xl px-6">
-          <div className="section-shell rounded-[1.75rem] px-6 py-10 sm:px-10">
-            <p className="section-label mb-4 text-xs">Next Layer</p>
-            <h2 className="mb-4 font-display text-3xl text-white md:text-4xl">Review Growth, Roadmap, and Commercial Scale</h2>
-            <p className="mx-auto mb-8 max-w-2xl text-sm text-gray-300 md:text-base">
-              Continue through the connected REDOXY narrative to understand how capability converts into traction and strategic expansion.
-            </p>
+      <section className="py-14 text-center">
             <Link href={pageLinks.traction} className="btn-premium magnetic-button" data-premium-interactive data-premium-mode="magnetic">
-              View Our Growth and Financial Outlook
-            </Link>
-          </div>
-        </div>
-      </ScrollStage>
+            View Our Growth and Financial Outlook
+          </Link>
+      </section>
     </SiteLayout>
   );
 }

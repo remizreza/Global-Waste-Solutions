@@ -173,14 +173,14 @@ export default function Traction() {
             </div>
           </ScrollStage>
 
-          <ScrollStage className="mt-10 grid gap-4 lg:grid-cols-12" direction="left">
-            <Link href={pageLinks.technology} className="link-premium lg:col-span-7">
+          <div className="mt-10 grid md:grid-cols-2 gap-4">
+            <Link href={pageLinks.technology} className="link-premium">
                 Review enabling technology
               </Link>
-            <Link href={pageLinks.services} className="link-premium lg:col-span-5 lg:translate-y-8">
+            <Link href={pageLinks.services} className="link-premium">
                 Connect roadmap to service lines
               </Link>
-          </ScrollStage>
+          </div>
 
           <p className="mt-6 text-sm text-gray-300">
             Technology insights power the live roadmap.{" "}

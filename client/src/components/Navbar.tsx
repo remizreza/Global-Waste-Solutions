@@ -45,12 +45,7 @@ export default function Navbar() {
           : "bg-transparent"
       }`}
     >
-      <div className="container mx-auto px-4 sm:px-6 pt-3">
-        <div className={`flex h-18 items-center justify-between rounded-[1.4rem] border px-4 sm:px-6 transition-all duration-300 ${
-          scrolled
-            ? "border-white/12 bg-[#07101f]/82 backdrop-blur-xl shadow-[0_18px_60px_rgba(0,0,0,0.28)]"
-            : "border-white/8 bg-black/10 backdrop-blur-md"
-        }`}>
+      <div className="container mx-auto px-6 h-20 flex items-center justify-between">
         <Link href={pageLinks.home} className="flex items-center gap-3 shrink-0 min-w-0">
             <span className="relative inline-flex">
               <span className="absolute inset-0 rounded-full bg-orange-400/35 blur-md animate-pulse" />
@@ -61,47 +56,22 @@ export default function Navbar() {
                 loading="eager"
               />
             </span>
-            <div className="min-w-0">
-              <RedoxyWordmark className="text-3xl lg:text-[2rem] transition-all duration-300" />
-              <p className="section-label mt-1 hidden text-[9px] lg:block">Industrial Infrastructure Group</p>
-            </div>
+            <RedoxyWordmark className="text-3xl md:text-[2rem] transition-all duration-300" />
         </Link>
 
-        <div className="hidden lg:flex items-center gap-3">
-          <div className="flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.03] px-2 py-2">
-          {primaryNavItems.map((item) => (
+        <div className="hidden md:flex items-center gap-8">
+          {navItems.map((item) => (
             <Link
               key={item.href}
               href={item.href}
               aria-current={location === item.href ? "page" : undefined}
-              className={`rounded-full px-3 py-2 text-[11px] font-tech uppercase tracking-[0.16em] transition-all ${
+              className={`text-sm font-tech uppercase tracking-[0.16em] transition-all relative after:absolute after:left-0 after:-bottom-1 after:h-[1px] after:bg-primary after:transition-all ${
                 location === item.href
-                  ? "bg-white/8 text-primary shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)]"
-                  : "text-gray-200/88 hover:bg-white/[0.04] hover:text-primary"
+                  ? "text-primary after:w-full"
+                  : "text-gray-300 hover:text-primary after:w-0 hover:after:w-full"
               }`}
             >
               {item.label}
-            </Link>
-          ))}
-          </div>
-
-          <div className="flex items-center gap-2 pl-2">
-            {utilityNavItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                aria-current={location === item.href ? "page" : undefined}
-                className={`rounded-full border px-3 py-2 text-[10px] font-tech uppercase tracking-[0.16em] transition-all ${
-                  location === item.href
-                    ? "border-primary/45 bg-primary/10 text-primary"
-                    : "border-white/10 bg-white/[0.02] text-gray-200/78 hover:border-white/20 hover:text-white"
-                }`}
-              >
-                {item.label}
-              </Link>
-            ))}
-            <Link href={pageLinks.contact} className="btn-premium !px-5 !py-2.5 !text-[10px]">
-              Start Discussion
             </Link>
           </div>
         </div>

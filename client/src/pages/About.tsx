@@ -283,7 +283,7 @@ export default function About() {
           </div>
           </ScrollStage>
 
-          <ScrollStage className="grid md:grid-cols-3 gap-4" direction="right">
+          <div className="grid md:grid-cols-3 gap-4">
             <Link href={pageLinks.services} className="link-premium flex items-center gap-2">
                 <Building2 className="w-4 h-4 text-primary" /> Linked Services
               </Link>
@@ -294,7 +294,7 @@ export default function About() {
             <Link href={pageLinks.traction} className="link-premium flex items-center gap-2">
                 <Compass className="w-4 h-4 text-primary" /> Growth Outlook
               </Link>
-          </ScrollStage>
+          </div>
         </div>
       </section>
     </SiteLayout>

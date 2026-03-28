@@ -231,14 +231,14 @@ export default function Technology() {
           </div>
           </ScrollStage>
 
-          <ScrollStage className="mt-12 grid gap-4 lg:grid-cols-12" direction="left">
-            <Link href={pageLinks.services} className="link-premium lg:col-span-7">
+          <div className="mt-12 grid md:grid-cols-2 gap-4">
+            <Link href={pageLinks.services} className="link-premium">
                 See where each method is used in services
               </Link>
-            <Link href={pageLinks.traction} className="link-premium lg:col-span-5 lg:translate-y-8">
+            <Link href={pageLinks.traction} className="link-premium">
                 View how technology supports growth
               </Link>
-          </ScrollStage>
+          </div>
 
           <p className="mt-6 text-sm text-gray-300">
             Traction metrics reflect applied engineering results.{" "}

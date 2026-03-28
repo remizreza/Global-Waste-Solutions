@@ -152,7 +152,7 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
                   <ul className="space-y-2">
                     {column.links.map((linkItem) => (
                       <li key={linkItem.label}>
-                        <Link href={linkItem.href} className="footer-link">{linkItem.label}</Link>
+                        <Link href={linkItem.href} className="text-gray-300 hover:text-primary transition-colors">{linkItem.label}</Link>
                       </li>
                     ))}
                   </ul>
@@ -169,9 +169,9 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
                     <p className="text-white font-medium text-base">{item.title}</p>
                     <p className="text-sm text-gray-300 mb-3 leading-6">{item.description}</p>
                     <div className="flex flex-wrap items-center gap-2 text-sm">
-                      <Link href={item.from} className="footer-path">{item.from}</Link>
+                      <Link href={item.from} className="text-primary hover:underline">{item.from}</Link>
                       <ArrowRight className="h-4 w-4 text-gray-400" />
-                      <Link href={item.to} className="footer-path">{item.to}</Link>
+                      <Link href={item.to} className="text-primary hover:underline">{item.to}</Link>
                     </div>
                   </div>
                 ))}

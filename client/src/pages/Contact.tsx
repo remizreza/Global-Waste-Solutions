@@ -183,17 +183,17 @@ export default function Contact() {
             </motion.div>
           </ScrollStage>
 
-          <ScrollStage className="mt-10 grid gap-4 lg:grid-cols-12" direction="right" mode="elegant">
-            <Link href={pageLinks.about} className="link-premium lg:col-span-4">
+          <div className="mt-10 grid md:grid-cols-3 gap-4">
+            <Link href={pageLinks.about} className="link-premium">
                 View group structure
               </Link>
-            <Link href={pageLinks.technology} className="link-premium lg:col-span-3 lg:translate-y-6">
+            <Link href={pageLinks.technology} className="link-premium">
                 View technical methodology
               </Link>
-            <Link href={pageLinks.traction} className="link-premium lg:col-span-5">
+            <Link href={pageLinks.traction} className="link-premium">
                 View growth roadmap
               </Link>
-          </ScrollStage>
+          </div>
         </div>
       </section>
     </SiteLayout>

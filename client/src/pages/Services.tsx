@@ -369,11 +369,11 @@ export default function Services() {
             ) : null}
           </Dialog>
 
-          <ScrollStage className="mt-12 text-center" direction="left">
+          <div className="mt-12 text-center">
             <Link href={pageLinks.contact} className="btn-premium">
                 Request Project Consultation
               </Link>
-          </ScrollStage>
+          </div>
         </div>
       </section>
     </SiteLayout>
