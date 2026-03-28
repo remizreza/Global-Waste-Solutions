@@ -210,11 +210,9 @@ export default function Services() {
                       ctaHref={division.route}
                       ctaLabel="Open linked page"
                     />
-                    <Link href={division.route}>
-                      <a className="btn-premium-outline !px-3 !py-2 !text-xs !font-tech">
+                    <Link href={division.route} className="btn-premium-outline !px-3 !py-2 !text-xs !font-tech">
                         Linked section
-                      </a>
-                    </Link>
+                      </Link>
                   </div>
                   <button
                     type="button"
@@ -327,11 +325,9 @@ export default function Services() {
           </Dialog>
 
           <div className="mt-12 text-center">
-            <Link href={pageLinks.contact}>
-              <a className="btn-premium">
+            <Link href={pageLinks.contact} className="btn-premium">
                 Request Project Consultation
-              </a>
-            </Link>
+              </Link>
           </div>
         </div>
       </section>

@@ -108,11 +108,9 @@ export default function Contact() {
                   Anchoring REDOXY’s leadership direction and high-impact industrial
                   growth strategy across KSA and UAE.
                 </p>
-                <Link href={pageLinks.contact}>
-                  <a className="btn-premium-outline !px-4 !py-2 !text-xs !font-tech">
+                <Link href={pageLinks.contact} className="btn-premium-outline !px-4 !py-2 !text-xs !font-tech">
                     Connect to Executive Office
-                  </a>
-                </Link>
+                  </Link>
               </div>
             </motion.div>
 
@@ -164,21 +162,15 @@ export default function Contact() {
           </div>
 
           <div className="mt-10 grid md:grid-cols-3 gap-4">
-            <Link href={pageLinks.about}>
-              <a className="link-premium">
+            <Link href={pageLinks.about} className="link-premium">
                 View group structure
-              </a>
-            </Link>
-            <Link href={pageLinks.technology}>
-              <a className="link-premium">
+              </Link>
+            <Link href={pageLinks.technology} className="link-premium">
                 View technical methodology
-              </a>
-            </Link>
-            <Link href={pageLinks.traction}>
-              <a className="link-premium">
+              </Link>
+            <Link href={pageLinks.traction} className="link-premium">
                 View growth roadmap
-              </a>
-            </Link>
+              </Link>
           </div>
         </div>
       </section>

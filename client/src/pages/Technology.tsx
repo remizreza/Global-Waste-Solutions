@@ -187,23 +187,17 @@ export default function Technology() {
           </div>
 
           <div className="mt-12 grid md:grid-cols-2 gap-4">
-            <Link href={pageLinks.services}>
-              <a className="link-premium">
+            <Link href={pageLinks.services} className="link-premium">
                 See where each method is used in services
-              </a>
-            </Link>
-            <Link href={pageLinks.traction}>
-              <a className="link-premium">
+              </Link>
+            <Link href={pageLinks.traction} className="link-premium">
                 View how technology supports growth
-              </a>
-            </Link>
+              </Link>
           </div>
 
           <p className="mt-6 text-sm text-gray-300">
             Traction metrics reflect applied engineering results.{" "}
-            <Link href={pageLinks.traction}>
-              <a className="text-primary underline">See live traction data</a>
-            </Link>{" "}
+            <Link href={pageLinks.traction} className="text-primary underline">See live traction data</Link>{" "}
             to connect R&D investment with commercial outcomes.
           </p>
         </div>

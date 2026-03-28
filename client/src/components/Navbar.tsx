@@ -42,8 +42,7 @@ export default function Navbar() {
       }`}
     >
       <div className="container mx-auto px-6 h-20 flex items-center justify-between">
-        <Link href={pageLinks.home}>
-          <a className="flex items-center gap-3 shrink-0 min-w-0">
+        <Link href={pageLinks.home} className="flex items-center gap-3 shrink-0 min-w-0">
             <span className="relative inline-flex">
               <span className="absolute inset-0 rounded-full bg-orange-400/35 blur-md animate-pulse" />
               <img
@@ -54,22 +53,21 @@ export default function Navbar() {
               />
             </span>
             <RedoxyWordmark className="text-3xl md:text-[2rem] transition-all duration-300" />
-          </a>
         </Link>
 
         <div className="hidden md:flex items-center gap-8">
           {navItems.map((item) => (
-            <Link key={item.href} href={item.href}>
-              <a
-                aria-current={location === item.href ? "page" : undefined}
-                className={`text-sm font-tech uppercase tracking-[0.16em] transition-all relative after:absolute after:left-0 after:-bottom-1 after:h-[1px] after:bg-primary after:transition-all ${
-                  location === item.href
-                    ? "text-primary after:w-full"
-                    : "text-gray-300 hover:text-primary after:w-0 hover:after:w-full"
-                }`}
-              >
-                {item.label}
-              </a>
+            <Link
+              key={item.href}
+              href={item.href}
+              aria-current={location === item.href ? "page" : undefined}
+              className={`text-sm font-tech uppercase tracking-[0.16em] transition-all relative after:absolute after:left-0 after:-bottom-1 after:h-[1px] after:bg-primary after:transition-all ${
+                location === item.href
+                  ? "text-primary after:w-full"
+                  : "text-gray-300 hover:text-primary after:w-0 hover:after:w-full"
+              }`}
+            >
+              {item.label}
             </Link>
           ))}
         </div>
@@ -110,15 +108,14 @@ export default function Navbar() {
             >
               {navItems.map((item) => (
                 <motion.div key={item.href} variants={slideIn("x", 16)}>
-                  <Link href={item.href}>
-                    <a
-                      className={`text-lg font-tech flex items-center justify-between ${
-                        location === item.href ? "text-primary" : "text-gray-300"
-                      }`}
-                    >
-                      {item.label}
-                      <ChevronRight className="w-4 h-4 text-primary" />
-                    </a>
+                  <Link
+                    href={item.href}
+                    className={`text-lg font-tech flex items-center justify-between ${
+                      location === item.href ? "text-primary" : "text-gray-300"
+                    }`}
+                  >
+                    {item.label}
+                    <ChevronRight className="w-4 h-4 text-primary" />
                   </Link>
                 </motion.div>
               ))}
