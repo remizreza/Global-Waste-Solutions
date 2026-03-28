@@ -1,63 +1,95 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export default function CustomCursor() {
   const cursorRef = useRef<HTMLDivElement | null>(null);
+  const [enabled, setEnabled] = useState(false);
 
   useEffect(() => {
     const cursor = cursorRef.current;
     if (!cursor) return;
+
     const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const finePointer = window.matchMedia("(pointer: fine)").matches;
     const coarsePointer = window.matchMedia("(pointer: coarse)").matches;
-    if (prefersReduced || coarsePointer) return;
+    const userAgent = window.navigator.userAgent;
+    const isSafari = /^((?!chrome|android).)*safari/i.test(userAgent);
+    const canUseCursor = !prefersReduced && finePointer && !coarsePointer && !isSafari;
+
+    setEnabled(canUseCursor);
+    document.body.dataset.customCursor = canUseCursor ? "true" : "false";
+    if (!canUseCursor) {
+      return () => {
+        delete document.body.dataset.customCursor;
+      };
+    }
 
     let raf = 0;
-    let targetX = 0;
-    let targetY = 0;
-    let currentX = 0;
-    let currentY = 0;
-    let isActive = false;
+    let targetX = window.innerWidth / 2;
+    let targetY = window.innerHeight / 2;
+    let currentX = targetX;
+    let currentY = targetY;
+    let isVisible = false;
+    let isHovering = false;
+    let isPressed = false;
+
+    const updateState = () => {
+      cursor.dataset.visible = String(isVisible);
+      cursor.dataset.hover = String(isHovering);
+      cursor.dataset.pressed = String(isPressed);
+    };
 
     const handleMove = (event: MouseEvent) => {
-      targetX = event.clientX - 8;
-      targetY = event.clientY - 8;
+      targetX = event.clientX;
+      targetY = event.clientY;
+      isVisible = true;
+      updateState();
     };
+
+    const handleLeave = () => {
+      isVisible = false;
+      updateState();
+    };
+
     const handleDown = () => {
-      isActive = true;
-      cursor.classList.add("is-active");
+      isPressed = true;
+      updateState();
     };
+
     const handleUp = () => {
-      isActive = false;
-      cursor.classList.remove("is-active");
+      isPressed = false;
+      updateState();
     };
 
     const handleOver = (event: MouseEvent) => {
       const target = event.target as HTMLElement | null;
       if (!target) return;
-      const isInteractive =
-        !!target.closest(
-          "a,button,[role='button'],.product-card,.link-premium,.btn-premium,.btn-premium-outline",
-        );
-      if (isInteractive !== isActive) {
-        isActive = isInteractive;
-        cursor.classList.toggle("is-active", isActive);
-      }
+      isHovering = Boolean(
+        target.closest(
+          "a,button,[role='button'],input,textarea,select,.product-card,.link-premium,.btn-premium,.btn-premium-outline,.btn-whatsapp-premium",
+        ),
+      );
+      updateState();
     };
 
     const tick = () => {
-      currentX += (targetX - currentX) * 0.2;
-      currentY += (targetY - currentY) * 0.2;
+      currentX += (targetX - currentX) * 0.16;
+      currentY += (targetY - currentY) * 0.16;
       cursor.style.transform = `translate3d(${currentX}px, ${currentY}px, 0)`;
       raf = requestAnimationFrame(tick);
     };
 
+    updateState();
     window.addEventListener("mousemove", handleMove);
+    window.addEventListener("mouseleave", handleLeave);
     window.addEventListener("mousedown", handleDown);
     window.addEventListener("mouseup", handleUp);
     window.addEventListener("mouseover", handleOver);
     raf = requestAnimationFrame(tick);
 
     return () => {
+      delete document.body.dataset.customCursor;
       window.removeEventListener("mousemove", handleMove);
+      window.removeEventListener("mouseleave", handleLeave);
       window.removeEventListener("mousedown", handleDown);
       window.removeEventListener("mouseup", handleUp);
       window.removeEventListener("mouseover", handleOver);
@@ -65,12 +97,21 @@ export default function CustomCursor() {
     };
   }, []);
 
+  if (!enabled) return null;
+
   return (
     <div
       ref={cursorRef}
-      className="custom-cursor fixed left-0 top-0 z-[80] pointer-events-none"
+      aria-hidden="true"
+      data-visible="false"
+      data-hover="false"
+      data-pressed="false"
+      className="custom-cursor pointer-events-none fixed left-0 top-0 z-[9999]"
     >
-      <div className="h-4 w-4 rotate-45 border border-white/40" />
+      <div className="custom-cursor__halo" />
+      <div className="custom-cursor__ring" />
+      <div className="custom-cursor__orbit" />
+      <div className="custom-cursor__core" />
     </div>
   );
 }

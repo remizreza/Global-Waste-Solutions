@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import { motion } from "framer-motion";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import { Activity, ExternalLink, RefreshCw } from "lucide-react";
 
 type BulletinItem = {
@@ -46,10 +46,20 @@ function formatTimeAgo(dateValue: string): string {
 }
 
 export default function LiveBulletinBoard() {
+  const sectionRef = useRef<HTMLElement | null>(null);
+  const reduceMotion = useReducedMotion();
   const [items, setItems] = useState<BulletinItem[]>(fallbackItems);
   const [updatedAt, setUpdatedAt] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [refreshTick, setRefreshTick] = useState(0);
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ["start 88%", "end 20%"],
+  });
+  const rotate = useTransform(scrollYProgress, [0, 0.5, 1], reduceMotion ? [0, 0, 0] : [-7, 0, 4]);
+  const y = useTransform(scrollYProgress, [0, 0.5, 1], reduceMotion ? [0, 0, 0] : [90, 0, -30]);
+  const scale = useTransform(scrollYProgress, [0, 0.5, 1], reduceMotion ? [1, 1, 1] : [0.95, 1, 1.02]);
+  const opacity = useTransform(scrollYProgress, [0, 0.18, 1], [0.45, 1, 1]);
 
   useEffect(() => {
     let mounted = true;
@@ -83,7 +93,11 @@ export default function LiveBulletinBoard() {
   const rotatingItems = useMemo(() => items.slice(0, 6), [items]);
 
   return (
-    <section className="py-14 border-y border-white/10 bg-card/20">
+    <motion.section
+      ref={sectionRef}
+      className="py-14 border-y border-white/10 bg-card/20"
+      style={{ rotate, y, scale, opacity, transformPerspective: 1600 }}
+    >
       <div className="container mx-auto px-6">
         <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
           <h2 className="text-2xl md:text-3xl font-display text-white flex items-center gap-2">
@@ -130,6 +144,6 @@ export default function LiveBulletinBoard() {
           ))}
         </div>
       </div>
-    </section>
+    </motion.section>
   );
 }

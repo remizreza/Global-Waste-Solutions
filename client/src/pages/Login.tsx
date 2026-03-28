@@ -36,22 +36,18 @@ export default function Login() {
                 />
               </label>
 
-              <Link href={pageLinks.dashboard}>
-                <a className="inline-flex w-full items-center justify-center rounded-lg bg-primary px-4 py-3 text-sm font-tech uppercase tracking-[0.16em] text-black transition hover:brightness-105">
+              <Link href={pageLinks.dashboard} className="inline-flex w-full items-center justify-center rounded-lg bg-primary px-4 py-3 text-sm font-tech uppercase tracking-[0.16em] text-black transition hover:brightness-105">
                   Open Live Dashboard
-                </a>
-              </Link>
+                </Link>
             </form>
 
             <p className="mt-3 text-xs text-gray-400">
-              Admin? Use <Link href={pageLinks.adminLogin}><a className="text-primary hover:underline">Admin Login</a></Link>.
+              Admin? Use <Link href={pageLinks.adminLogin} className="text-primary hover:underline">Admin Login</Link>.
             </p>
 
             <p className="mt-6 text-sm text-gray-300">
               New trader?{" "}
-              <Link href={pageLinks.signup}>
-                <a className="text-primary hover:underline">Create your account</a>
-              </Link>
+              <Link href={pageLinks.signup} className="text-primary hover:underline">Create your account</Link>
             </p>
           </div>
         </div>

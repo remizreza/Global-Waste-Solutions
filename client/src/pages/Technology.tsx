@@ -3,6 +3,8 @@ import { motion } from "framer-motion";
 import SiteLayout from "@/components/SiteLayout";
 import InfoPreviewDialog from "@/components/InfoPreviewDialog";
 import LiveStoriesBoard from "@/components/LiveStoriesBoard";
+import ScrollStage from "@/components/ScrollStage";
+import ScrollTile from "@/components/ScrollTile";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   pageLinks,
@@ -10,6 +12,7 @@ import {
   technologyStorySlides,
   technologyModules,
 } from "@/lib/siteContent";
+import { hingeReveal, premiumHoverLift, revealMask, staggerContainer } from "@/lib/motion";
 
 export default function Technology() {
   return (
@@ -28,20 +31,28 @@ export default function Technology() {
           />
           <div className="absolute inset-0 bg-gradient-to-b from-secondary/70 via-secondary/35 to-secondary/85" />
         </div>
+        <div className="absolute inset-0 hero-spotlight opacity-55 pointer-events-none" />
+        <div className="absolute inset-0 hero-architectural-grid opacity-15 pointer-events-none" />
         <div className="absolute inset-0 bg-grid-pattern opacity-5 pointer-events-none" />
         <div className="container mx-auto relative z-10 max-w-6xl">
-          <div className="text-center mb-14">
-            <p className="inline-flex px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-tech tracking-widest mb-5">
-              INNOVATION & METHODOLOGY
+          <ScrollStage className="mb-14" direction="right">
+          <motion.div
+            className="page-hero-shell section-shell mb-14 rounded-[1.75rem] px-6 py-10 text-center sm:px-10"
+            initial="hidden"
+            animate="visible"
+            variants={revealMask(28)}
+          >
+            <p className="section-label mb-5 text-sm">
+              ENGINEERING & PROCESS INTELLIGENCE
             </p>
             <h1 className="text-4xl md:text-5xl font-display text-white mb-5">
-              Technology Stack
+              Process Technology & Delivery Methods
             </h1>
             <p className="text-gray-300 max-w-3xl mx-auto">
-              Technical depth behind environmental treatment, precision
-              industrial services, and digital operating intelligence.
+              The process systems, treatment methods, and operating intelligence that support REDOXY field execution.
             </p>
-          </div>
+          </motion.div>
+          </ScrollStage>
 
           <div className="mb-8 flex flex-wrap gap-2 justify-center">
             {technologyModules.map((module) => (
@@ -73,19 +84,36 @@ export default function Technology() {
             </a>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-6">
-            {technologyModules.map((module) => (
+          <ScrollStage className="mb-10" direction="left">
+          <motion.div
+            className="grid gap-6 lg:grid-cols-12"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.12 }}
+            variants={staggerContainer(0.12)}
+          >
+            {technologyModules.map((module, index) => (
+              <ScrollTile
+                key={module.title}
+                direction={index % 2 === 0 ? "left" : "right"}
+                className={
+                  index % 3 === 0
+                    ? "lg:col-span-7"
+                    : index % 3 === 1
+                      ? "lg:col-span-5 lg:translate-y-10"
+                      : "lg:col-span-6 lg:translate-y-4"
+                }
+              >
               <motion.div
                 id={`tech-${module.id}`}
                 key={module.title}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, amount: 0.2 }}
-                transition={{ duration: 0.45 }}
-                className="border border-white/10 rounded-lg p-7 bg-secondary/45 flex flex-col backdrop-blur-sm"
+                variants={hingeReveal(index % 2 === 0 ? "left" : "right", 20)}
+                whileHover={premiumHoverLift}
+                className="section-shell flex flex-col rounded-[1.5rem] p-7"
                 data-premium-interactive
                 data-premium-mode="tilt"
               >
+                <p className="section-label mb-4 text-xs">Module</p>
                 <div className="flex items-center gap-2 mb-3">
                   <h2 className="text-2xl text-white font-display">
                     {module.title}
@@ -117,27 +145,34 @@ export default function Technology() {
                   ctaLabel="Back to Services"
                 />
               </motion.div>
+              </ScrollTile>
             ))}
-          </div>
+          </motion.div>
+          </ScrollStage>
 
-          <div className="mt-10 border border-white/10 rounded-xl p-6 brand-surface brand-hover-lift">
+          <ScrollStage className="mt-10" direction="right">
+          <div className="section-shell mt-10 rounded-[1.5rem] p-6 brand-hover-lift">
+            <p className="section-label mb-4 text-xs">Research Proof</p>
             <h3 className="text-2xl text-white font-display mb-4">
               R&D Achievements
             </h3>
-            <div className="grid md:grid-cols-2 gap-3">
+            <div className="grid gap-3 lg:grid-cols-12">
               {rdAchievements.map((item) => (
                 <a
                   key={item}
                   href={pageLinks.services}
-                  className="link-premium text-sm"
+                  className="link-premium text-sm lg:col-span-6"
                 >
                   {item}
                 </a>
               ))}
             </div>
           </div>
+          </ScrollStage>
 
-          <div id="tech-mtu" className="mt-10 border border-white/10 rounded-xl p-6 brand-surface brand-hover-lift">
+          <ScrollStage className="mt-10" direction="left">
+          <div id="tech-mtu" className="section-shell mt-10 rounded-[1.5rem] p-6 brand-hover-lift">
+            <p className="section-label mb-4 text-xs">Flagship Platform</p>
             <h3 className="text-2xl text-white font-display mb-3">
               Modular Treatment Units (MTU)
             </h3>
@@ -147,8 +182,11 @@ export default function Technology() {
               field-ready mobilization for compliant, high-throughput treatment.
             </p>
           </div>
+          </ScrollStage>
 
-          <div id="tech-advanced-recycling" className="mt-10 border border-white/10 rounded-xl p-6 brand-surface brand-hover-lift">
+          <ScrollStage className="mt-10" direction="right">
+          <div id="tech-advanced-recycling" className="section-shell mt-10 rounded-[1.5rem] p-6 brand-hover-lift">
+            <p className="section-label mb-4 text-xs">Recovery System</p>
             <h3 className="text-2xl text-white font-display mb-3">
               Advanced Oil Recycling
             </h3>
@@ -158,8 +196,10 @@ export default function Technology() {
               recovery value and reducing disposal volumes.
             </p>
           </div>
+          </ScrollStage>
 
-          <div className="mt-10 border border-white/10 rounded-xl overflow-hidden bg-secondary/45">
+          <ScrollStage className="mt-10" direction="left">
+          <div className="section-shell mt-10 rounded-[1.5rem] overflow-hidden">
             <img
               src="/story-assets/network-connectivity.jpg"
               alt="Redoxy network connectivity map"
@@ -167,6 +207,7 @@ export default function Technology() {
               loading="lazy"
             />
             <div className="p-5 md:p-6">
+              <p className="section-label mb-3 text-xs">Regional Reach</p>
               <h3 className="text-xl md:text-2xl text-white font-display mb-2">
                 Network Connectivity
               </h3>
@@ -177,33 +218,31 @@ export default function Technology() {
               </p>
             </div>
           </div>
+          </ScrollStage>
 
+          <ScrollStage className="mt-10" direction="right">
           <div className="mt-10">
             <LiveStoriesBoard
               fallbackTitle="Technology & R&D Story Stream"
               fallbackSubtitle="Upload new updates in /live-stories to publish automatically."
               fallbackSlides={technologyStorySlides}
+              disableLiveFeed
             />
           </div>
+          </ScrollStage>
 
-          <div className="mt-12 grid md:grid-cols-2 gap-4">
-            <Link href={pageLinks.services}>
-              <a className="link-premium">
+          <ScrollStage className="mt-12 grid gap-4 lg:grid-cols-12" direction="left">
+            <Link href={pageLinks.services} className="link-premium lg:col-span-7">
                 See where each method is used in services
-              </a>
-            </Link>
-            <Link href={pageLinks.traction}>
-              <a className="link-premium">
+              </Link>
+            <Link href={pageLinks.traction} className="link-premium lg:col-span-5 lg:translate-y-8">
                 View how technology supports growth
-              </a>
-            </Link>
-          </div>
+              </Link>
+          </ScrollStage>
 
           <p className="mt-6 text-sm text-gray-300">
             Traction metrics reflect applied engineering results.{" "}
-            <Link href={pageLinks.traction}>
-              <a className="text-primary underline">See live traction data</a>
-            </Link>{" "}
+            <Link href={pageLinks.traction} className="text-primary underline">See live traction data</Link>{" "}
             to connect R&D investment with commercial outcomes.
           </p>
         </div>

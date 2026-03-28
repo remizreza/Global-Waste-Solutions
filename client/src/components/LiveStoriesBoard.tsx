@@ -20,18 +20,22 @@ type LiveStoriesBoardProps = {
   fallbackTitle: string;
   fallbackSubtitle?: string;
   fallbackSlides: LiveStory[];
+  disableLiveFeed?: boolean;
 };
 
 export default function LiveStoriesBoard({
   fallbackTitle,
   fallbackSubtitle,
   fallbackSlides,
+  disableLiveFeed = false,
 }: LiveStoriesBoardProps) {
   const [title, setTitle] = useState(fallbackTitle);
   const [subtitle, setSubtitle] = useState(fallbackSubtitle);
   const [slides, setSlides] = useState<LiveStory[]>(fallbackSlides);
 
   useEffect(() => {
+    if (disableLiveFeed) return;
+
     let active = true;
 
     const loadStories = async () => {
@@ -59,7 +63,7 @@ export default function LiveStoriesBoard({
       active = false;
       window.clearInterval(intervalId);
     };
-  }, []);
+  }, [disableLiveFeed]);
 
   return <StorySlideshow title={title} subtitle={subtitle} slides={slides} />;
 }

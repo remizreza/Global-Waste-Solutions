@@ -6,15 +6,19 @@ import { pageLinks } from "@/lib/siteContent";
 import { MOTION_EASE, motionDuration, slideIn } from "@/lib/motion";
 import RedoxyWordmark from "@/components/RedoxyWordmark";
 
-const navItems = [
+const primaryNavItems = [
   { label: "Services", href: pageLinks.services },
   { label: "Technology", href: pageLinks.technology },
   { label: "Traction", href: pageLinks.traction },
   { label: "Products", href: pageLinks.products },
+  { label: "About", href: pageLinks.about },
+  { label: "Contact", href: pageLinks.contact },
+];
+
+const utilityNavItems = [
   { label: "Dashboard", href: pageLinks.dashboard },
   { label: "Login", href: pageLinks.login },
   { label: "Admin", href: pageLinks.adminLogin },
-  { label: "Contact", href: pageLinks.contact },
 ];
 
 export default function Navbar() {
@@ -41,48 +45,77 @@ export default function Navbar() {
           : "bg-transparent"
       }`}
     >
-      <div className="container mx-auto px-6 h-20 flex items-center justify-between">
-        <Link href={pageLinks.home}>
-          <a className="flex items-center gap-3 shrink-0 min-w-0">
+      <div className="container mx-auto px-4 sm:px-6 pt-3">
+        <div className={`flex h-18 items-center justify-between rounded-[1.4rem] border px-4 sm:px-6 transition-all duration-300 ${
+          scrolled
+            ? "border-white/12 bg-[#07101f]/82 backdrop-blur-xl shadow-[0_18px_60px_rgba(0,0,0,0.28)]"
+            : "border-white/8 bg-black/10 backdrop-blur-md"
+        }`}>
+        <Link href={pageLinks.home} className="flex items-center gap-3 shrink-0 min-w-0">
             <span className="relative inline-flex">
               <span className="absolute inset-0 rounded-full bg-orange-400/35 blur-md animate-pulse" />
               <img
                 src="/redoxy-icon.png"
                 alt="REDOXY emblem"
-                className="relative h-10 w-10 md:h-11 md:w-11 object-contain drop-shadow-[0_0_18px_rgba(255,122,0,0.45)]"
+                className="relative h-10 w-10 lg:h-11 lg:w-11 object-contain drop-shadow-[0_0_18px_rgba(255,122,0,0.45)]"
                 loading="eager"
               />
             </span>
-            <RedoxyWordmark className="text-3xl md:text-[2rem] transition-all duration-300" />
-          </a>
+            <div className="min-w-0">
+              <RedoxyWordmark className="text-3xl lg:text-[2rem] transition-all duration-300" />
+              <p className="section-label mt-1 hidden text-[9px] lg:block">Industrial Infrastructure Group</p>
+            </div>
         </Link>
 
-        <div className="hidden md:flex items-center gap-8">
-          {navItems.map((item) => (
-            <Link key={item.href} href={item.href}>
-              <a
+        <div className="hidden lg:flex items-center gap-3">
+          <div className="flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.03] px-2 py-2">
+          {primaryNavItems.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              aria-current={location === item.href ? "page" : undefined}
+              className={`rounded-full px-3 py-2 text-[11px] font-tech uppercase tracking-[0.16em] transition-all ${
+                location === item.href
+                  ? "bg-white/8 text-primary shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)]"
+                  : "text-gray-200/88 hover:bg-white/[0.04] hover:text-primary"
+              }`}
+            >
+              {item.label}
+            </Link>
+          ))}
+          </div>
+
+          <div className="flex items-center gap-2 pl-2">
+            {utilityNavItems.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
                 aria-current={location === item.href ? "page" : undefined}
-                className={`text-sm font-tech uppercase tracking-[0.16em] transition-all relative after:absolute after:left-0 after:-bottom-1 after:h-[1px] after:bg-primary after:transition-all ${
+                className={`rounded-full border px-3 py-2 text-[10px] font-tech uppercase tracking-[0.16em] transition-all ${
                   location === item.href
-                    ? "text-primary after:w-full"
-                    : "text-gray-300 hover:text-primary after:w-0 hover:after:w-full"
+                    ? "border-primary/45 bg-primary/10 text-primary"
+                    : "border-white/10 bg-white/[0.02] text-gray-200/78 hover:border-white/20 hover:text-white"
                 }`}
               >
                 {item.label}
-              </a>
+              </Link>
+            ))}
+            <Link href={pageLinks.contact} className="btn-premium !px-5 !py-2.5 !text-[10px]">
+              Start Discussion
             </Link>
-          ))}
+          </div>
         </div>
 
         <button
           type="button"
           aria-label="Toggle navigation"
           aria-expanded={isOpen}
-          className="md:hidden text-white"
+          className="lg:hidden text-white rounded-full border border-white/10 bg-white/[0.04] p-2"
           onClick={() => setIsOpen((value) => !value)}
         >
           {isOpen ? <X /> : <Menu />}
         </button>
+        </div>
       </div>
 
       <AnimatePresence>
@@ -92,7 +125,7 @@ export default function Navbar() {
             animate={reduceMotion ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
             exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -8, scale: 0.98 }}
             transition={{ duration: motionDuration.ui, ease: MOTION_EASE }}
-            className="md:hidden bg-secondary/95 backdrop-blur-xl border-b border-white/10 origin-top"
+            className="lg:hidden mx-4 mt-2 origin-top rounded-[1.4rem] border border-white/10 bg-[#07101f]/94 backdrop-blur-xl"
           >
             <motion.div
               className="flex flex-col p-6 gap-4"
@@ -108,17 +141,16 @@ export default function Navbar() {
                 },
               }}
             >
-              {navItems.map((item) => (
+              {[...primaryNavItems, ...utilityNavItems].map((item) => (
                 <motion.div key={item.href} variants={slideIn("x", 16)}>
-                  <Link href={item.href}>
-                    <a
-                      className={`text-lg font-tech flex items-center justify-between ${
-                        location === item.href ? "text-primary" : "text-gray-300"
-                      }`}
-                    >
-                      {item.label}
-                      <ChevronRight className="w-4 h-4 text-primary" />
-                    </a>
+                  <Link
+                    href={item.href}
+                    className={`text-lg font-tech flex items-center justify-between ${
+                      location === item.href ? "text-primary" : "text-gray-300"
+                    }`}
+                  >
+                    {item.label}
+                    <ChevronRight className="w-4 h-4 text-primary" />
                   </Link>
                 </motion.div>
               ))}

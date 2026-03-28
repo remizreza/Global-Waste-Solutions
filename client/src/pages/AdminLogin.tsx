@@ -57,9 +57,7 @@ export default function AdminLogin() {
             </button>
             <p className="text-xs text-gray-400">
               Trader dashboard only?{' '}
-              <Link href={pageLinks.login}>
-                <a className="text-primary hover:underline">Open trader login</a>
-              </Link>
+              <Link href={pageLinks.login} className="text-primary hover:underline">Open trader login</Link>
               .
             </p>
           </form>
