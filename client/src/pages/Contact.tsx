@@ -3,36 +3,49 @@ import { motion } from "framer-motion";
 import { Link } from "wouter";
 import SiteLayout from "@/components/SiteLayout";
 import InfoPreviewDialog from "@/components/InfoPreviewDialog";
+import ScrollStage from "@/components/ScrollStage";
+import ScrollTile from "@/components/ScrollTile";
 import { contactDetails, pageLinks } from "@/lib/siteContent";
+import { hingeReveal, premiumHoverLift, revealMask } from "@/lib/motion";
 
 export default function Contact() {
   return (
     <SiteLayout>
       <section className="min-h-screen pt-32 pb-20 px-6 relative overflow-hidden">
+        <div className="absolute inset-0 hero-spotlight opacity-55 pointer-events-none" />
+        <div className="absolute inset-0 hero-architectural-grid opacity-15 pointer-events-none" />
         <div className="absolute inset-0 bg-grid-pattern opacity-5 pointer-events-none" />
         <div className="container mx-auto relative z-10 max-w-6xl">
-          <div className="text-center mb-12">
-            <p className="inline-flex px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-tech tracking-widest mb-5">
-              CORPORATE STRATEGY & FINANCE
+          <ScrollStage className="mb-12" direction="right" mode="elegant">
+          <motion.div
+            className="page-hero-shell section-shell mb-12 rounded-[1.75rem] px-6 py-10 text-center sm:px-10"
+            initial="hidden"
+            animate="visible"
+            variants={revealMask(28)}
+          >
+            <p className="section-label mb-5 text-sm">
+              COMMERCIAL CONTACT & STRATEGY DESK
             </p>
             <h1 className="text-4xl md:text-5xl font-display text-white mb-5">
-              Contact REDOXY Group
+              Connect With REDOXY
             </h1>
             <p className="text-gray-300 max-w-3xl mx-auto">
-              For partnerships, projects, and commercial collaboration across
-              KSA and UAE.
+              For project discussions, strategic partnerships, and commercial coordination across KSA and UAE.
             </p>
-          </div>
+          </motion.div>
+          </ScrollStage>
 
-          <div className="grid lg:grid-cols-2 gap-8">
+          <ScrollStage className="grid gap-8 lg:grid-cols-12" direction="left" mode="elegant">
             <motion.div
-              initial={{ opacity: 0, y: 28 }}
-              whileInView={{ opacity: 1, y: 0 }}
+              initial="hidden"
+              whileInView="visible"
               viewport={{ once: true, amount: 0.2 }}
-              transition={{ duration: 0.55 }}
-              className="space-y-4"
+              variants={hingeReveal("left", 28)}
+              className="space-y-4 lg:col-span-5"
             >
-              <div className="border border-white/10 rounded-lg p-6 brand-surface brand-hover-lift">
+              <ScrollTile direction="left">
+              <div className="section-shell rounded-[1.5rem] p-6 brand-hover-lift">
+                <p className="section-label mb-4 text-xs">Primary Channel</p>
                 <p className="text-primary text-xs font-tech uppercase tracking-wider mb-2">
                   Strategy Office
                 </p>
@@ -66,7 +79,10 @@ export default function Contact() {
                   </a>
                 </div>
               </div>
-              <div className="border border-white/10 rounded-lg p-6 bg-secondary/45">
+              </ScrollTile>
+              <ScrollTile direction="right">
+              <div className="section-shell rounded-[1.5rem] p-6">
+                <p className="section-label mb-4 text-xs">Direct Lines</p>
                 <p className="flex items-center gap-2 text-white mb-2">
                   <Phone className="w-4 h-4 text-primary" />{" "}
                   {contactDetails.phoneUAE}
@@ -84,6 +100,7 @@ export default function Contact() {
                   {contactDetails.website}
                 </p>
               </div>
+              </ScrollTile>
               <InfoPreviewDialog
                 title="Engagement Channels"
                 subtitle="How to engage REDOXY"
@@ -97,7 +114,9 @@ export default function Contact() {
                 triggerLabel="Preview engagement map"
               />
 
-              <div className="border border-white/10 rounded-lg p-6 brand-surface brand-hover-lift">
+              <ScrollTile direction="left">
+              <div className="section-shell rounded-[1.5rem] p-6 brand-hover-lift">
+                <p className="section-label mb-4 text-xs">Executive Office</p>
                 <p className="text-primary text-xs font-tech uppercase tracking-wider mb-2">
                   The Visionary
                 </p>
@@ -112,15 +131,18 @@ export default function Contact() {
                     Connect to Executive Office
                   </Link>
               </div>
+              </ScrollTile>
             </motion.div>
 
             <motion.div
-              initial={{ opacity: 0, y: 28 }}
-              whileInView={{ opacity: 1, y: 0 }}
+              initial="hidden"
+              whileInView="visible"
               viewport={{ once: true, amount: 0.2 }}
-              transition={{ duration: 0.55, delay: 0.08 }}
-              className="border border-white/10 rounded-lg p-8 brand-surface brand-hover-lift"
+              variants={hingeReveal("right", 28)}
+              whileHover={premiumHoverLift}
+              className="section-shell rounded-[1.5rem] p-8 brand-hover-lift lg:col-span-7 lg:translate-y-10"
             >
+              <p className="section-label mb-4 text-xs">Inquiry Form</p>
               <h2 className="text-2xl text-white font-display mb-5">
                 Quick Inquiry
               </h2>
@@ -159,7 +181,7 @@ export default function Contact() {
                 </button>
               </form>
             </motion.div>
-          </div>
+          </ScrollStage>
 
           <div className="mt-10 grid md:grid-cols-3 gap-4">
             <Link href={pageLinks.about} className="link-premium">

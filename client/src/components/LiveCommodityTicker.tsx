@@ -14,8 +14,8 @@ const fallbackQuotes: CommodityQuote[] = [
 ];
 
 function formatQuote(quote: CommodityQuote) {
-  const symbol = quote.direction === "down" ? "🟥" : "🟩";
-  return `${symbol} ${quote.label}: $${quote.price.toFixed(2)}`;
+  const symbol = quote.direction === "down" ? "Down" : "Up";
+  return `${quote.label} $${quote.price.toFixed(2)} ${symbol}`;
 }
 
 export default function LiveCommodityTicker() {
@@ -57,9 +57,13 @@ export default function LiveCommodityTicker() {
   }, [quotes]);
 
   return (
-    <div className="relative overflow-hidden rounded-lg border border-white/10 bg-secondary/70 brand-surface px-4 py-3">
-      <div className="pointer-events-none absolute inset-0 opacity-60">
-        <div className="h-full w-full bg-[radial-gradient(circle_at_center,rgba(22,163,74,0.18),transparent_60%)]" />
+    <div className="section-shell relative overflow-hidden rounded-[1.5rem] px-4 py-4">
+      <div className="pointer-events-none absolute inset-0 opacity-70">
+        <div className="h-full w-full bg-[radial-gradient(circle_at_center,rgba(255,107,26,0.14),transparent_45%)]" />
+      </div>
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <p className="section-label text-[10px]">Live Market Pulse</p>
+        <p className="text-[10px] font-tech uppercase tracking-[0.22em] text-gray-400">Energy + Recovery Commodities</p>
       </div>
       <div className="ticker-track whitespace-nowrap">
         <span className="ticker-text">{tickerText}</span>

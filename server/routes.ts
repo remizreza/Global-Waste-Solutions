@@ -26,14 +26,40 @@ type CommoditySnapshot = {
 };
 
 type TraderPricing = {
-  product: "Brent Crude" | "WTI Crude" | "Natural Gas" | "Heating Oil" | "Gasoline";
+  product: string;
   price: number;
   rawPrice: number;
-  rawUnit: "USD/bbl" | "USD/gal" | "USD/MMBtu";
-  trend: "up" | "down";
+  rawUnit: "USD/bbl" | "USD/gal" | "USD/MMBtu" | "USD/mt";
+  trend: "up" | "down" | "flat";
   updatedAt: string;
   unit: "USD/mt" | "USD/mt eq";
   source: string;
+  benchmark: string;
+  note?: string;
+};
+
+type ForecastPoint = {
+  date: string;
+  benchmark: string;
+  benchmarkUsdMt: number;
+  expectedOfferUsdMt: number;
+  confidence: "low" | "medium";
+};
+
+type BenchmarkKey = "brent" | "dubaiProxy";
+
+type BenchmarkQuote = {
+  key: BenchmarkKey;
+  label: string;
+  source: string;
+  symbol: string;
+  priceUsdPerBbl: number;
+  priceUsdPerMt: number;
+  previousUsdPerBbl: number | null;
+  changeUsdPerBbl: number | null;
+  changePercent: number | null;
+  trend: "up" | "down" | "flat";
+  updatedAt: string;
   note?: string;
 };
 
@@ -41,10 +67,13 @@ type TraderBoardSnapshot = {
   updatedAt: string;
   tradersOnline: number;
   marketPulse: "Bullish" | "Bearish" | "Neutral";
+  benchmarkMode: "benchmark-driven";
+  benchmarks: BenchmarkQuote[];
   quotes: TraderPricing[];
+  forecasts: ForecastPoint[];
 };
 
-type EnergyProductKey = "brent" | "wti" | "naturalGas" | "heatingOil" | "gasoline";
+type EnergyProductKey = "brent" | "wti" | "naturalGas" | "heatingOil" | "gasoline" | "gasOil";
 
 type IgSession = {
   accessToken: string;
@@ -59,11 +88,16 @@ type IgMarketQuote = {
   instrumentName: string | null;
 };
 
-const COMMODITIES_API_BASE = "https://commodities-api.com/api";
+const COMMODITIES_API_BASE = "https://api.commodities-api.com";
+const ALPHA_VANTAGE_BASE = "https://www.alphavantage.co/query";
 const DEFAULT_COMMODITIES_KEY =
   process.env.COMMODITIES_API_KEY ??
   process.env.NEXT_PUBLIC_COMMODITIES_API_KEY ??
   "q38sxllxx9x4tcq01zr6q8b18271lcq9p880dmclzprmi8844pr4s0lkqg10";
+const ALPHA_VANTAGE_API_KEY =
+  process.env.ALPHA_VANTAGE_API_KEY ??
+  process.env.NEXT_PUBLIC_ALPHA_VANTAGE_API_KEY ??
+  "";
 
 const FALLBACK_COMMODITY_QUOTES: CommoditySnapshot = {
   crude: 84.2,
@@ -193,6 +227,17 @@ function buildCommoditiesUrl(endpoint: string, params: Record<string, string>) {
   return url;
 }
 
+function buildAlphaVantageUrl(params: Record<string, string>) {
+  const url = new URL(ALPHA_VANTAGE_BASE);
+  url.searchParams.set("apikey", ALPHA_VANTAGE_API_KEY);
+
+  for (const [key, value] of Object.entries(params)) {
+    url.searchParams.set(key, value);
+  }
+
+  return url;
+}
+
 async function fetchCommoditiesJson<T>(
   endpoint: string,
   params: Record<string, string> = {},
@@ -213,6 +258,63 @@ function numberOrNull(value: unknown): number | null {
   return typeof value === "number" && Number.isFinite(value) ? value : null;
 }
 
+function parseNumberString(value: unknown): number | null {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof value !== "string") return null;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function toTrend(change: number | null): "up" | "down" | "flat" {
+  if (change == null || Math.abs(change) < 0.0001) return "flat";
+  return change > 0 ? "up" : "down";
+}
+
+function convertBblToMt(priceUsdPerBbl: number, factor = 7.33) {
+  return Number((priceUsdPerBbl * factor).toFixed(2));
+}
+
+function buildDerivedQuote(input: {
+  product: string;
+  rawPrice: number;
+  rawUnit: TraderPricing["rawUnit"];
+  unit: TraderPricing["unit"];
+  price: number;
+  source: string;
+  benchmark: string;
+  note?: string;
+  updatedAt: string;
+}): TraderPricing {
+  return {
+    product: input.product,
+    price: Number(input.price.toFixed(2)),
+    rawPrice: Number(input.rawPrice.toFixed(input.rawUnit === "USD/gal" ? 4 : input.rawUnit === "USD/MMBtu" ? 3 : 2)),
+    rawUnit: input.rawUnit,
+    trend: "flat",
+    updatedAt: input.updatedAt,
+    unit: input.unit,
+    source: input.source,
+    benchmark: input.benchmark,
+    note: input.note,
+  };
+}
+
+function buildForecasts(benchmark: BenchmarkQuote, premiumPerMt = 87): ForecastPoint[] {
+  const step = benchmark.changeUsdPerBbl ?? 0.65;
+  return Array.from({ length: 5 }, (_, index) => {
+    const direction = benchmark.trend === "down" ? -1 : 1;
+    const nextBbl = benchmark.priceUsdPerBbl + direction * step * (index + 1) * 0.35;
+    const benchmarkUsdMt = convertBblToMt(nextBbl);
+    return {
+      date: new Date(Date.now() + (index + 1) * 86400000).toISOString().slice(0, 10),
+      benchmark: benchmark.label,
+      benchmarkUsdMt,
+      expectedOfferUsdMt: Number((benchmarkUsdMt + premiumPerMt).toFixed(2)),
+      confidence: index < 2 ? "medium" : "low",
+    };
+  });
+}
+
 const BARREL_GALLONS = 42;
 const KEROSENE_BARREL_GALLONS = 41.3;
 const IG_API_BASE = process.env.IG_API_BASE?.trim() || "https://api.ig.com/gateway/deal";
@@ -227,6 +329,7 @@ function getIgConfiguredEpics() {
     naturalGas: process.env.IG_EPIC_NATURAL_GAS?.trim() || "CC.D.NG.UNC.IP",
     heatingOil: process.env.IG_EPIC_HEATING_OIL?.trim() || "CC.D.HO.UNC.IP",
     gasoline: process.env.IG_EPIC_GASOLINE?.trim() || "CC.D.RB.UNC.IP",
+    gasOil: process.env.IG_EPIC_GAS_OIL?.trim() || process.env.IG_EPIC_DIESEL?.trim() || "CC.D.LGO.UNC.IP",
   };
 }
 
@@ -394,6 +497,16 @@ function normalizeIgEnergyPrice(key: EnergyProductKey, mid: number) {
         unit: "USD/mt" as const,
       };
     }
+    case "gasOil": {
+      return {
+        product: "Gas Oil" as const,
+        price: Number(mid.toFixed(2)),
+        rawPrice: Number(mid.toFixed(2)),
+        rawUnit: "USD/mt" as const,
+        unit: "USD/mt" as const,
+        note: "Live IG London Gas Oil market used as gas oil benchmark.",
+      };
+    }
   }
 }
 
@@ -436,6 +549,18 @@ async function fetchIgQuotes(): Promise<
         updatedAt: quote?.updatedAt ?? new Date().toISOString(),
         unit: normalized.unit,
         source: "ig-live",
+        benchmark:
+          normalized.product === "Brent Crude"
+            ? "Brent crude benchmark"
+            : normalized.product === "WTI Crude"
+              ? "WTI crude benchmark"
+              : normalized.product === "Natural Gas"
+                ? "Henry Hub style gas benchmark"
+                : normalized.product === "Heating Oil"
+                  ? "Heating oil crack proxy"
+                  : normalized.product === "Gas Oil"
+                    ? "London gas oil benchmark"
+                    : "Gasoline crack proxy",
         note: "note" in normalized ? normalized.note : undefined,
       };
     }
@@ -534,10 +659,153 @@ async function fetchInvestingProxyQuotes(): Promise<Partial<Record<'brent', numb
   };
 }
 
+async function fetchAlphaVantageBrent(): Promise<BenchmarkQuote | null> {
+  if (!ALPHA_VANTAGE_API_KEY) {
+    return null;
+  }
+
+  const url = buildAlphaVantageUrl({
+    function: "BRENT",
+    interval: "daily",
+  });
+
+  const response = await fetch(url.toString(), {
+    headers: {
+      "user-agent": "redoxy-brent-client/1.0",
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Alpha Vantage BRENT failed: ${response.status}`);
+  }
+
+  const payload = (await response.json()) as {
+    data?: Array<{ date?: unknown; value?: unknown }>;
+    interval?: unknown;
+    unit?: unknown;
+    name?: unknown;
+    "Error Message"?: unknown;
+    Information?: unknown;
+    Note?: unknown;
+  };
+
+  if (payload["Error Message"] || payload.Information || payload.Note) {
+    throw new Error("Alpha Vantage did not return a usable Brent payload");
+  }
+
+  const rows = Array.isArray(payload.data) ? payload.data : [];
+  const latest = rows.find((row) => parseNumberString(row?.value) != null);
+  const previous = rows.slice(rows.indexOf(latest ?? rows[0]) + 1).find((row) => parseNumberString(row?.value) != null);
+
+  const latestPrice = parseNumberString(latest?.value);
+  if (latestPrice == null) {
+    throw new Error("Alpha Vantage Brent payload missing latest value");
+  }
+
+  const previousPrice = parseNumberString(previous?.value);
+  const change = previousPrice == null ? null : Number((latestPrice - previousPrice).toFixed(2));
+  const changePercent =
+    previousPrice == null || previousPrice === 0
+      ? null
+      : Number((((latestPrice - previousPrice) / previousPrice) * 100).toFixed(2));
+
+  const updatedAt =
+    typeof latest?.date === "string" && latest.date.trim()
+      ? new Date(`${latest.date}T00:00:00Z`).toISOString()
+      : new Date().toISOString();
+
+  return {
+    key: "brent",
+    label: "Brent Benchmark",
+    source: "Alpha Vantage",
+    symbol: "BRENT",
+    priceUsdPerBbl: Number(latestPrice.toFixed(2)),
+    priceUsdPerMt: convertBblToMt(latestPrice),
+    previousUsdPerBbl: previousPrice == null ? null : Number(previousPrice.toFixed(2)),
+    changeUsdPerBbl: change,
+    changePercent,
+    trend: toTrend(change),
+    updatedAt,
+    note: "Daily Brent benchmark feed from Alpha Vantage.",
+  };
+}
+
+async function fetchDubaiProxyQuote(): Promise<BenchmarkQuote | null> {
+  if (!DEFAULT_COMMODITIES_KEY) {
+    return null;
+  }
+
+  const [latestResponse, historicalResponse] = await Promise.all([
+    fetchCommoditiesJson<{
+      data?: { success?: unknown; date?: unknown; rates?: Record<string, unknown> };
+      success?: unknown;
+      date?: unknown;
+      rates?: Record<string, unknown>;
+    }>("latest", {
+      base: "USD",
+      symbols: "DBLc1",
+    }),
+    fetchCommoditiesJson<{
+      data?: { success?: unknown; date?: unknown; rates?: Record<string, unknown> };
+      success?: unknown;
+      date?: unknown;
+      rates?: Record<string, unknown>;
+    }>(new Date(Date.now() - 86400000).toISOString().slice(0, 10), {
+      base: "USD",
+      symbols: "DBLc1",
+    }),
+  ]);
+
+  const latestRates = latestResponse.data?.rates ?? latestResponse.rates ?? {};
+  const historicalRates = historicalResponse.data?.rates ?? historicalResponse.rates ?? {};
+
+  const latestPrice = parseNumberString(latestRates.DBLc1);
+  if (latestPrice == null) {
+    throw new Error("Commodities-API Dubai proxy payload missing DBLc1");
+  }
+
+  const previousPrice = parseNumberString(historicalRates.DBLc1);
+  const change = previousPrice == null ? null : Number((latestPrice - previousPrice).toFixed(2));
+  const changePercent =
+    previousPrice == null || previousPrice === 0
+      ? null
+      : Number((((latestPrice - previousPrice) / previousPrice) * 100).toFixed(2));
+
+  const latestDate =
+    typeof latestResponse.data?.date === "string"
+      ? latestResponse.data.date
+      : typeof latestResponse.date === "string"
+        ? latestResponse.date
+        : new Date().toISOString().slice(0, 10);
+
+  return {
+    key: "dubaiProxy",
+    label: "Dubai Proxy",
+    source: "Commodities-API",
+    symbol: "DBLc1",
+    priceUsdPerBbl: Number(latestPrice.toFixed(2)),
+    priceUsdPerMt: convertBblToMt(latestPrice),
+    previousUsdPerBbl: previousPrice == null ? null : Number(previousPrice.toFixed(2)),
+    changeUsdPerBbl: change,
+    changePercent,
+    trend: toTrend(change),
+    updatedAt: new Date(`${latestDate}T00:00:00Z`).toISOString(),
+    note: "DBLc1 is a futures proxy, not the licensed Platts physical assessment.",
+  };
+}
+
 async function createLiveTraderSnapshot(): Promise<TraderBoardSnapshot> {
   const now = new Date();
-  const [igResult] = await Promise.allSettled([fetchIgQuotes()]);
+  const [igResult, brentResult, dubaiResult] = await Promise.allSettled([
+    fetchIgQuotes(),
+    fetchAlphaVantageBrent(),
+    fetchDubaiProxyQuote(),
+  ]);
   const ig = igResult.status === "fulfilled" ? igResult.value : {};
+  const benchmarkCandidates = [
+    brentResult.status === "fulfilled" ? brentResult.value : null,
+    dubaiResult.status === "fulfilled" ? dubaiResult.value : null,
+  ].filter((quote): quote is BenchmarkQuote => Boolean(quote));
 
   const fallbackQuotes: TraderPricing[] = [
     {
@@ -549,6 +817,7 @@ async function createLiveTraderSnapshot(): Promise<TraderBoardSnapshot> {
       updatedAt: now.toISOString(),
       unit: "USD/mt",
       source: "fallback",
+      benchmark: "Brent crude benchmark",
     },
     {
       product: "WTI Crude",
@@ -559,6 +828,7 @@ async function createLiveTraderSnapshot(): Promise<TraderBoardSnapshot> {
       updatedAt: now.toISOString(),
       unit: "USD/mt",
       source: "fallback",
+      benchmark: "WTI crude benchmark",
     },
     {
       product: "Natural Gas",
@@ -569,6 +839,7 @@ async function createLiveTraderSnapshot(): Promise<TraderBoardSnapshot> {
       updatedAt: now.toISOString(),
       unit: "USD/mt eq",
       source: "fallback",
+      benchmark: "Henry Hub style gas benchmark",
       note: "LNG equivalent using 52 MMBtu/mt",
     },
     {
@@ -580,6 +851,7 @@ async function createLiveTraderSnapshot(): Promise<TraderBoardSnapshot> {
       updatedAt: now.toISOString(),
       unit: "USD/mt",
       source: "fallback",
+      benchmark: "Heating oil crack proxy",
     },
     {
       product: "Gasoline",
@@ -590,20 +862,136 @@ async function createLiveTraderSnapshot(): Promise<TraderBoardSnapshot> {
       updatedAt: now.toISOString(),
       unit: "USD/mt",
       source: "fallback",
+      benchmark: "Gasoline crack proxy",
+    },
+    {
+      product: "Gas Oil",
+      price: 696.82,
+      rawPrice: 696.82,
+      rawUnit: "USD/mt",
+      trend: "up",
+      updatedAt: now.toISOString(),
+      unit: "USD/mt",
+      source: "fallback",
+      benchmark: "London gas oil benchmark",
+      note: "Fallback London gas oil benchmark used when IG gas oil is unavailable.",
     },
   ];
 
-  const quoteOrder: EnergyProductKey[] = ["brent", "wti", "naturalGas", "heatingOil", "gasoline"];
+  const quoteOrder: EnergyProductKey[] = ["brent", "wti", "naturalGas", "heatingOil", "gasoline", "gasOil"];
   const quotes = quoteOrder.map((key) => ig[key] ?? fallbackQuotes[quoteOrder.indexOf(key)]);
+  const benchmarkFallbacks: BenchmarkQuote[] = [
+    {
+      key: "brent",
+      label: "Brent Benchmark",
+      source: "fallback",
+      symbol: "BRENT",
+      priceUsdPerBbl: fallbackQuotes[0].rawPrice,
+      priceUsdPerMt: fallbackQuotes[0].price,
+      previousUsdPerBbl: 94.1,
+      changeUsdPerBbl: Number((fallbackQuotes[0].rawPrice - 94.1).toFixed(2)),
+      changePercent: Number((((fallbackQuotes[0].rawPrice - 94.1) / 94.1) * 100).toFixed(2)),
+      trend: "up",
+      updatedAt: now.toISOString(),
+      note: "Fallback benchmark used because Alpha Vantage data is unavailable.",
+    },
+    {
+      key: "dubaiProxy",
+      label: "Dubai Proxy",
+      source: "fallback",
+      symbol: "DBLc1",
+      priceUsdPerBbl: 93.2,
+      priceUsdPerMt: convertBblToMt(93.2),
+      previousUsdPerBbl: 92.4,
+      changeUsdPerBbl: 0.8,
+      changePercent: 0.87,
+      trend: "up",
+      updatedAt: now.toISOString(),
+      note: "Fallback futures proxy used because DBLc1 data is unavailable.",
+    },
+  ];
+  const benchmarkMap = new Map(benchmarkCandidates.map((quote) => [quote.key, quote]));
+  const benchmarks = benchmarkFallbacks.map((fallback) => benchmarkMap.get(fallback.key) ?? fallback);
   const liveCount = quoteOrder.filter((key) => Boolean(ig[key])).length;
   const source = liveCount === quoteOrder.length ? "ig-live" : liveCount > 0 ? "partial-fallback" : "fallback";
-  const oilBench = ig.brent?.rawPrice ?? fallbackQuotes[0].rawPrice;
+  const oilBench = benchmarks[0]?.priceUsdPerBbl ?? ig.brent?.rawPrice ?? fallbackQuotes[0].rawPrice;
+
+  const primaryQuotes = quotes.map((quote) => ({
+    ...quote,
+    benchmark: quote.product === "Brent Crude"
+      ? "Brent crude benchmark"
+      : quote.product === "WTI Crude"
+        ? "WTI crude benchmark"
+        : quote.product === "Natural Gas"
+          ? "Henry Hub style gas benchmark"
+          : quote.product === "Heating Oil"
+            ? "Heating oil crack proxy"
+            : quote.product === "Gas Oil"
+              ? "London gas oil benchmark"
+              : "Gasoline crack proxy",
+    source: quote.source === "fallback" && source === "partial-fallback" ? "partial-fallback" : quote.source,
+  }));
+
+  const heatingOil = primaryQuotes.find((quote) => quote.product === "Heating Oil") ?? fallbackQuotes[3];
+  const gasOil = primaryQuotes.find((quote) => quote.product === "Gas Oil") ?? fallbackQuotes[5];
+  const brentBenchmark = benchmarks.find((quote) => quote.key === "brent") ?? benchmarkFallbacks[0];
+  const dubaiBenchmark = benchmarks.find((quote) => quote.key === "dubaiProxy") ?? benchmarkFallbacks[1];
+
+  const derivedQuotes: TraderPricing[] = [
+    buildDerivedQuote({
+      product: "Diesel",
+      rawPrice: gasOil.rawPrice,
+      rawUnit: "USD/mt",
+      unit: "USD/mt",
+      price: gasOil.price + 22,
+      source: gasOil.source.includes("ig") ? "ig-derived" : "fallback-derived",
+      benchmark: "Diesel derived from heating oil / gasoil proxy",
+      note: "Derived from live gas oil with diesel premium when direct diesel feed is unavailable.",
+      updatedAt: gasOil.updatedAt,
+    }),
+    buildDerivedQuote({
+      product: "Kerosene",
+      rawPrice: Number((heatingOil.rawPrice * 0.972).toFixed(4)),
+      rawUnit: "USD/gal",
+      unit: "USD/mt",
+      price: heatingOil.price * 0.965,
+      source: heatingOil.source.includes("ig") ? "ig-derived" : "fallback-derived",
+      benchmark: "Kerosene derived from heating oil",
+      note: "Proxy estimate from heating oil / jet range product.",
+      updatedAt: heatingOil.updatedAt,
+    }),
+    buildDerivedQuote({
+      product: "Naphtha",
+      rawPrice: brentBenchmark.priceUsdPerBbl * 0.84,
+      rawUnit: "USD/bbl",
+      unit: "USD/mt",
+      price: brentBenchmark.priceUsdPerMt * 0.84,
+      source: brentBenchmark.source === "fallback" ? "fallback-derived" : "brent-derived",
+      benchmark: "Brent-linked naphtha proxy",
+      note: "Brent-linked proxy used when direct naphtha feed is unavailable.",
+      updatedAt: brentBenchmark.updatedAt,
+    }),
+    buildDerivedQuote({
+      product: "Recovery Oil (Black)",
+      rawPrice: brentBenchmark.priceUsdPerBbl * 0.61,
+      rawUnit: "USD/bbl",
+      unit: "USD/mt",
+      price: brentBenchmark.priceUsdPerMt * 0.61,
+      source: "redoxy-derived",
+      benchmark: "Recovered black oil discount to Brent",
+      note: "Recovered black oil estimate using internal discount-to-Brent logic.",
+      updatedAt: brentBenchmark.updatedAt,
+    }),
+  ];
 
   return {
     updatedAt: now.toISOString(),
     tradersOnline: 20 + Math.floor((Math.sin(now.getTime() / 180000) + 1) * 4),
     marketPulse: oilBench > 85 ? 'Bullish' : oilBench < 80 ? 'Bearish' : 'Neutral',
-    quotes: quotes.map((quote) => ({ ...quote, source: quote.source === "fallback" && source === "partial-fallback" ? "partial-fallback" : quote.source })),
+    benchmarkMode: "benchmark-driven",
+    benchmarks,
+    quotes: [...primaryQuotes, ...derivedQuotes],
+    forecasts: buildForecasts(brentBenchmark),
   };
 }
 

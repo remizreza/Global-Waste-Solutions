@@ -6,15 +6,19 @@ import { pageLinks } from "@/lib/siteContent";
 import { MOTION_EASE, motionDuration, slideIn } from "@/lib/motion";
 import RedoxyWordmark from "@/components/RedoxyWordmark";
 
-const navItems = [
+const primaryNavItems = [
   { label: "Services", href: pageLinks.services },
   { label: "Technology", href: pageLinks.technology },
   { label: "Traction", href: pageLinks.traction },
   { label: "Products", href: pageLinks.products },
+  { label: "About", href: pageLinks.about },
+  { label: "Contact", href: pageLinks.contact },
+];
+
+const utilityNavItems = [
   { label: "Dashboard", href: pageLinks.dashboard },
   { label: "Login", href: pageLinks.login },
   { label: "Admin", href: pageLinks.adminLogin },
-  { label: "Contact", href: pageLinks.contact },
 ];
 
 export default function Navbar() {
@@ -48,7 +52,7 @@ export default function Navbar() {
               <img
                 src="/redoxy-icon.png"
                 alt="REDOXY emblem"
-                className="relative h-10 w-10 md:h-11 md:w-11 object-contain drop-shadow-[0_0_18px_rgba(255,122,0,0.45)]"
+                className="relative h-10 w-10 lg:h-11 lg:w-11 object-contain drop-shadow-[0_0_18px_rgba(255,122,0,0.45)]"
                 loading="eager"
               />
             </span>
@@ -69,18 +73,19 @@ export default function Navbar() {
             >
               {item.label}
             </Link>
-          ))}
+          </div>
         </div>
 
         <button
           type="button"
           aria-label="Toggle navigation"
           aria-expanded={isOpen}
-          className="md:hidden text-white"
+          className="lg:hidden text-white rounded-full border border-white/10 bg-white/[0.04] p-2"
           onClick={() => setIsOpen((value) => !value)}
         >
           {isOpen ? <X /> : <Menu />}
         </button>
+        </div>
       </div>
 
       <AnimatePresence>
@@ -90,7 +95,7 @@ export default function Navbar() {
             animate={reduceMotion ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
             exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -8, scale: 0.98 }}
             transition={{ duration: motionDuration.ui, ease: MOTION_EASE }}
-            className="md:hidden bg-secondary/95 backdrop-blur-xl border-b border-white/10 origin-top"
+            className="lg:hidden mx-4 mt-2 origin-top rounded-[1.4rem] border border-white/10 bg-[#07101f]/94 backdrop-blur-xl"
           >
             <motion.div
               className="flex flex-col p-6 gap-4"
@@ -106,7 +111,7 @@ export default function Navbar() {
                 },
               }}
             >
-              {navItems.map((item) => (
+              {[...primaryNavItems, ...utilityNavItems].map((item) => (
                 <motion.div key={item.href} variants={slideIn("x", 16)}>
                   <Link
                     href={item.href}
