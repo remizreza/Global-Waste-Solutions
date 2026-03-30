@@ -30,6 +30,7 @@ Optional upstream market data connectors:
 - `INVESTING_API_KEY`
 - `MIDDLEEAST_TRADES_API_URL`
 - `MIDDLEEAST_TRADES_API_KEY`
+- `VITE_SITE_LAST_PUBLISHED_AT` (optional; shown in website footer as "Website last published")
 
 ## IG live market connector
 To source trader dashboard prices from IG, set these in Vercel Project Settings:
