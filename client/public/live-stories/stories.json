@@ -1,14 +1,41 @@
 {
-  "title": "Live Stories & Updates",
-  "subtitle": "If are interested to be part of our beautiful journey join hands with us, here is snap of what we ask for ....",
+  "title": "REDOXY Investment Story Film",
+  "subtitle": "Live story stream combining the current investment film with modular infrastructure and corridor assets.",
   "slides": [
     {
-      "id": "redoxy-presentation-pdf",
-      "title": "REDOXY Presentation Deck",
-      "description": "PDF is displayed as an auto-running slideshow with sequential page turns.",
-      "image": "https://www.redoxyksa.com/story-assets/redoxy-presentation.pdf",
-      "mediaType": "pdf",
-      "pdfPages": 8
+      "id": "deck-film",
+      "title": "Scaling Modular Industrial Infrastructure",
+      "description": "Autoplaying presentation film for REDOXY's modular infrastructure, industrial services, and trading expansion roadmap.",
+      "image": "/live-stories/media/Live.mp4",
+      "mediaType": "video"
+    },
+    {
+      "id": "mtu-scale",
+      "title": "MTU 001 Scale Narrative",
+      "description": "Core modular treatment unit positioned as the anchor asset for staged GCC deployment and execution-led growth.",
+      "image": "/story-assets/mtu-scale-01.png",
+      "mediaType": "image"
+    },
+    {
+      "id": "asset-engine",
+      "title": "Industrial Asset Engine",
+      "description": "Operating model connecting environmental execution, industrial services, and agile UAE trading capability.",
+      "image": "/live-stories/media/Live.mp4",
+      "mediaType": "video"
+    },
+    {
+      "id": "corridor-map",
+      "title": "Regional Connectivity Story",
+      "description": "Network-led market access and corridor connectivity supporting KSA, UAE, and adjacent industrial trade routes.",
+      "image": "/story-assets/network-connectivity.jpg",
+      "mediaType": "image"
+    },
+    {
+      "id": "future-growth",
+      "title": "Growth And Future Energy Readiness",
+      "description": "Future-facing positioning across modular infrastructure, circular energy, and transition-aligned growth themes.",
+      "image": "/story-assets/mtu-scale-02.png",
+      "mediaType": "image"
     }
   ]
 }

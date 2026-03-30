@@ -15,28 +15,33 @@ export const pageLinks = {
   traction: "/traction",
   contact: "/contact",
   products: "/products",
+  login: "/login",
+  signup: "/signup",
+  dashboard: "/dashboard",
+  adminLogin: "/admin/login",
+  adminDashboard: "/admin/dashboard",
 };
 
 export const homeStats = [
   {
-    label: "Operating Since",
+    label: "Operating Base",
     value: "2020",
-    description: "KSA technical and environmental operations",
+    description: "KSA-led technical and environmental execution platform",
   },
   {
-    label: "Dual Entity",
+    label: "Group Structure",
     value: "KSA + UAE",
-    description: "Industrial execution + agile trading and logistics",
+    description: "Integrated delivery company with regional trading and logistics capability",
   },
   {
-    label: "2025 Revenue Achievement",
+    label: "2025 Performance",
     value: "46%",
-    description: "Revenue achieved through high-performance delivery in 2025",
+    description: "Revenue achievement secured through disciplined project delivery in 2025",
   },
   {
-    label: "Sustainability Goal",
+    label: "Sustainability Direction",
     value: "Net-Zero 2050",
-    description: "ISO 14001-aligned environmental roadmap",
+    description: "ISO 14001-aligned environmental roadmap with long-range decarbonization targets",
   },
 ];
 
@@ -46,16 +51,16 @@ export const serviceDivisions = [
     title: "Environmental & Waste Management",
     entity: "KSA Team",
     summary:
-      "Full-cycle environmental solutions from hazardous waste handling to water treatment.",
+      "Industrial environmental services covering hazardous waste handling, remediation, and water treatment.",
     highlights: [
-      "REDOXY MTU 001 now in active modular deployment pipeline",
-      "Full-cycle green waste solutions",
-      "Hazardous waste handling and sludge removal",
-      "Tank and industrial cleaning",
-      "ISO 14001:2015-aligned operations",
+      "REDOXY MTU 001 positioned for active modular deployment programs",
+      "Hazardous waste handling, sludge removal, and onsite remediation",
+      "Industrial tank cleaning and wastewater treatment support",
+      "Compliance-led delivery aligned with ISO 14001:2015",
+      "Rapid field mobilization for regulated operating environments",
     ],
     details: [
-      "REDOXY MTU 001 combines compact treatment engineering with field-ready mobilization.",
+      "REDOXY MTU 001 combines modular process engineering with field-ready mobilization.",
       "Advanced treatment processes include Reverse Osmosis, Electro Oxidation, and Vacuum Evaporation.",
       "Designed for industrial plants requiring reliable compliance and recovery outcomes.",
       "Integrated with onsite logistics and emergency support to minimize downtime.",
@@ -68,7 +73,7 @@ export const serviceDivisions = [
     title: "Specialized Industrial Services",
     entity: "KSA Team",
     summary:
-      "Execution-focused mechanical, cleaning, and surface preparation services for industrial assets.",
+      "Shutdown-critical mechanical, cleaning, and surface preparation services for industrial assets.",
     highlights: [
       "Chemical cleaning for boilers, reactors, and exchangers",
       "API-standard blasting and painting",
@@ -76,9 +81,9 @@ export const serviceDivisions = [
       "Support references include Sadara, SATORP, Farabi, and NOMAC",
     ],
     details: [
-      "Services are structured for petrochemical and heavy-industry operating environments.",
-      "Combines technical crews, maintenance tooling, and QA discipline.",
-      "Built to improve reliability, safety, and turnaround speed.",
+      "Structured for petrochemical, utility, and heavy-industry operating environments.",
+      "Combines specialized crews, maintenance tooling, and QA discipline.",
+      "Designed to improve reliability, safety, and turnaround performance.",
     ],
     bgImage: "/industrial-bg.jpg",
     route: "/traction",
@@ -88,17 +93,17 @@ export const serviceDivisions = [
     title: "Industrial Trading & Logistics",
     entity: "UAE Team",
     summary:
-      "Agile regional trade hub connecting industrial demand with secure supply and market timing.",
+      "Regional trading desk connecting industrial demand with supply security, timing, and logistics control.",
     highlights: [
       "Fuel oil, diesel blend stock, and bitumen residue",
       "MEG/DEG, caustic soda, and oilfield chemicals",
-      "Fixed-pricing advantage for strategic products",
-      "Market downcycle procurement strategy",
+      "Structured pricing advantage for strategic products",
+      "Downcycle procurement and margin-protection strategy",
     ],
     details: [
       "REDOXY F.Z.C. provides responsive trade execution across GCC-linked corridors.",
-      "Commercial model focuses on margin discipline and reliable fulfillment.",
-      "Roadmap includes distribution expansion to support Africa and Asia growth.",
+      "Commercial model centers on margin discipline and reliable fulfilment.",
+      "Roadmap includes selective distribution expansion across Africa and Asia corridors.",
     ],
     bgImage: "/logistics-bg.jpg",
     route: "/products",
@@ -150,7 +155,7 @@ export const technologyModules = [
     id: "digital-rd",
     title: "Digital Transformation",
     summary:
-      "Operational intelligence roadmap combining ERP and AI-enabled planning.",
+      "Operational intelligence roadmap combining ERP architecture and AI-assisted planning.",
     details: [
       "Short-term: SAP S/4HANA and Palantir Foundry for logistics and controls.",
       "Medium-term: AI forecasting and automated fleet management.",
@@ -160,23 +165,23 @@ export const technologyModules = [
 
 export const rdAchievements = [
   "REDOXY MTU 001 modular architecture engineered for rapid industrial deployment.",
-  "Integrated process stack combining RO, chemical oxidation, and electro-oxidation.",
-  "Field execution framework aligned with precision industrial maintenance workflows.",
-  "Digital roadmap: ERP + AI planning foundation for predictive operating control.",
+  "Integrated treatment stack combining RO, chemical oxidation, and electro-oxidation.",
+  "Field delivery framework aligned with precision industrial maintenance workflows.",
+  "ERP and AI planning roadmap designed for predictive operating control.",
 ];
 
 export const tractionItems = [
   {
-    title: "Financial Health",
+    title: "Delivery Performance",
     metric: "46% Revenue Achievement",
-    subtitle: "Performance level achieved in 2025 with profitability momentum",
+    subtitle: "2025 performance secured with improving profitability discipline",
     details: [
       "Reflects disciplined project execution and controlled operating model.",
       "2030 target set to reach 80% profit with expanded program scale.",
     ],
   },
   {
-    title: "UAE Revenue Target",
+    title: "UAE Commercial Target",
     metric: "AED 420,000/mo",
     subtitle: "Projected monthly revenue run-rate",
     details: [
@@ -185,7 +190,7 @@ export const tractionItems = [
     ],
   },
   {
-    title: "2029 Growth Objective",
+    title: "2029 Revenue Objective",
     metric: "AED 500M+",
     subtitle: "Revenue ambition by 2029",
     details: [
@@ -194,7 +199,7 @@ export const tractionItems = [
     ],
   },
   {
-    title: "2035 Energy Transition",
+    title: "2035 Transition Mix",
     metric: "50% New Energy",
     subtitle: "Target revenue share from future ventures",
     details: [
@@ -227,6 +232,14 @@ export const tractionContracts = [
 
 export const technologyStorySlides: StorySlideContent[] = [
   {
+    id: "technology-story-film",
+    title: "Technology Story Film",
+    description:
+      "Autoplaying REDOXY technology film showing treatment systems, deployment atmosphere, and engineering positioning.",
+    image: "/assets/Technology.mp4",
+    mediaType: "video",
+  },
+  {
     id: "advanced-water-infrastructure",
     title: "Advanced Water Infrastructure Outlook",
     description:
@@ -254,6 +267,46 @@ export const technologyStorySlides: StorySlideContent[] = [
 
 export const tractionStorySlides: StorySlideContent[] = [
   {
+    id: "traction-story-film",
+    title: "REDOXY Investment Story Film",
+    description:
+      "Autoplaying REDOXY growth film covering modular infrastructure, industrial execution, and expansion narrative.",
+    image: "/live-stories/media/Live.mp4",
+    mediaType: "video",
+  },
+  {
+    id: "redoxy-investment-deck-cover",
+    title: "REDOXY Investment Deck",
+    description:
+      "Scaling modular industrial infrastructure across KSA and UAE with an execution-led GCC expansion model.",
+    image: "/story-assets/REDOXY_Scaling_Modular_Industrial_Infrastructure (1).pdf.png",
+    mediaType: "image",
+  },
+  {
+    id: "redoxy-mtu-scale",
+    title: "MTU 001 Modular Scale Path",
+    description:
+      "Flagship modular treatment deployment strategy positioned for staged commercial rollout and partner-backed scaling.",
+    image: "/story-assets/mtu-scale-01.png",
+    mediaType: "image",
+  },
+  {
+    id: "redoxy-network-corridors",
+    title: "Cross-Border Industrial Corridors",
+    description:
+      "Trading, logistics, and industrial service integration across GCC-linked demand corridors.",
+    image: "/story-assets/network-connectivity.jpg",
+    mediaType: "image",
+  },
+  {
+    id: "redoxy-industrial-asset-engine",
+    title: "Industrial Asset Engine",
+    description:
+      "Asset-backed service and treatment capabilities structured to support recurring industrial revenue lines.",
+    image: "/story-assets/Redoxy_Industrial_Asset_Engine (1).pdf.png",
+    mediaType: "image",
+  },
+  {
     id: "energy-logistics-corridor",
     title: "Energy Logistics Corridor Development",
     description:
@@ -279,31 +332,43 @@ export const tractionStorySlides: StorySlideContent[] = [
   },
 ];
 
+export const servicesStorySlides: StorySlideContent[] = [
+  {
+    id: "services-story-film",
+    title: "Services Story Film",
+    description:
+      "Autoplaying REDOXY services film showing field execution, industrial cleaning, and modular treatment positioning.",
+    image: "/assets/Services.mp4",
+    mediaType: "video",
+  },
+  ...tractionStorySlides.slice(1),
+];
+
 export const storySlides = technologyStorySlides;
 
 export const aboutValues = [
   {
-    title: "Operational Excellence",
+    title: "Execution Discipline",
     description:
-      "Delivering consistent, professional, and high-quality services in high-stakes industrial contexts.",
+      "Delivering reliable, high-quality performance in high-stakes industrial environments.",
   },
   {
-    title: "ESG Responsibility",
+    title: "Environmental Stewardship",
     description:
-      "Commitment to Net-Zero by 2050 with ISO 14001-aligned environmental operating standards.",
+      "Advancing Net-Zero by 2050 through ISO 14001-aligned operating standards and practical sustainability controls.",
   },
   {
-    title: "Innovation",
+    title: "Applied Innovation",
     description:
-      "Continuous adoption of advanced industrial methods and digital systems.",
+      "Adopting treatment technology, modular systems, and digital tooling where they improve execution.",
   },
 ];
 
 export const investmentCallout = {
-  headline: "2025-2029 Strategic Growth & Investment Opportunity",
-  tagline: "Propelling Saudi Vision 2030 Through Circular Energy Solutions",
+  headline: "2025-2029 Industrial Growth & Capital Opportunity",
+  tagline: "Supporting Saudi Vision 2030 through circular infrastructure and industrial services",
   summary:
-    "REDOXY is scaling modular industrial infrastructure with an execution-led GCC expansion strategy anchored by MTU deployment programs and cross-border industrial trade.",
+    "REDOXY is scaling modular industrial infrastructure through an execution-led GCC growth strategy anchored by MTU deployment programs, environmental services, and cross-border industrial trade.",
 };
 
 export const entityStructure = [

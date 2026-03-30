@@ -2,7 +2,10 @@ import { Link } from "wouter";
 import { motion } from "framer-motion";
 import SiteLayout from "@/components/SiteLayout";
 import InfoPreviewDialog from "@/components/InfoPreviewDialog";
-import { contactDetails, pageLinks, serviceDivisions } from "@/lib/siteContent";
+import LiveStoriesBoard from "@/components/LiveStoriesBoard";
+import ScrollStage from "@/components/ScrollStage";
+import ScrollTile from "@/components/ScrollTile";
+import { contactDetails, pageLinks, serviceDivisions, servicesStorySlides } from "@/lib/siteContent";
 import { useMemo, useState } from "react";
 import { CheckCircle2, Mail, MessageCircle } from "lucide-react";
 import {
@@ -12,6 +15,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { hingeReveal, premiumHoverLift, revealMask, staggerContainer } from "@/lib/motion";
 
 type ServiceId = (typeof serviceDivisions)[number]["id"];
 
@@ -146,30 +150,57 @@ export default function Services() {
           />
           <div className="absolute inset-0 bg-gradient-to-b from-secondary/70 via-secondary/35 to-secondary/85" />
         </div>
+        <div className="absolute inset-0 hero-spotlight opacity-55 pointer-events-none" />
+        <div className="absolute inset-0 hero-architectural-grid opacity-15 pointer-events-none" />
         <div className="absolute inset-0 bg-grid-pattern opacity-5 pointer-events-none" />
         <div className="container mx-auto relative z-10">
-          <div className="text-center mb-14">
-            <p className="inline-flex px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-tech tracking-widest mb-5">
-              INTEGRATED SOLUTIONS
+          <ScrollStage className="mb-14" direction="right">
+          <motion.div
+            className="section-shell mb-14 rounded-[1.75rem] px-6 py-10 text-center sm:px-10"
+            initial="hidden"
+            animate="visible"
+            variants={revealMask(28)}
+          >
+            <p className="section-label mb-5 text-sm">
+              OPERATING CAPABILITIES
             </p>
             <h1 className="text-4xl md:text-5xl font-display text-white mb-5">
-              Services by Entity Capability
+              Industrial Services by Operating Entity
             </h1>
             <p className="text-gray-300 max-w-3xl mx-auto">
-              Structured by operating strengths: KSA execution teams for
-              technical services and UAE for agile trading/logistics.
+              Structured around delivery strengths: KSA for field execution and UAE for regional trading and logistics.
             </p>
             <p className="inline-flex mt-4 px-3 py-1 rounded-full border border-primary/30 bg-primary/10 text-primary text-xs font-tech tracking-[0.18em] uppercase">
               REDOXY MTU 001 In Service Focus
             </p>
-          </div>
+          </motion.div>
+          </ScrollStage>
 
-          <div className="grid lg:grid-cols-3 gap-7">
-            {serviceDivisions.map((division) => (
+          <ScrollStage className="mb-10" direction="left">
+          <motion.div
+            className="grid items-start gap-7 lg:grid-cols-12"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.12 }}
+            variants={staggerContainer(0.12)}
+          >
+            {serviceDivisions.map((division, index) => (
+              <ScrollTile
+                key={division.id}
+                direction={index % 2 === 0 ? "left" : "right"}
+                className={
+                  index === 0
+                    ? "lg:col-span-5"
+                    : index === 1
+                      ? "lg:col-span-4 lg:translate-y-10"
+                      : "lg:col-span-3"
+                }
+              >
               <motion.div
                 key={division.id}
-                whileHover={{ y: -8, scale: 1.01 }}
-                className="brand-surface brand-hover-lift rounded-xl overflow-hidden flex flex-col"
+                variants={hingeReveal(index % 2 === 0 ? "left" : "right", 22)}
+                whileHover={premiumHoverLift}
+                className="section-shell brand-hover-lift flex h-auto flex-col overflow-hidden rounded-[1.5rem]"
               >
                 <div className="aspect-video w-full bg-secondary/35">
                   <img
@@ -180,6 +211,7 @@ export default function Services() {
                   />
                 </div>
                 <div className="p-6 flex-1 flex flex-col">
+                  <p className="section-label mb-3 text-[10px]">Capability Block</p>
                   <p className="text-primary text-xs font-tech uppercase tracking-wider mb-2">
                     {division.entity}
                   </p>
@@ -210,11 +242,9 @@ export default function Services() {
                       ctaHref={division.route}
                       ctaLabel="Open linked page"
                     />
-                    <Link href={division.route}>
-                      <a className="btn-premium-outline !px-3 !py-2 !text-xs !font-tech">
+                    <Link href={division.route} className="btn-premium-outline !px-3 !py-2 !text-xs !font-tech">
                         Linked section
-                      </a>
-                    </Link>
+                      </Link>
                   </div>
                   <button
                     type="button"
@@ -225,8 +255,21 @@ export default function Services() {
                   </button>
                 </div>
               </motion.div>
+              </ScrollTile>
             ))}
+          </motion.div>
+          </ScrollStage>
+
+          <ScrollStage className="mt-10" direction="right">
+          <div className="mt-10">
+            <LiveStoriesBoard
+              fallbackTitle="Service Stories & Investment Slides"
+              fallbackSubtitle="Execution capability, modular infrastructure scaling, and strategic service positioning in one live story rail."
+              fallbackSlides={servicesStorySlides}
+              disableLiveFeed
+            />
           </div>
+          </ScrollStage>
 
           <Dialog open={activeServiceId !== null} onOpenChange={(open) => !open && closeQuickScope()}>
             {activeService ? (
@@ -241,8 +284,8 @@ export default function Services() {
                   </DialogDescription>
                 </DialogHeader>
 
-                <div className="border border-white/10 rounded-xl p-5 bg-background/40">
-                  <p className="text-xs uppercase tracking-[0.2em] text-primary font-tech mb-2">
+                <div className="section-shell rounded-[1.25rem] p-5">
+                  <p className="section-label mb-2 text-xs">
                     Brief Technology Context
                   </p>
                   <p className="text-sm text-gray-200">{activeService.details[0]}</p>
@@ -327,11 +370,9 @@ export default function Services() {
           </Dialog>
 
           <div className="mt-12 text-center">
-            <Link href={pageLinks.contact}>
-              <a className="btn-premium">
+            <Link href={pageLinks.contact} className="btn-premium">
                 Request Project Consultation
-              </a>
-            </Link>
+              </Link>
           </div>
         </div>
       </section>

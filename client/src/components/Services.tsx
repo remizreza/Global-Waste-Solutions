@@ -57,12 +57,10 @@ export default function Services() {
             <p className="text-gray-400 max-w-2xl mx-auto text-lg mb-8">
               Redoxy delivers integrated environmental and industrial solutions that drive efficiency and sustainability.
             </p>
-            <Link href="/services">
-              <a className="inline-flex items-center gap-2 px-8 py-3 bg-primary text-black font-tech font-bold uppercase tracking-widest hover:bg-primary/90 transition-all group">
+            <Link href="/services" className="inline-flex items-center gap-2 px-8 py-3 bg-primary text-black font-tech font-bold uppercase tracking-widest hover:bg-primary/90 transition-all group">
                 View All Services
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-              </a>
-            </Link>
+              </Link>
           </motion.div>
         </div>
 
