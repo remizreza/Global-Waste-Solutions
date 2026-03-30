@@ -21,6 +21,7 @@ const Signup = lazy(() => import("@/pages/Signup"));
 const TraderDashboard = lazy(() => import("@/pages/TraderDashboard"));
 const AdminLogin = lazy(() => import("@/pages/AdminLogin"));
 const AdminDashboard = lazy(() => import("@/pages/AdminDashboard"));
+const AdminWorkbenchPreview = lazy(() => import("@/pages/AdminWorkbenchPreview"));
 
 function AppRoutes() {
   return (
@@ -38,6 +39,7 @@ function AppRoutes() {
       <Route path="/dashboard" component={TraderDashboard} />
       <Route path="/admin/login" component={AdminLogin} />
       <Route path="/admin/dashboard" component={AdminDashboard} />
+      <Route path="/admin/workbench-preview" component={AdminWorkbenchPreview} />
 
       {/* The 404 Error Page */}
       <Route component={NotFound} />

@@ -8,6 +8,7 @@ import {
   isAdminAuthConfigured,
   validateAdminCredentials,
 } from "./adminAuth.js";
+import { createMarketEngineSnapshot } from "./marketEngine.js";
 
 type BulletinItem = {
   title: string;
@@ -46,7 +47,7 @@ type ForecastPoint = {
   confidence: "low" | "medium";
 };
 
-type BenchmarkKey = "brent" | "dubaiProxy";
+type BenchmarkKey = "brent" | "dubaiProxy" | "plattsEquivalent";
 
 type BenchmarkQuote = {
   key: BenchmarkKey;
@@ -131,8 +132,41 @@ const FEEDS = [
     url: "https://www.eia.gov/rss/press_rss.xml",
   },
   {
+    source: "Reuters Business",
+    url: "https://feeds.reuters.com/reuters/businessNews",
+  },
+  {
+    source: "S&P Global Energy",
+    url: "https://www.spglobal.com/commodityinsights/en/market-insights/latest-news/rss",
+  },
+  {
+    source: "Rigzone",
+    url: "https://www.rigzone.com/news/rss.asp",
+  },
+  {
+    source: "OilPrice",
+    url: "https://oilprice.com/rss/main",
+  },
+  {
     source: "Offshore Technology",
     url: "https://www.offshore-technology.com/feed/",
+  },
+];
+
+const REFERENCE_SOURCE_CATALOG = [
+  {
+    name: "TradingView",
+    role: "real-time chart reference",
+    mode: "reference",
+    note: "Used as a high-quality live charting reference for trader visual checks and technical confirmation.",
+    url: "https://www.tradingview.com/",
+  },
+  {
+    name: "Investing.com",
+    role: "market cross-check",
+    mode: "reference",
+    note: "Used as a quick public cross-check for commodity pricing and market tone.",
+    url: "https://www.investing.com/commodities/",
   },
 ];
 
@@ -274,6 +308,10 @@ function convertBblToMt(priceUsdPerBbl: number, factor = 7.33) {
   return Number((priceUsdPerBbl * factor).toFixed(2));
 }
 
+function convertMtToBbl(priceUsdPerMt: number, factor = 7.45) {
+  return Number((priceUsdPerMt / factor).toFixed(2));
+}
+
 function buildDerivedQuote(input: {
   product: string;
   rawPrice: number;
@@ -313,6 +351,43 @@ function buildForecasts(benchmark: BenchmarkQuote, premiumPerMt = 87): ForecastP
       confidence: index < 2 ? "medium" : "low",
     };
   });
+}
+
+function derivePlattsEquivalentQuote(input: {
+  brent: BenchmarkQuote;
+  dubaiProxy: BenchmarkQuote;
+  gasOilQuote?: TraderPricing | null;
+  now: Date;
+}): BenchmarkQuote {
+  const londonGasOilMt = input.gasOilQuote?.price ?? 696.82;
+  const londonGasOilBbl = convertMtToBbl(londonGasOilMt);
+  const brentToDubaiSpread = input.brent.priceUsdPerBbl - input.dubaiProxy.priceUsdPerBbl;
+  const normalizedArabGulfBbl = londonGasOilBbl - 0.58 * brentToDubaiSpread - 0.85;
+  const weightedBbl = input.gasOilQuote
+    ? Number(((londonGasOilBbl * 0.62) + (normalizedArabGulfBbl * 0.38)).toFixed(2))
+    : Number(normalizedArabGulfBbl.toFixed(2));
+  const priceUsdPerMt = Number((weightedBbl * 7.45).toFixed(2));
+  const referencePrev = input.dubaiProxy.previousUsdPerBbl ?? input.dubaiProxy.priceUsdPerBbl;
+  const previousUsdPerBbl = Number((weightedBbl - (input.dubaiProxy.priceUsdPerBbl - referencePrev)).toFixed(2));
+  const changeUsdPerBbl = Number((weightedBbl - previousUsdPerBbl).toFixed(2));
+  const changePercent =
+    previousUsdPerBbl === 0 ? null : Number((((weightedBbl - previousUsdPerBbl) / previousUsdPerBbl) * 100).toFixed(2));
+
+  return {
+    key: "plattsEquivalent",
+    label: "Platts 10ppm AG Equivalent",
+    source: input.gasOilQuote?.source === "ig-live" ? "IG + DBLc1 derived" : "DBLc1 derived",
+    symbol: "MOPAG-EQ",
+    priceUsdPerBbl: weightedBbl,
+    priceUsdPerMt,
+    previousUsdPerBbl,
+    changeUsdPerBbl,
+    changePercent,
+    trend: toTrend(changeUsdPerBbl),
+    updatedAt: input.gasOilQuote?.updatedAt ?? input.dubaiProxy.updatedAt ?? input.now.toISOString(),
+    note:
+      "Derived Arab Gulf 10ppm gasoil equivalent using live IG London gas oil when available, normalized against DBLc1 Dubai proxy and converted at 7.45 bbl/mt. Use for negotiation guidance, not as a licensed Platts assessment.",
+  };
 }
 
 const BARREL_GALLONS = 42;
@@ -909,12 +984,24 @@ async function createLiveTraderSnapshot(): Promise<TraderBoardSnapshot> {
       updatedAt: now.toISOString(),
       note: "Fallback futures proxy used because DBLc1 data is unavailable.",
     },
+    {
+      key: "plattsEquivalent",
+      label: "Platts 10ppm AG Equivalent",
+      source: "fallback-derived",
+      symbol: "MOPAG-EQ",
+      priceUsdPerBbl: 89.1,
+      priceUsdPerMt: Number((89.1 * 7.45).toFixed(2)),
+      previousUsdPerBbl: 88.2,
+      changeUsdPerBbl: 0.9,
+      changePercent: 1.02,
+      trend: "up",
+      updatedAt: now.toISOString(),
+      note: "Fallback derived Arab Gulf 10ppm gasoil equivalent used when live derivation inputs are unavailable.",
+    },
   ];
   const benchmarkMap = new Map(benchmarkCandidates.map((quote) => [quote.key, quote]));
-  const benchmarks = benchmarkFallbacks.map((fallback) => benchmarkMap.get(fallback.key) ?? fallback);
   const liveCount = quoteOrder.filter((key) => Boolean(ig[key])).length;
   const source = liveCount === quoteOrder.length ? "ig-live" : liveCount > 0 ? "partial-fallback" : "fallback";
-  const oilBench = benchmarks[0]?.priceUsdPerBbl ?? ig.brent?.rawPrice ?? fallbackQuotes[0].rawPrice;
 
   const primaryQuotes = quotes.map((quote) => ({
     ...quote,
@@ -934,8 +1021,18 @@ async function createLiveTraderSnapshot(): Promise<TraderBoardSnapshot> {
 
   const heatingOil = primaryQuotes.find((quote) => quote.product === "Heating Oil") ?? fallbackQuotes[3];
   const gasOil = primaryQuotes.find((quote) => quote.product === "Gas Oil") ?? fallbackQuotes[5];
+  const rawBrentBenchmark = benchmarkMap.get("brent") ?? benchmarkFallbacks[0];
+  const rawDubaiBenchmark = benchmarkMap.get("dubaiProxy") ?? benchmarkFallbacks[1];
+  const plattsEquivalent = derivePlattsEquivalentQuote({
+    brent: rawBrentBenchmark,
+    dubaiProxy: rawDubaiBenchmark,
+    gasOilQuote: gasOil,
+    now,
+  });
+  benchmarkMap.set("plattsEquivalent", plattsEquivalent);
+  const benchmarks = benchmarkFallbacks.map((fallback) => benchmarkMap.get(fallback.key) ?? fallback);
   const brentBenchmark = benchmarks.find((quote) => quote.key === "brent") ?? benchmarkFallbacks[0];
-  const dubaiBenchmark = benchmarks.find((quote) => quote.key === "dubaiProxy") ?? benchmarkFallbacks[1];
+  const oilBench = brentBenchmark.priceUsdPerBbl ?? ig.brent?.rawPrice ?? fallbackQuotes[0].rawPrice;
 
   const derivedQuotes: TraderPricing[] = [
     buildDerivedQuote({
@@ -1177,6 +1274,63 @@ export async function registerRoutes(
   app.get("/api/trader-dashboard", async (_req, res) => {
     const snapshot = await createLiveTraderSnapshot();
     res.json(snapshot);
+  });
+
+  app.get("/api/admin/market-engine", async (req, res) => {
+    if (!isAdminAuthorized(req.headers.authorization)) {
+      return res.status(401).json({ ok: false, error: "Unauthorized" });
+    }
+
+    const snapshot = await createLiveTraderSnapshot();
+    const volumeMtRaw =
+      typeof req.query.volumeMt === "string" ? Number(req.query.volumeMt) : 5000;
+    const volumeMt = Number.isFinite(volumeMtRaw) && volumeMtRaw > 0 ? volumeMtRaw : 5000;
+    const [engine, news] = await Promise.all([
+      Promise.resolve(
+        createMarketEngineSnapshot({
+          benchmarks: snapshot.benchmarks,
+          quotes: snapshot.quotes,
+          updatedAt: snapshot.updatedAt,
+          volumeMt,
+        }),
+      ),
+      getLiveBulletin(),
+    ]);
+    return res.json({
+      ...engine,
+      news,
+      sourceCatalog: [
+        ...REFERENCE_SOURCE_CATALOG,
+        ...FEEDS.map((feed) => ({
+          name: feed.source,
+          role: "live market news",
+          mode: "news-feed",
+          note: "Included in the engine's rotating news-intelligence layer and filtered for energy-market relevance.",
+          url: feed.url,
+        })),
+        {
+          name: "Alpha Vantage",
+          role: "Brent benchmark data",
+          mode: "live-api",
+          note: "Used for Brent benchmark direction when configured and available.",
+          url: "https://www.alphavantage.co/",
+        },
+        {
+          name: "Commodities-API",
+          role: "Dubai proxy data",
+          mode: "live-api",
+          note: "Used for DBLc1 futures-proxy direction in the benchmark stack.",
+          url: "https://www.commodities-api.com/",
+        },
+        {
+          name: "IG",
+          role: "live market feed",
+          mode: "live-api",
+          note: "Used for live gasoil and energy-market inputs when account credentials are configured.",
+          url: "https://www.ig.com/",
+        },
+      ],
+    });
   });
 
   return httpServer;

@@ -1,4 +1,3 @@
-import SiteLayout from "@/components/SiteLayout";
 import { FormEvent, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { pageLinks } from "@/lib/siteContent";
@@ -42,8 +41,7 @@ export default function AdminLogin() {
   };
 
   return (
-    <SiteLayout>
-      <section className="min-h-screen pt-32 pb-16 px-6">
+      <section className="min-h-screen bg-background px-6 pb-16 pt-20 text-foreground">
         <div className="container mx-auto max-w-xl rounded-2xl border border-white/15 bg-card/60 p-8">
           <p className="text-primary font-tech text-xs tracking-[0.22em] uppercase mb-3">Admin Access</p>
           <h1 className="text-3xl font-display text-white mb-2">Admin Login</h1>
@@ -63,6 +61,5 @@ export default function AdminLogin() {
           </form>
         </div>
       </section>
-    </SiteLayout>
   );
 }
