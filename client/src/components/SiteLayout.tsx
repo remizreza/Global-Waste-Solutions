@@ -72,6 +72,12 @@ const correlationLinks = [
 
 export default function SiteLayout({ children }: SiteLayoutProps) {
   usePremiumInteractions();
+  const publishedAtRaw = import.meta.env.VITE_SITE_LAST_PUBLISHED_AT as string | undefined;
+  const publishedAt = publishedAtRaw ? new Date(publishedAtRaw) : null;
+  const publishedAtLabel =
+    publishedAt && !Number.isNaN(publishedAt.getTime())
+      ? publishedAt.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })
+      : "Not set";
 
   return (
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden selection:bg-primary/30">
@@ -231,7 +237,12 @@ export default function SiteLayout({ children }: SiteLayoutProps) {
           </ScrollStage>
 
           <div className="flex flex-col gap-3 border-t border-white/8 pt-6 text-center md:flex-row md:items-center md:justify-between md:text-left">
-            <p className="text-gray-500 text-sm font-tech">© 2000 REDOXY Group. All rights reserved.</p>
+            <div className="flex flex-col gap-1">
+              <p className="text-gray-500 text-sm font-tech">© 2000 REDOXY Group. All rights reserved.</p>
+              <p className="text-[11px] uppercase tracking-[0.16em] text-emerald-300/85">
+                Website last published: {publishedAtLabel}
+              </p>
+            </div>
             <div className="flex items-center justify-center gap-3 md:justify-end">
               <Link href={pageLinks.services} className="link-premium !px-4 !py-2 !text-xs">Explore Services</Link>
               <Link href={pageLinks.contact} className="btn-premium !px-5 !py-2.5 !text-[10px]">Open Contact Desk</Link>
