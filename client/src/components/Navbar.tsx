@@ -1,26 +1,35 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
 import { ChevronRight, Menu, X } from "lucide-react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { pageLinks } from "@/lib/siteContent";
+import { MOTION_EASE, motionDuration, slideIn } from "@/lib/motion";
+import RedoxyWordmark from "@/components/RedoxyWordmark";
 
-const navItems = [
+const primaryNavItems = [
   { label: "Services", href: pageLinks.services },
   { label: "Technology", href: pageLinks.technology },
   { label: "Traction", href: pageLinks.traction },
-  { label: "About", href: pageLinks.about },
   { label: "Products", href: pageLinks.products },
+  { label: "About", href: pageLinks.about },
   { label: "Contact", href: pageLinks.contact },
+];
+
+const utilityNavItems = [
+  { label: "Dashboard", href: pageLinks.dashboard },
+  { label: "Login", href: pageLinks.login },
+  { label: "Admin", href: pageLinks.adminLogin },
 ];
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [location] = useLocation();
+  const reduceMotion = useReducedMotion();
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 40);
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
@@ -32,126 +41,90 @@ export default function Navbar() {
     <nav
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         scrolled
-          ? "bg-secondary/95 backdrop-blur-md border-b border-white/10"
+          ? "nav-glass border-b border-white/15 shadow-[0_10px_35px_rgba(6,12,28,0.45)]"
           : "bg-transparent"
       }`}
     >
       <div className="container mx-auto px-6 h-20 flex items-center justify-between">
-        <Link href={pageLinks.home}>
-          <a className="flex items-center gap-3 shrink-0 min-w-0">
-            <img
-              src="/redoxy-wordmark.svg"
-              alt="redoxy wordmark"
-              className="h-10 md:h-11 w-auto object-contain"
-              loading="eager"
-            />
-              src="/redoxy-icon.png"
-              alt="REDOXY emblem"
-              className="h-10 w-10 md:h-11 md:w-11 object-contain drop-shadow-[0_0_16px_rgba(37,99,235,0.35)]"
-              loading="eager"
-            />
-            <svg
-              className="h-10 md:h-12 w-auto drop-shadow-[0_0_12px_rgba(37,99,235,0.25)]"
-              viewBox="0 0 300 80"
-              role="img"
-              aria-label="REDOXY"
-            >
-              <defs>
-                <linearGradient id="rSplit" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stopColor="#004A99" />
-                  <stop offset="48%" stopColor="#004A99" />
-                  <stop offset="52%" stopColor="#FF7F00" />
-                  <stop offset="100%" stopColor="#FF7F00" />
-                </linearGradient>
-                <style>
-                  {`
-                  .logo-font {
-                    font-family: 'Montserrat', 'Inter', sans-serif;
-                    font-weight: 900;
-                    letter-spacing: 0px;
-                  }
-                  `}
-                </style>
-              </defs>
-              <g transform="translate(0,62)">
-                <rect x="1" y="-54" width="18" height="54" rx="2" fill="url(#rSplit)" />
-                <text x="0" y="0" fill="#004A99" fontSize="56" className="logo-font">
-                  R
-                </text>
-                <text x="44" y="0" fill="#004A99" fontSize="56" className="logo-font">
-                  ED
-                </text>
-                <text x="120" y="0" fill="#FF7F00" fontSize="56" className="logo-font">
-                  O
-                </text>
-                <text x="168" y="0" fill="#004A99" fontSize="56" className="logo-font">
-                  XY
-                </text>
-                <text
-                  x="254"
-                  y="-20"
-                  fill="#004A99"
-                  fontSize="13"
-                  fontWeight="700"
-                  fontFamily="'Montserrat','Inter',sans-serif"
-                >
-                  ®
-                </text>
-              </g>
-            </svg>
-          </a>
+        <Link href={pageLinks.home} className="flex items-center gap-3 shrink-0 min-w-0">
+            <span className="relative inline-flex">
+              <span className="absolute inset-0 rounded-full bg-orange-400/35 blur-md animate-pulse" />
+              <img
+                src="/redoxy-icon.png"
+                alt="REDOXY emblem"
+                className="relative h-10 w-10 lg:h-11 lg:w-11 object-contain drop-shadow-[0_0_18px_rgba(255,122,0,0.45)]"
+                loading="eager"
+              />
+            </span>
+            <RedoxyWordmark className="text-3xl md:text-[2rem] transition-all duration-300" />
         </Link>
 
         <div className="hidden md:flex items-center gap-8">
           {navItems.map((item) => (
-            <Link key={item.href} href={item.href}>
-              <a
-                aria-current={location === item.href ? "page" : undefined}
-                className={`text-sm font-tech uppercase tracking-widest transition-all ${
-                  location === item.href
-                    ? "text-primary"
-                    : "text-gray-300 hover:text-primary"
-                }`}
-              >
-                {item.label}
-              </a>
+            <Link
+              key={item.href}
+              href={item.href}
+              aria-current={location === item.href ? "page" : undefined}
+              className={`text-sm font-tech uppercase tracking-[0.16em] transition-all relative after:absolute after:left-0 after:-bottom-1 after:h-[1px] after:bg-primary after:transition-all ${
+                location === item.href
+                  ? "text-primary after:w-full"
+                  : "text-gray-300 hover:text-primary after:w-0 hover:after:w-full"
+              }`}
+            >
+              {item.label}
             </Link>
-          ))}
+          </div>
         </div>
 
         <button
           type="button"
           aria-label="Toggle navigation"
           aria-expanded={isOpen}
-          className="md:hidden text-white"
+          className="lg:hidden text-white rounded-full border border-white/10 bg-white/[0.04] p-2"
           onClick={() => setIsOpen((value) => !value)}
         >
           {isOpen ? <X /> : <Menu />}
         </button>
+        </div>
       </div>
 
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            className="md:hidden bg-secondary border-b border-white/10 overflow-hidden"
+            initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -10, scale: 0.98 }}
+            animate={reduceMotion ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
+            exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -8, scale: 0.98 }}
+            transition={{ duration: motionDuration.ui, ease: MOTION_EASE }}
+            className="lg:hidden mx-4 mt-2 origin-top rounded-[1.4rem] border border-white/10 bg-[#07101f]/94 backdrop-blur-xl"
           >
-            <div className="flex flex-col p-6 gap-4">
-              {navItems.map((item) => (
-                <Link key={item.href} href={item.href}>
-                  <a
+            <motion.div
+              className="flex flex-col p-6 gap-4"
+              initial="hidden"
+              animate="visible"
+              variants={{
+                hidden: {},
+                visible: {
+                  transition: {
+                    staggerChildren: 0.06,
+                    ease: MOTION_EASE,
+                  },
+                },
+              }}
+            >
+              {[...primaryNavItems, ...utilityNavItems].map((item) => (
+                <motion.div key={item.href} variants={slideIn("x", 16)}>
+                  <Link
+                    href={item.href}
                     className={`text-lg font-tech flex items-center justify-between ${
                       location === item.href ? "text-primary" : "text-gray-300"
                     }`}
                   >
                     {item.label}
                     <ChevronRight className="w-4 h-4 text-primary" />
-                  </a>
-                </Link>
+                  </Link>
+                </motion.div>
               ))}
-            </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>

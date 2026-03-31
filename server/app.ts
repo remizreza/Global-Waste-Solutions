@@ -1,7 +1,7 @@
-import express, { type Request, Response, NextFunction } from "express";
+import express, { type Request, type Response, type NextFunction } from "express";
 import { createServer } from "http";
-import { registerRoutes } from "./routes";
-import { serveStatic } from "./static";
+import { registerRoutes } from "./routes.js";
+import { serveStatic } from "./static.js";
 
 declare module "http" {
   interface IncomingMessage {
@@ -18,6 +18,25 @@ export function log(message: string, source = "express") {
   });
 
   console.log(`${formattedTime} [${source}] ${message}`);
+}
+
+function sanitizeLogPayload(payload: unknown): unknown {
+  if (!payload || typeof payload !== "object") return payload;
+
+  if (Array.isArray(payload)) {
+    return payload.map((item) => sanitizeLogPayload(item));
+  }
+
+  const redactedKeys = new Set(["token", "authorization", "password", "admin_token"]);
+  const sanitized: Record<string, unknown> = {};
+
+  for (const [key, value] of Object.entries(payload as Record<string, unknown>)) {
+    sanitized[key] = redactedKeys.has(key.toLowerCase())
+      ? "[REDACTED]"
+      : sanitizeLogPayload(value);
+  }
+
+  return sanitized;
 }
 
 export async function createApp(options?: { serveClient?: boolean }) {
@@ -51,7 +70,7 @@ export async function createApp(options?: { serveClient?: boolean }) {
       if (path.startsWith("/api")) {
         let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
         if (capturedJsonResponse) {
-          logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
+          logLine += ` :: ${JSON.stringify(sanitizeLogPayload(capturedJsonResponse))}`;
         }
 
         log(logLine);

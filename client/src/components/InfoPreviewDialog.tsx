@@ -36,8 +36,9 @@ export default function InfoPreviewDialog({
           {triggerLabel}
         </Button>
       </DialogTrigger>
-      <DialogContent className="bg-card border-white/10 text-white max-w-2xl">
+      <DialogContent className="max-w-2xl border-white/10 bg-[#07101f]/95 text-white backdrop-blur-xl">
         <DialogHeader>
+          <p className="section-label text-xs">Preview Layer</p>
           <DialogTitle className="text-2xl font-display">{title}</DialogTitle>
           {subtitle ? (
             <DialogDescription className="text-gray-300">
@@ -46,7 +47,7 @@ export default function InfoPreviewDialog({
           ) : null}
         </DialogHeader>
         {points.length > 0 ? (
-          <ul className="space-y-2 text-sm text-gray-300 mt-2">
+          <ul className="section-shell mt-2 space-y-2 rounded-[1.25rem] p-4 text-sm text-gray-300">
             {points.map((point) => (
               <li key={point} className="flex items-start gap-2">
                 <span className="text-primary">▹</span>
@@ -57,7 +58,7 @@ export default function InfoPreviewDialog({
         ) : null}
         {ctaHref ? (
           <div className="mt-4">
-            <Link href={ctaHref}>
+            <Link href={ctaHref} className="inline-flex">
               <Button className="btn-premium">
                 {ctaLabel}
               </Button>

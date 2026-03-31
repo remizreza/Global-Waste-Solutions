@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import { motion } from "framer-motion";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import { Activity, ExternalLink, RefreshCw } from "lucide-react";
 
 type BulletinItem = {
@@ -17,21 +17,21 @@ type BulletinResponse = {
 
 const fallbackItems: BulletinItem[] = [
   {
-    title: "REDOXY MTU 001 deployment pipeline accelerated for KSA programs.",
-    link: "/traction",
-    source: "REDOXY Update",
+    title: "IEA projects global oil demand growth moderating as efficiency and EV adoption scale.",
+    link: "https://www.iea.org/reports/oil-market-report",
+    source: "IEA Oil Market Report",
     publishedAt: new Date().toISOString(),
   },
   {
-    title: "Manarsdha contract stream positioned for modular waste treatment transformation.",
-    link: "/traction",
-    source: "REDOXY Update",
+    title: "IMO decarbonization rules continue to reshape bunker fuel and maritime logistics strategies.",
+    link: "https://www.imo.org/en/MediaCentre/HotTopics/Pages/Decarbonization.aspx",
+    source: "International Maritime Organization",
     publishedAt: new Date().toISOString(),
   },
   {
-    title: "Technology and R&D stream expanded across modular treatment initiatives.",
-    link: "/technology",
-    source: "REDOXY Update",
+    title: "Middle East downstream and circular-economy investments remain active across refining corridors.",
+    link: "https://www.reuters.com/markets/commodities/",
+    source: "Reuters Commodities",
     publishedAt: new Date().toISOString(),
   },
 ];
@@ -46,10 +46,20 @@ function formatTimeAgo(dateValue: string): string {
 }
 
 export default function LiveBulletinBoard() {
+  const sectionRef = useRef<HTMLElement | null>(null);
+  const reduceMotion = useReducedMotion();
   const [items, setItems] = useState<BulletinItem[]>(fallbackItems);
   const [updatedAt, setUpdatedAt] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [refreshTick, setRefreshTick] = useState(0);
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ["start 88%", "end 20%"],
+  });
+  const rotate = useTransform(scrollYProgress, [0, 0.5, 1], reduceMotion ? [0, 0, 0] : [-7, 0, 4]);
+  const y = useTransform(scrollYProgress, [0, 0.5, 1], reduceMotion ? [0, 0, 0] : [90, 0, -30]);
+  const scale = useTransform(scrollYProgress, [0, 0.5, 1], reduceMotion ? [1, 1, 1] : [0.95, 1, 1.02]);
+  const opacity = useTransform(scrollYProgress, [0, 0.18, 1], [0.45, 1, 1]);
 
   useEffect(() => {
     let mounted = true;
@@ -83,7 +93,11 @@ export default function LiveBulletinBoard() {
   const rotatingItems = useMemo(() => items.slice(0, 6), [items]);
 
   return (
-    <section className="py-14 border-y border-white/10 bg-card/20">
+    <motion.section
+      ref={sectionRef}
+      className="py-14 border-y border-white/10 bg-card/20"
+      style={{ rotate, y, scale, opacity, transformPerspective: 1600 }}
+    >
       <div className="container mx-auto px-6">
         <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
           <h2 className="text-2xl md:text-3xl font-display text-white flex items-center gap-2">
@@ -130,6 +144,6 @@ export default function LiveBulletinBoard() {
           ))}
         </div>
       </div>
-    </section>
+    </motion.section>
   );
 }

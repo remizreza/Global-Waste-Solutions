@@ -1,6 +1,5 @@
 import { Suspense, lazy } from "react";
 import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
-import { useHashLocation } from "wouter/use-hash-location";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -17,6 +16,12 @@ const Services = lazy(() => import("@/pages/Services"));
 const Technology = lazy(() => import("@/pages/Technology"));
 const Traction = lazy(() => import("@/pages/Traction"));
 const Products = lazy(() => import("@/pages/Products"));
+const Login = lazy(() => import("@/pages/Login"));
+const Signup = lazy(() => import("@/pages/Signup"));
+const TraderDashboard = lazy(() => import("@/pages/TraderDashboard"));
+const AdminLogin = lazy(() => import("@/pages/AdminLogin"));
+const AdminDashboard = lazy(() => import("@/pages/AdminDashboard"));
+const AdminWorkbenchPreview = lazy(() => import("@/pages/AdminWorkbenchPreview"));
 
 function AppRoutes() {
   return (
@@ -29,6 +34,12 @@ function AppRoutes() {
       <Route path="/technology" component={Technology} />
       <Route path="/traction" component={Traction} />
       <Route path="/products" component={Products} />
+      <Route path="/login" component={Login} />
+      <Route path="/signup" component={Signup} />
+      <Route path="/dashboard" component={TraderDashboard} />
+      <Route path="/admin/login" component={AdminLogin} />
+      <Route path="/admin/dashboard" component={AdminDashboard} />
+      <Route path="/admin/workbench-preview" component={AdminWorkbenchPreview} />
 
       {/* The 404 Error Page */}
       <Route component={NotFound} />
@@ -76,7 +87,7 @@ function App() {
             </div>
           }
         >
-          <WouterRouter hook={useHashLocation}>
+          <WouterRouter>
             <AnimatedRouter />
           </WouterRouter>
         </Suspense>

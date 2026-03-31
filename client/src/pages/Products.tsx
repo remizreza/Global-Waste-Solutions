@@ -1,4 +1,9 @@
+import { motion } from "framer-motion";
 import SiteLayout from "@/components/SiteLayout";
+import QuickEnquiryDialog from "@/components/QuickEnquiryDialog";
+import ScrollStage from "@/components/ScrollStage";
+import ScrollTile from "@/components/ScrollTile";
+import { revealMask, staggerContainer, hingeReveal, premiumHoverLift } from "@/lib/motion";
 
 const tradingHubItems = [
   "Gas Oil",
@@ -12,27 +17,60 @@ export default function Products() {
   return (
     <SiteLayout>
       <section className="min-h-screen pt-32 pb-20 px-6 relative overflow-hidden">
+        <div className="absolute inset-0 hero-spotlight opacity-55 pointer-events-none" />
+        <div className="absolute inset-0 hero-architectural-grid opacity-15 pointer-events-none" />
         <div className="absolute inset-0 bg-grid-pattern opacity-5 pointer-events-none" />
         <div className="container mx-auto relative z-10 max-w-6xl">
-          <div className="text-center mb-14">
-            <p className="inline-flex px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm font-tech tracking-widest mb-5">
-              PRODUCTS & TRADING
+          <ScrollStage className="mb-14" direction="right">
+          <motion.div
+            className="section-shell mb-14 rounded-[1.75rem] px-6 py-10 text-center sm:px-10"
+            initial="hidden"
+            animate="visible"
+            variants={revealMask(28)}
+          >
+            <p className="section-label mb-5 text-sm">
+              TRADING & SUPPLY ACCESS
             </p>
             <h1 className="text-4xl md:text-5xl font-display text-white mb-5">
-              UAE Trading Hub
+              UAE Trading & Supply Desk
             </h1>
             <p className="text-gray-300 max-w-3xl mx-auto">
-              Streamlined procurement and logistics for strategic industrial
-              commodities across GCC corridors.
+              Structured sourcing, supply coordination, and logistics support for strategic industrial commodities across GCC corridors.
             </p>
-          </div>
+          </motion.div>
+          </ScrollStage>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {tradingHubItems.map((item) => (
-              <div
+          <ScrollStage className="" direction="left">
+          <motion.div
+            className="grid items-start gap-6 sm:grid-cols-2 lg:grid-cols-12"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.12 }}
+            variants={staggerContainer(0.12)}
+          >
+            {tradingHubItems.map((item, index) => (
+              <ScrollTile
                 key={item}
-                className="product-card border border-white/10 rounded-lg p-6 bg-card/50 backdrop-blur-sm"
+                direction={index % 2 === 0 ? "left" : "right"}
+                className={
+                  index === 0
+                    ? "lg:col-span-5"
+                    : index === 1
+                      ? "lg:col-span-3 lg:translate-y-10"
+                      : index === 2
+                        ? "lg:col-span-4"
+                        : index === 3
+                          ? "lg:col-span-4 lg:translate-y-8"
+                          : "lg:col-span-8"
+                }
               >
+              <motion.div
+                key={item}
+                variants={hingeReveal(index % 2 === 0 ? "left" : "right", 20)}
+                whileHover={premiumHoverLift}
+                className="product-card section-shell rounded-[1.5rem] p-6"
+              >
+                <p className="section-label mb-4 text-xs">Trading Focus</p>
                 <p className="text-primary text-xs font-tech uppercase tracking-[0.18em] mb-2">
                   Trading Focus
                 </p>
@@ -47,12 +85,13 @@ export default function Products() {
                     triggerLabel="Quick Enquiry"
                   />
                 </div>
-              </div>
+              </motion.div>
+              </ScrollTile>
             ))}
-          </div>
+          </motion.div>
+          </ScrollStage>
         </div>
       </section>
     </SiteLayout>
   );
 }
-import QuickEnquiryDialog from "@/components/QuickEnquiryDialog";
