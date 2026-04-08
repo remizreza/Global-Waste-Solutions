@@ -1,0 +1,103 @@
+import express, { type Request, type Response, type NextFunction } from "express";
+import { createServer } from "http";
+import { registerRoutes } from "./routes.js";
+import { serveStatic } from "./static.js";
+
+declare module "http" {
+  interface IncomingMessage {
+    rawBody: unknown;
+  }
+}
+
+export function log(message: string, source = "express") {
+  const formattedTime = new Date().toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: true,
+  });
+
+  console.log(`${formattedTime} [${source}] ${message}`);
+}
+
+function sanitizeLogPayload(payload: unknown): unknown {
+  if (!payload || typeof payload !== "object") return payload;
+
+  if (Array.isArray(payload)) {
+    return payload.map((item) => sanitizeLogPayload(item));
+  }
+
+  const redactedKeys = new Set(["token", "authorization", "password", "admin_token"]);
+  const sanitized: Record<string, unknown> = {};
+
+  for (const [key, value] of Object.entries(payload as Record<string, unknown>)) {
+    sanitized[key] = redactedKeys.has(key.toLowerCase())
+      ? "[REDACTED]"
+      : sanitizeLogPayload(value);
+  }
+
+  return sanitized;
+}
+
+export async function createApp(options?: { serveClient?: boolean }) {
+  const app = express();
+  const httpServer = createServer(app);
+  const serveClient = options?.serveClient ?? false;
+
+  app.use(
+    express.json({
+      verify: (req, _res, buf) => {
+        req.rawBody = buf;
+      },
+    }),
+  );
+
+  app.use(express.urlencoded({ extended: false }));
+
+  app.use((req, res, next) => {
+    const start = Date.now();
+    const path = req.path;
+    let capturedJsonResponse: Record<string, any> | undefined = undefined;
+
+    const originalResJson = res.json;
+    res.json = function (bodyJson, ...args) {
+      capturedJsonResponse = bodyJson;
+      return originalResJson.apply(res, [bodyJson, ...args]);
+    };
+
+    res.on("finish", () => {
+      const duration = Date.now() - start;
+      if (path.startsWith("/api")) {
+        let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
+        if (capturedJsonResponse) {
+          logLine += ` :: ${JSON.stringify(sanitizeLogPayload(capturedJsonResponse))}`;
+        }
+
+        log(logLine);
+      }
+    });
+
+    next();
+  });
+
+  await registerRoutes(httpServer, app);
+
+  app.use((err: any, _req: Request, res: Response, next: NextFunction) => {
+    const status = err.status || err.statusCode || 500;
+    const message = err.message || "Internal Server Error";
+
+    console.error("Internal Server Error:", err);
+
+    if (res.headersSent) {
+      return next(err);
+    }
+
+    return res.status(status).json({ message });
+  });
+
+  if (serveClient) {
+    serveStatic(app);
+  }
+
+  return { app, httpServer };
+}
