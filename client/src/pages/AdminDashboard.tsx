@@ -136,15 +136,14 @@ type RegionNegotiationCard = {
   region: NegotiationRegion;
   label: string;
   incoterm: string;
-  benchmarkBase: number;
-  lowOffer: number;
-  targetOffer: number;
-  defendedOffer: number;
-  premiumLow: number;
-  premiumHigh: number;
-  freightLow: number;
-  freightHigh: number;
-  logistics: number;
+  volumeMt: number;
+  baseUsdMt: number;
+  premiumUsdMt: number;
+  freightUsdMt: number;
+  logisticsUsdMt: number;
+  competitiveUsdMt: number;
+  targetUsdMt: number;
+  defendedUsdMt: number;
   note: string;
 };
 
@@ -156,15 +155,26 @@ type OfferAssessment = {
   colorClass: string;
 };
 
-const plattsGasoilReference = {
-  label: "Platts FOB Arab Gulf 10 ppm gasoil",
-  priceUsdPerBbl: 89.1,
-  priceUsdPerMt: 663.8,
-  marketRangeUsdMt: "$660 - $665 / MT",
-  fobOfferRangeUsdMt: "$670 - $690 / MT",
-  cfrIndiaRangeUsdMt: "$700 - $740 / MT",
-  note: "Locked desk reference based on the latest verified Platts-linked market equivalent. Use this as the benchmark base, then add premium and freight for deal pricing.",
+type CalculatorRegionCard = {
+  region: NegotiationRegion;
+  label: string;
+  incoterm: string;
+  baseUsdMt: number;
+  premiumUsdMt: number;
+  freightUsdMt: number;
+  logisticsUsdMt: number;
+  competitiveUsdMt: number;
+  targetUsdMt: number;
+  defendedUsdMt: number;
 };
+
+type ProductStrategy = {
+  family: "crude" | "distillate" | "base-oil" | "gas" | "specialty";
+  benchmark: ManualInputs["benchmark"];
+  strategy: string;
+  quoteLabel: string;
+};
+type ProductFamilyTab = ProductStrategy["family"];
 
 const STORAGE_KEY = "redoxy-admin-workbench-inputs";
 const SCENARIO_STORAGE_KEY = "redoxy-admin-workbench-scenarios";
@@ -185,6 +195,70 @@ const defaultInputs: ManualInputs = {
 };
 
 const TRANSACTION_CURRENCY = "USD";
+const DASHBOARD_MOTTO = "Benchmark-first pricing. Product-specific quoting. Region-ready execution.";
+const PRODUCT_FAMILY_TABS: Array<{ key: ProductFamilyTab; label: string; description: string }> = [
+  { key: "crude", label: "Crude", description: "Global and regional crude anchors" },
+  { key: "distillate", label: "Distillates", description: "Middle-distillate and refined fuel pricing" },
+  { key: "base-oil", label: "Base Oil", description: "Virgin and recycled neutral grades" },
+  { key: "gas", label: "Gas", description: "Gas-linked and energy-complex checks" },
+  { key: "specialty", label: "Specialty", description: "Fallback for products without a dedicated model" },
+];
+const PRODUCT_STRATEGIES: Record<string, ProductStrategy> = {
+  "Brent Crude": {
+    family: "crude",
+    benchmark: "brent",
+    strategy: "Use Brent as the neutral market anchor, then add destination structure and margin only where justified.",
+    quoteLabel: "Crude cargo or refinery-linked offer",
+  },
+  "WTI Crude": {
+    family: "crude",
+    benchmark: "brent",
+    strategy: "Treat WTI as a supporting crude indicator, but keep export-region negotiations anchored to Brent or Dubai structure.",
+    quoteLabel: "Crude reference check",
+  },
+  "Gas Oil": {
+    family: "distillate",
+    benchmark: "plattsEquivalent",
+    strategy: "Use middle-distillate benchmark structure and add freight, quality, and timing spreads by region.",
+    quoteLabel: "Middle distillate negotiation",
+  },
+  "Heating Oil": {
+    family: "distillate",
+    benchmark: "plattsEquivalent",
+    strategy: "Use distillate-linked pricing, then adjust sulfur, demand seasonality, and inland logistics.",
+    quoteLabel: "Distillate swap or cargo quote",
+  },
+  "Natural Gas": {
+    family: "gas",
+    benchmark: "brent",
+    strategy: "Use live gas as the reference price, but keep Brent visible for broader energy-complex direction and contract linkage.",
+    quoteLabel: "Gas-linked commercial check",
+  },
+  "SN150 Virgin": {
+    family: "base-oil",
+    benchmark: "plattsEquivalent",
+    strategy: "Use the refined-product structure as the feedstock floor, then add viscosity and virgin quality premium.",
+    quoteLabel: "Base oil cargo offer",
+  },
+  "SN500 Virgin": {
+    family: "base-oil",
+    benchmark: "plattsEquivalent",
+    strategy: "Use the feedstock floor, then widen the premium for heavier viscosity and virgin quality.",
+    quoteLabel: "Heavy neutral base oil quote",
+  },
+  "SN150 RC": {
+    family: "base-oil",
+    benchmark: "plattsEquivalent",
+    strategy: "Keep the same feedstock anchor, then discount for recycled-content supply and acceptance profile.",
+    quoteLabel: "RC base oil quote",
+  },
+  "SN500 RC": {
+    family: "base-oil",
+    benchmark: "plattsEquivalent",
+    strategy: "Use a recycled heavy-neutral model with a wider range for quality spread and batch variation.",
+    quoteLabel: "RC heavy neutral quote",
+  },
+};
 const REGION_PRESETS: Record<
   NegotiationRegion,
   {
@@ -275,6 +349,10 @@ function toUsdBbl(usdMt: number) {
   return Number((usdMt / 7.33).toFixed(2));
 }
 
+function formatUsd(value: number | null | undefined, digits = 2, fallback = "--") {
+  return typeof value === "number" && Number.isFinite(value) ? value.toFixed(digits) : fallback;
+}
+
 function assessOfferPosition(offerUsdMt: number, regionCard?: {
   competitiveUsdMt?: number;
   targetUsdMt?: number;
@@ -354,6 +432,9 @@ export default function AdminDashboard({ shellless = false }: AdminDashboardProp
   const [history, setHistory] = useState<HistoryPoint[]>([]);
   const [inputs, setInputs] = useState<ManualInputs>(() => getStoredInputs());
   const [savedScenarios, setSavedScenarios] = useState<ScenarioRecord[]>(() => getStoredScenarios());
+  const [sessionReady, setSessionReady] = useState(false);
+  const [engineRefreshNonce, setEngineRefreshNonce] = useState(0);
+  const [activeFamilyTab, setActiveFamilyTab] = useState<ProductFamilyTab>("crude");
 
   useEffect(() => {
     const token = localStorage.getItem("admin_token");
@@ -373,6 +454,9 @@ export default function AdminDashboard({ shellless = false }: AdminDashboardProp
           localStorage.removeItem("admin_token");
           setLocation("/admin/login");
           return;
+        }
+        if (!cancelled) {
+          setSessionReady(true);
         }
 
         const [dashboardResponse, marketEngineResponse] = await Promise.all([
@@ -413,7 +497,7 @@ export default function AdminDashboard({ shellless = false }: AdminDashboardProp
       cancelled = true;
       clearInterval(interval);
     };
-  }, [inputs.volumeMt, setLocation]);
+  }, [engineRefreshNonce, inputs.volumeMt, setLocation]);
 
   useEffect(() => {
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(inputs));
@@ -441,28 +525,30 @@ export default function AdminDashboard({ shellless = false }: AdminDashboardProp
   const regionNegotiationCards = useMemo<RegionNegotiationCard[]>(() => {
     return (Object.entries(REGION_PRESETS) as Array<[NegotiationRegion, (typeof REGION_PRESETS)[NegotiationRegion]]>).map(
       ([region, preset]) => {
-        const lowOffer = benchmarkBaseForNegotiation + preset.premiumLow + preset.freightLow + preset.logistics;
-        const defendedOffer = benchmarkBaseForNegotiation + preset.premiumHigh + preset.freightHigh + preset.logistics;
-        const targetOffer = (lowOffer + defendedOffer) / 2;
+        const premiumUsdMt = Number(((preset.premiumLow + preset.premiumHigh) / 2).toFixed(2));
+        const freightUsdMt = Number(((preset.freightLow + preset.freightHigh) / 2).toFixed(2));
+        const logisticsUsdMt = Number(preset.logistics.toFixed(2));
+        const competitiveUsdMt = benchmarkBaseForNegotiation + preset.premiumLow + preset.freightLow + preset.logistics;
+        const defendedUsdMt = benchmarkBaseForNegotiation + preset.premiumHigh + preset.freightHigh + preset.logistics;
+        const targetUsdMt = (competitiveUsdMt + defendedUsdMt) / 2;
 
         return {
           region,
           label: preset.label,
           incoterm: preset.incoterm,
-          benchmarkBase: Number(benchmarkBaseForNegotiation.toFixed(2)),
-          lowOffer: Number(lowOffer.toFixed(2)),
-          targetOffer: Number(targetOffer.toFixed(2)),
-          defendedOffer: Number(defendedOffer.toFixed(2)),
-          premiumLow: preset.premiumLow,
-          premiumHigh: preset.premiumHigh,
-          freightLow: preset.freightLow,
-          freightHigh: preset.freightHigh,
-          logistics: preset.logistics,
+          volumeMt: inputs.volumeMt,
+          baseUsdMt: Number(benchmarkBaseForNegotiation.toFixed(2)),
+          premiumUsdMt,
+          freightUsdMt,
+          logisticsUsdMt,
+          competitiveUsdMt: Number(competitiveUsdMt.toFixed(2)),
+          targetUsdMt: Number(targetUsdMt.toFixed(2)),
+          defendedUsdMt: Number(defendedUsdMt.toFixed(2)),
           note: preset.note,
         };
       },
     );
-  }, [benchmarkBaseForNegotiation]);
+  }, [benchmarkBaseForNegotiation, inputs.volumeMt]);
   const selectedRegionCard =
     marketEngine?.regionOffers.find((card) => card.region === inputs.region) ??
     regionNegotiationCards.find((card) => card.region === inputs.region) ??
@@ -471,6 +557,15 @@ export default function AdminDashboard({ shellless = false }: AdminDashboardProp
   const baseOilOffers = marketEngine?.baseOilOffers ?? [];
   const marketNews = marketEngine?.news ?? [];
   const sourceCatalog = marketEngine?.sourceCatalog ?? [];
+  const selectedProductStrategy = PRODUCT_STRATEGIES[inputs.selectedProduct] ?? {
+    family: "specialty" as const,
+    benchmark: "brent" as const,
+    strategy: "Use the closest live benchmark, then apply product-specific quality, logistics, and timing spreads manually.",
+    quoteLabel: "Specialty product quote",
+  };
+  useEffect(() => {
+    setActiveFamilyTab(selectedProductStrategy.family);
+  }, [selectedProductStrategy.family]);
   const verifiedUsefulScenarios = savedScenarios.filter((item) => item.useful && item.verified);
   const learnedTargetUsdMt =
     verifiedUsefulScenarios.length > 0
@@ -481,8 +576,19 @@ export default function AdminDashboard({ shellless = false }: AdminDashboardProp
           ).toFixed(2),
         )
       : null;
-  const assessedOfferUsdMt = selectedRegionCard?.targetUsdMt ?? offerUsdMt;
-  const offerAssessment = assessOfferPosition(assessedOfferUsdMt, selectedRegionCard);
+  const calculatorRegionCard: CalculatorRegionCard = {
+    region: inputs.region,
+    label: selectedRegionCard?.label ?? REGION_PRESETS[inputs.region].label,
+    incoterm: selectedRegionCard?.incoterm ?? REGION_PRESETS[inputs.region].incoterm,
+    baseUsdMt: Number(baseUsdMt.toFixed(2)),
+    premiumUsdMt: Number(inputs.brokerPremiumUsdMt.toFixed(2)),
+    freightUsdMt: Number(inputs.freightUsdMt.toFixed(2)),
+    logisticsUsdMt: Number((selectedRegionCard?.logisticsUsdMt ?? REGION_PRESETS[inputs.region].logistics).toFixed(2)),
+    competitiveUsdMt: Number((baseUsdMt + inputs.brokerPremiumUsdMt + inputs.freightUsdMt + (selectedRegionCard?.logisticsUsdMt ?? REGION_PRESETS[inputs.region].logistics)).toFixed(2)),
+    targetUsdMt: Number((baseUsdMt + inputs.brokerPremiumUsdMt + inputs.freightUsdMt + (selectedRegionCard?.logisticsUsdMt ?? REGION_PRESETS[inputs.region].logistics) + inputs.dubaiDifferentialUsdMt + inputs.densityAdjustmentUsdMt + inputs.marginUsdMt).toFixed(2)),
+    defendedUsdMt: Number((baseUsdMt + inputs.brokerPremiumUsdMt + inputs.freightUsdMt + (selectedRegionCard?.logisticsUsdMt ?? REGION_PRESETS[inputs.region].logistics) + inputs.dubaiDifferentialUsdMt + inputs.densityAdjustmentUsdMt + inputs.marginUsdMt + 12).toFixed(2)),
+  };
+  const offerAssessment = assessOfferPosition(offerUsdMt, selectedRegionCard);
 
   const breakdownData = useMemo(
     () => [
@@ -498,18 +604,54 @@ export default function AdminDashboard({ shellless = false }: AdminDashboardProp
 
   const variationData = useMemo(
     () => [
-      { name: "Competitive", offer: selectedRegionCard ? selectedRegionCard.lowOffer : Number((offerUsdMt - 15).toFixed(2)) },
-      { name: "Target", offer: selectedRegionCard ? selectedRegionCard.targetOffer : Number(offerUsdMt.toFixed(2)) },
-      { name: "Defended", offer: selectedRegionCard ? selectedRegionCard.defendedOffer : Number((offerUsdMt + 15).toFixed(2)) },
+      { name: "Competitive", offer: calculatorRegionCard.competitiveUsdMt },
+      { name: "Target", offer: calculatorRegionCard.targetUsdMt },
+      { name: "Defended", offer: calculatorRegionCard.defendedUsdMt },
       { name: "Tight Margin", offer: Number((offerUsdMt - 10).toFixed(2)) },
       { name: "Aggressive Margin", offer: Number((offerUsdMt + 15).toFixed(2)) },
     ],
-    [offerUsdMt, selectedRegionCard],
+    [calculatorRegionCard, offerUsdMt],
   );
 
   const gasOilLive = quotes.find((item) => item.product === "Gas Oil")?.price ?? 0;
   const heatingOilLive = quotes.find((item) => item.product === "Heating Oil")?.price ?? 0;
   const brentLive = quotes.find((item) => item.product === "Brent Crude")?.price ?? selectedBenchmark?.priceUsdPerMt ?? 0;
+  const benchmarkInsightCards = benchmarks.map((benchmark) => ({
+    ...benchmark,
+    statusLabel:
+      benchmark.key === "brent"
+        ? "Global energy anchor"
+        : benchmark.key === "dubaiProxy"
+          ? "Regional crude direction"
+          : "Refined product equivalent",
+  }));
+  const selectedBenchmarkCard = benchmarkInsightCards.find((item) => item.key === inputs.benchmark) ?? benchmarkInsightCards[0];
+  const selectedQuote = quotes.find((quote) => quote.product === inputs.selectedProduct) ?? quotes[0];
+  const filteredBaseOilOffers =
+    selectedProductStrategy.family === "base-oil" ? baseOilOffers : baseOilOffers.slice(0, 2);
+  const productWorkspaceRows = useMemo(() => {
+    const liveRows = quotes.map((quote) => ({
+      key: quote.product,
+      label: quote.product,
+      valueUsdMt: quote.price,
+      source: quote.source,
+      benchmark: quote.benchmark,
+      family: PRODUCT_STRATEGIES[quote.product]?.family ?? "specialty",
+      rawLabel: `${quote.rawPrice.toFixed(quote.rawUnit === "USD/gal" ? 4 : quote.rawUnit === "USD/MMBtu" ? 3 : 2)} ${quote.rawUnit}`,
+    }));
+
+    const baseOilRows = baseOilOffers.map((oil) => ({
+      key: oil.slug,
+      label: oil.label,
+      valueUsdMt: oil.priceUsdMt,
+      source: "Derived desk model",
+      benchmark: oil.benchmark,
+      family: "base-oil" as const,
+      rawLabel: `Range ${oil.lowUsdMt.toFixed(2)} - ${oil.highUsdMt.toFixed(2)} USD/MT`,
+    }));
+
+    return [...liveRows, ...baseOilRows].filter((row) => row.family === activeFamilyTab);
+  }, [activeFamilyTab, baseOilOffers, quotes]);
 
   const regionalProxyTable = useMemo<RegionalProxyRow[]>(
     () => [
@@ -557,347 +699,467 @@ export default function AdminDashboard({ shellless = false }: AdminDashboardProp
     [gasOilLive, heatingOilLive, brentLive],
   );
 
+  if (!sessionReady && !snapshot) {
+    return (
+      <div className="min-h-screen bg-background px-6 pb-16 pt-20 text-foreground">
+        <div className="container mx-auto max-w-3xl rounded-[28px] border border-emerald-950/35 bg-[linear-gradient(160deg,rgba(8,15,30,0.96),rgba(10,28,22,0.9)_60%,rgba(14,45,0,0.72))] p-8 shadow-[0_30px_120px_rgba(0,0,0,0.38)]">
+          <p className="font-tech text-xs uppercase tracking-[0.22em] text-primary">Admin Dashboard</p>
+          <h1 className="mt-3 text-3xl font-display text-white">Loading pricing workbench</h1>
+          <p className="mt-3 text-sm text-slate-300">Verifying session and loading live benchmarks, region bands, and news context.</p>
+        </div>
+      </div>
+    );
+  }
+
   const page = (
-      <section className="min-h-screen px-6 pb-16 pt-32">
-        <div className="container mx-auto max-w-7xl space-y-6">
-          <div className="rounded-2xl border border-white/15 bg-card/60 p-6">
-            <p className="mb-2 font-tech text-xs uppercase tracking-[0.2em] text-primary">Admin Dashboard</p>
-            <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-              <div>
-                <h1 className="text-3xl font-display text-white">{shellless ? "Negotiation workbench" : "REDOXY oil pricing desk"}</h1>
-                <p className="mt-2 text-sm text-gray-300">
-                  Live Brent and proxy feeds support analysis. The negotiation engine converts today&apos;s benchmark structure into region-wise offers and trader-style working ranges.
-                </p>
-              </div>
-              <div className="text-sm text-gray-300">Updated: {updated} | Pulse: {snapshot?.marketPulse ?? "--"}</div>
-            </div>
-          </div>
-
-          <div className="grid gap-5 md:grid-cols-2">
-            {benchmarks.map((benchmark) => (
-              <article key={benchmark.key} className="rounded-2xl border border-white/15 bg-secondary/70 p-5">
-                <p className="mb-2 font-tech text-xs uppercase tracking-[0.18em] text-primary">
-                  {benchmark.key === "brent"
-                    ? "Live Brent for analysis"
-                    : benchmark.key === "plattsEquivalent"
-                      ? "Derived Platts-equivalent base"
-                      : "Dubai proxy for direction only"}
-                </p>
-                <p className="text-2xl font-display text-white">${benchmark.priceUsdPerBbl.toFixed(2)} / bbl</p>
-                <p className="mt-1 text-sm text-gray-300">${benchmark.priceUsdPerMt.toFixed(2)} / mt</p>
-                <p className="mt-3 text-sm text-gray-400">Source: {benchmark.source} | Symbol: {benchmark.symbol}</p>
-              </article>
-            ))}
-          </div>
-
-          <article className="rounded-2xl border border-primary/25 bg-[linear-gradient(135deg,rgba(34,13,6,0.94),rgba(10,16,34,0.9)_55%,rgba(8,34,48,0.82))] p-6">
-            <p className="font-tech text-xs uppercase tracking-[0.22em] text-primary">Locked exact reference</p>
-            <div className="mt-3 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-              <div className="max-w-3xl">
-                <h2 className="text-2xl font-display text-white">{plattsGasoilReference.label}</h2>
-                <p className="mt-2 text-sm text-slate-300">{plattsGasoilReference.note}</p>
-              </div>
-              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-                <div className="rounded-2xl border border-white/10 bg-black/15 px-4 py-3">
-                  <div className="text-[11px] uppercase tracking-[0.22em] text-slate-300">USD / bbl</div>
-                  <div className="mt-1 text-white">${plattsGasoilReference.priceUsdPerBbl.toFixed(2)}</div>
-                </div>
-                <div className="rounded-2xl border border-white/10 bg-black/15 px-4 py-3">
-                  <div className="text-[11px] uppercase tracking-[0.22em] text-slate-300">USD / mt</div>
-                  <div className="mt-1 text-white">${plattsGasoilReference.priceUsdPerMt.toFixed(2)}</div>
-                </div>
-                <div className="rounded-2xl border border-white/10 bg-black/15 px-4 py-3">
-                  <div className="text-[11px] uppercase tracking-[0.22em] text-slate-300">FOB base</div>
-                  <div className="mt-1 text-white">{plattsGasoilReference.marketRangeUsdMt}</div>
-                </div>
-                <div className="rounded-2xl border border-white/10 bg-black/15 px-4 py-3">
-                  <div className="text-[11px] uppercase tracking-[0.22em] text-slate-300">FOB quoted</div>
-                  <div className="mt-1 text-white">{plattsGasoilReference.fobOfferRangeUsdMt}</div>
-                </div>
-                <div className="rounded-2xl border border-white/10 bg-black/15 px-4 py-3">
-                  <div className="text-[11px] uppercase tracking-[0.22em] text-slate-300">CFR India</div>
-                  <div className="mt-1 text-white">{plattsGasoilReference.cfrIndiaRangeUsdMt}</div>
-                </div>
-              </div>
-            </div>
-          </article>
-
-          <div className="grid gap-5 lg:grid-cols-[0.95fr_1.05fr]">
-            <div className="rounded-2xl border border-white/15 bg-card/60 p-6">
-              <p className="font-tech text-xs uppercase tracking-[0.22em] text-primary">Calculator</p>
-              <h2 className="mt-2 text-xl font-display text-white">Final deal calculator</h2>
-              <p className="mt-2 text-sm text-slate-300">
-                Core negotiation formula: <span className="text-white">Platts-linked gasoil base + premium + freight = final deal price</span>.
-                Live Brent and product feeds remain visible for analysis and direction. Optional adjustments stay available below when you need a tighter commercial quote.
+    <section className="relative min-h-screen overflow-hidden px-6 pb-16 pt-28">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(18,44,58,0.12),transparent_34%),radial-gradient(circle_at_82%_18%,rgba(14,45,0,0.18),transparent_28%),linear-gradient(180deg,rgba(4,8,18,0.98),rgba(6,18,16,0.95)_42%,rgba(10,24,14,0.98))]" />
+      <div className="pointer-events-none absolute inset-0 bg-grid-pattern opacity-[0.04]" />
+      <div className="pointer-events-none absolute inset-y-0 left-[8%] hidden w-px bg-white/7 lg:block" />
+      <div className="pointer-events-none absolute inset-y-0 right-[8%] hidden w-px bg-white/6 lg:block" />
+      <div className="container relative z-10 mx-auto max-w-7xl space-y-6">
+        <div className="relative overflow-hidden rounded-[2rem] border border-white/12 shadow-[0_30px_120px_rgba(0,0,0,0.35)]">
+          <video
+            className="bg-video-smooth absolute inset-0 h-full w-full scale-[1.03] object-cover saturate-[1.08] contrast-[1.04] brightness-[0.92]"
+            src="/assets/admin-yard-bg.mp4"
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="auto"
+          />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_82%_22%,rgba(242,135,55,0.18),transparent_24%),radial-gradient(circle_at_20%_28%,rgba(14,45,0,0.16),transparent_26%),linear-gradient(145deg,rgba(8,15,30,0.28),rgba(8,16,30,0.12)_28%,rgba(9,28,18,0.38)_58%,rgba(12,32,10,0.78))]" />
+          <div className="absolute inset-0 bg-grid-pattern opacity-[0.05]" />
+          <div className="absolute inset-x-0 top-0 h-28 bg-[linear-gradient(180deg,rgba(255,255,255,0.12),transparent)]" />
+          <div className="absolute inset-y-0 left-[58%] hidden w-px bg-white/10 xl:block" />
+          <div className="relative z-10 p-6">
+          <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+            <div>
+              <p className="font-tech text-xs uppercase tracking-[0.24em] text-primary">
+                {shellless ? "Workbench Preview" : "Admin Market Desk"}
               </p>
-              <div className="mt-4 grid gap-4">
-                <div className="grid gap-4 md:grid-cols-2">
-                  <label className="grid gap-2 text-sm text-slate-200">
-                    Region
-                    <select className="rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-white" value={inputs.region} onChange={(e) => setInputs((v) => ({ ...v, region: e.target.value as ManualInputs["region"] }))}>
-                      <option value="uae">UAE</option>
-                      <option value="india">India</option>
-                      <option value="ksa">KSA</option>
-                    </select>
-                  </label>
-                  <label className="grid gap-2 text-sm text-slate-200">
-                    Volume (MT)
-                    <input className="rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-white" type="number" min="1" value={inputs.volumeMt} onChange={(e) => setInputs((v) => ({ ...v, volumeMt: toInputNumber(e.target.value) || 1 }))} />
-                  </label>
-                </div>
-                <label className="grid gap-2 text-sm text-slate-200">
-                  Product
-                  <select className="rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-white" value={inputs.selectedProduct} onChange={(e) => setInputs((v) => ({ ...v, selectedProduct: e.target.value }))}>
-                    {quotes.map((quote) => <option key={quote.product} value={quote.product}>{quote.product}</option>)}
-                  </select>
-                </label>
-                <label className="grid gap-2 text-sm text-slate-200">
-                  Benchmark
-                  <select className="rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-white" value={inputs.benchmark} onChange={(e) => setInputs((v) => ({ ...v, benchmark: e.target.value as ManualInputs["benchmark"] }))}>
-                    <option value="brent">Brent</option>
-                    <option value="dubaiProxy">Dubai proxy</option>
-                    <option value="plattsEquivalent">Platts-equivalent</option>
-                  </select>
-                </label>
-                <label className="flex items-center gap-3 text-sm text-slate-200">
-                  <input type="checkbox" checked={inputs.useBenchmarkBase} onChange={(e) => setInputs((v) => ({ ...v, useBenchmarkBase: e.target.checked }))} />
-                  Use selected benchmark as calculator base
-                </label>
-                <label className="flex items-center gap-3 text-sm text-slate-200">
-                  <input type="checkbox" checked={inputs.useManualBase} onChange={(e) => setInputs((v) => ({ ...v, useManualBase: e.target.checked }))} />
-                  Use manual base price instead of live selected product
-                </label>
-                {inputs.useManualBase ? (
-                  <label className="grid gap-2 text-sm text-slate-200">
-                    Manual base USD/MT
-                    <input className="rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-white" type="number" value={inputs.manualBaseUsdMt} onChange={(e) => setInputs((v) => ({ ...v, manualBaseUsdMt: toInputNumber(e.target.value) }))} />
-                  </label>
-                ) : null}
-                {[
-                  ["brokerPremiumUsdMt", "Broker premium"],
-                  ["freightUsdMt", "Freight"],
-                  ["dubaiDifferentialUsdMt", "Dubai differential"],
-                  ["densityAdjustmentUsdMt", "Density adjustment"],
-                  ["marginUsdMt", "Margin"],
-                ].map(([key, label]) => (
-                  <label key={key} className="grid gap-2 text-sm text-slate-200">
-                    {label} (USD/MT)
-                    <input className="rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-white" type="number" value={inputs[key as keyof ManualInputs] as number} onChange={(e) => setInputs((v) => ({ ...v, [key]: toInputNumber(e.target.value) }))} />
-                  </label>
-                ))}
-              </div>
-              <div className="mt-5 grid gap-3 md:grid-cols-2">
-                <div className="rounded-2xl border border-emerald-400/20 bg-emerald-500/10 p-4">
-                  <div className="text-[11px] uppercase tracking-[0.22em] text-emerald-200">Competitive / workable</div>
-                  <div className="mt-2 text-3xl font-display text-white">${selectedRegionCard?.competitiveUsdMt.toFixed(2) ?? coreDealUsdMt.toFixed(2)} / MT</div>
-                  <div className="mt-1 text-sm text-emerald-100">
-                    Base {selectedRegionCard?.baseUsdMt.toFixed(2) ?? baseUsdMt.toFixed(2)} + premium {selectedRegionCard?.premiumUsdMt.toFixed(2) ?? inputs.brokerPremiumUsdMt.toFixed(2)} + freight {selectedRegionCard?.freightUsdMt.toFixed(2) ?? inputs.freightUsdMt.toFixed(2)}
-                  </div>
-                  <div className="mt-2 text-xs uppercase tracking-[0.18em] text-emerald-50/90">
-                    Transaction currency: {TRANSACTION_CURRENCY}
-                  </div>
-                </div>
-                <div className="rounded-2xl border border-amber-400/20 bg-amber-500/10 p-4">
-                  <div className="text-[11px] uppercase tracking-[0.22em] text-amber-200">Target negotiation</div>
-                  <div className="mt-2 text-3xl font-display text-white">${selectedRegionCard?.targetUsdMt.toFixed(2) ?? offerUsdMt.toFixed(2)} / MT</div>
-                  <div className="mt-1 text-sm text-amber-100">${toUsdBbl(selectedRegionCard?.targetUsdMt ?? offerUsdMt).toFixed(2)} / bbl equivalent</div>
-                  <div className="mt-2 text-xs uppercase tracking-[0.18em] text-amber-50/90">
-                    Transaction currency: {TRANSACTION_CURRENCY}
-                  </div>
-                  <div className="mt-2 text-sm text-slate-200">{selectedRegionCard?.incoterm ?? "Includes optional Dubai differential, density, and margin overlays."}</div>
-                </div>
-              </div>
-              <div className="mt-4 rounded-2xl border border-white/10 bg-black/10 p-4 text-sm text-slate-300">
-                Base input is currently {inputs.useManualBase ? "manual" : selectedProduct?.product ?? "market"}.
-                The separate market engine uses today&apos;s benchmark stack to generate closest trader-style regional offers. Use the manual fields below only when you need to override the engine.
-              </div>
-              <div className={`mt-4 rounded-2xl border p-4 ${offerAssessment.colorClass}`}>
-                <div className="text-[11px] uppercase tracking-[0.22em]">Live assessment</div>
-                <div className="mt-2 text-2xl font-display">{offerAssessment.label}</div>
-                <p className="mt-2 text-sm opacity-90">{offerAssessment.detail}</p>
-                <p className="mt-2 text-xs uppercase tracking-[0.16em] opacity-80">{offerAssessment.suggestion}</p>
-              </div>
-              <div className="mt-4 flex flex-wrap gap-3">
+              <h1 className="mt-3 text-3xl font-display text-white sm:text-4xl">
+                Benchmark-first product pricing for practical negotiation work.
+              </h1>
+              <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-300 sm:text-base">
+                {DASHBOARD_MOTTO} The desk is structured to answer three questions clearly:
+                what is the market doing, what product are we pricing, and what is the defendable quote by region.
+              </p>
+              <div className="mt-6 flex flex-wrap gap-3">
                 <button
                   type="button"
-                  className="rounded-full border border-primary/30 bg-primary/10 px-4 py-2 text-sm text-white"
+                  className="rounded-full border border-primary/30 bg-primary/10 px-4 py-2 text-sm text-white transition-colors hover:bg-primary/20"
+                  onClick={() => setEngineRefreshNonce((value) => value + 1)}
+                >
+                  Refresh live market engine
+                </button>
+                <button
+                  type="button"
+                  className="rounded-full border border-white/12 px-4 py-2 text-sm text-slate-200 transition-colors hover:border-white/25 hover:bg-white/5"
+                  onClick={() =>
+                    setInputs((current) => ({
+                      ...current,
+                      benchmark: selectedProductStrategy.benchmark,
+                      useBenchmarkBase: true,
+                      useManualBase: false,
+                    }))
+                  }
+                >
+                  Use recommended benchmark
+                </button>
+                <button
+                  type="button"
+                  className="rounded-full border border-white/12 px-4 py-2 text-sm text-slate-200 transition-colors hover:border-white/25 hover:bg-white/5"
                   onClick={() => {
-                    if (!selectedRegionCard) return;
                     const record: ScenarioRecord = {
                       id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
                       createdAt: new Date().toISOString(),
                       inputs,
                       region: inputs.region,
-                      targetUsdMt: selectedRegionCard.targetUsdMt,
-                      competitiveUsdMt: selectedRegionCard.competitiveUsdMt,
-                      defendedUsdMt: selectedRegionCard.defendedUsdMt,
+                      targetUsdMt: calculatorRegionCard.targetUsdMt,
+                      competitiveUsdMt: calculatorRegionCard.competitiveUsdMt,
+                      defendedUsdMt: calculatorRegionCard.defendedUsdMt,
                       useful: false,
                       verified: false,
                     };
                     setSavedScenarios((prev) => [...prev, record].slice(-50));
                   }}
                 >
-                  Save scenario
+                  Save quote setup
                 </button>
-                <div className="rounded-full border border-white/10 px-4 py-2 text-sm text-slate-300">
-                  Verified useful scenarios: {verifiedUsefulScenarios.length}
-                  {learnedTargetUsdMt != null ? ` | learned target ${learnedTargetUsdMt.toFixed(2)} / MT` : ""}
-                </div>
               </div>
-              <a href="/admin-pricing-guide.md" target="_blank" rel="noreferrer" className="mt-4 inline-block text-sm text-primary underline">
-                Open pricing guide and worked examples
-              </a>
             </div>
 
-            <div className="rounded-2xl border border-white/15 bg-card/60 p-6">
-              <p className="font-tech text-xs uppercase tracking-[0.22em] text-primary">Forecasts And History</p>
-              <h2 className="mt-2 text-xl font-display text-white">Live trend and next 5 days</h2>
-              <div className="mt-4 h-64">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={history}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                    <XAxis dataKey="time" stroke="#94a3b8" hide />
-                    <YAxis stroke="#94a3b8" />
-                    <Tooltip />
-                    <Line type="monotone" dataKey="Brent" stroke="#f59e0b" dot={false} />
-                    <Line type="monotone" dataKey="Dubai" stroke="#22d3ee" dot={false} />
-                  </LineChart>
-                </ResponsiveContainer>
+            <div className="grid content-end gap-3 sm:grid-cols-2 xl:grid-cols-2">
+              <div className="rounded-2xl border border-emerald-950/35 bg-[linear-gradient(145deg,rgba(5,10,20,0.56),rgba(10,30,18,0.3))] p-4 backdrop-blur-md">
+                <div className="text-[11px] uppercase tracking-[0.2em] text-slate-300">Market pulse</div>
+                <div className="mt-3 text-2xl font-display text-white">{snapshot?.marketPulse ?? "--"}</div>
+                <p className="mt-2 text-xs text-slate-400">Updated {updated}</p>
               </div>
-              <div className="mt-4 h-64">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={snapshot?.forecasts ?? []}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                    <XAxis dataKey="date" stroke="#94a3b8" />
-                    <YAxis stroke="#94a3b8" />
-                    <Tooltip />
-                    <Area type="monotone" dataKey="benchmarkUsdMt" stroke="#38bdf8" fill="#0ea5e9" fillOpacity={0.22} />
-                    <Area type="monotone" dataKey="expectedOfferUsdMt" stroke="#f97316" fill="#f97316" fillOpacity={0.18} />
-                  </AreaChart>
-                </ResponsiveContainer>
+              <div className="rounded-2xl border border-emerald-950/35 bg-[linear-gradient(145deg,rgba(5,10,20,0.56),rgba(10,30,18,0.3))] p-4 backdrop-blur-md">
+                <div className="text-[11px] uppercase tracking-[0.2em] text-slate-300">Active product</div>
+                <div className="mt-3 text-2xl font-display text-white">{inputs.selectedProduct}</div>
+                <p className="mt-2 text-xs text-slate-400">{selectedProductStrategy.quoteLabel}</p>
+              </div>
+              <div className="rounded-2xl border border-emerald-950/35 bg-[linear-gradient(145deg,rgba(5,10,20,0.56),rgba(10,30,18,0.3))] p-4 backdrop-blur-md">
+                <div className="text-[11px] uppercase tracking-[0.2em] text-slate-300">Selected benchmark</div>
+                <div className="mt-3 text-2xl font-display text-white">
+                  {selectedBenchmarkCard?.label ?? "--"}
+                </div>
+                <p className="mt-2 text-xs text-slate-400">{selectedProductStrategy.strategy}</p>
+              </div>
+              <div className="rounded-2xl border border-emerald-950/35 bg-[linear-gradient(145deg,rgba(5,10,20,0.56),rgba(10,30,18,0.3))] p-4 backdrop-blur-md">
+                <div className="text-[11px] uppercase tracking-[0.2em] text-slate-300">Verified memory</div>
+                <div className="mt-3 text-2xl font-display text-white">{verifiedUsefulScenarios.length}</div>
+                <p className="mt-2 text-xs text-slate-400">
+                  {learnedTargetUsdMt != null ? `Learned target ${learnedTargetUsdMt.toFixed(2)} / MT` : "No trusted learning points yet"}
+                </p>
               </div>
             </div>
           </div>
+          </div>
+        </div>
 
-          <div className="rounded-2xl border border-white/15 bg-card/60 p-6">
-            <p className="font-tech text-xs uppercase tracking-[0.22em] text-primary">Verified Scenario Memory</p>
-            <h2 className="mt-2 text-xl font-display text-white">Only useful and verified inputs influence later guidance</h2>
+        <div className="grid gap-5 xl:grid-cols-[0.94fr_1.06fr]">
+          <div className="rounded-2xl border border-white/12 bg-card/65 p-6">
+            <p className="font-tech text-xs uppercase tracking-[0.22em] text-primary">Market overview</p>
+            <h2 className="mt-2 text-2xl font-display text-white">Live benchmark board</h2>
             <p className="mt-2 text-sm text-slate-300">
-              Every calculator run can be saved. Only scenarios explicitly marked useful and verified are treated as trusted learning references.
+              The overview stays neutral. It shows the benchmark stack first, then every product quote is derived from one of these anchors.
             </p>
-            <div className="mt-4 grid gap-3">
-              {savedScenarios.length === 0 ? (
-                <div className="rounded-2xl border border-white/10 bg-black/10 p-4 text-sm text-slate-400">
-                  No saved scenarios yet.
-                </div>
-              ) : (
-                savedScenarios
-                  .slice()
-                  .reverse()
-                  .slice(0, 8)
-                  .map((scenario) => (
-                    <article key={scenario.id} className="rounded-2xl border border-white/10 bg-black/10 p-4">
-                      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                        <div>
-                          <p className="text-white">
-                            {scenario.region.toUpperCase()} | {scenario.inputs.volumeMt.toLocaleString()} MT | target ${scenario.targetUsdMt.toFixed(2)} / MT
-                          </p>
-                          <p className="mt-1 text-xs text-slate-500">
-                            Saved {new Date(scenario.createdAt).toLocaleString()} | benchmark {scenario.inputs.benchmark}
-                          </p>
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                          <button
-                            type="button"
-                            className={`rounded-full border px-3 py-1 text-[11px] uppercase tracking-[0.18em] ${scenario.useful ? "border-emerald-400/30 bg-emerald-500/10 text-emerald-100" : "border-white/10 text-slate-300"}`}
-                            onClick={() =>
-                              setSavedScenarios((prev) =>
-                                prev.map((item) =>
-                                  item.id === scenario.id ? { ...item, useful: !item.useful } : item,
-                                ),
-                              )
-                            }
-                          >
-                            {scenario.useful ? "Useful" : "Mark useful"}
-                          </button>
-                          <button
-                            type="button"
-                            className={`rounded-full border px-3 py-1 text-[11px] uppercase tracking-[0.18em] ${scenario.verified ? "border-cyan-400/30 bg-cyan-500/10 text-cyan-100" : "border-white/10 text-slate-300"}`}
-                            onClick={() =>
-                              setSavedScenarios((prev) =>
-                                prev.map((item) =>
-                                  item.id === scenario.id ? { ...item, verified: !item.verified } : item,
-                                ),
-                              )
-                            }
-                          >
-                            {scenario.verified ? "Verified" : "Mark verified"}
-                          </button>
-                        </div>
-                      </div>
-                    </article>
-                  ))
-              )}
+            <div className="mt-5 grid gap-3">
+              {benchmarkInsightCards.map((benchmark) => (
+                <button
+                  key={benchmark.key}
+                  type="button"
+                  onClick={() => setInputs((current) => ({ ...current, benchmark: benchmark.key, useBenchmarkBase: true, useManualBase: false }))}
+                  className={`rounded-2xl border p-4 text-left transition-colors ${
+                    inputs.benchmark === benchmark.key
+                      ? "border-primary/35 bg-primary/10"
+                      : "border-white/10 bg-black/10 hover:border-white/20"
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <p className="text-sm text-white">{benchmark.label}</p>
+                      <p className="mt-1 text-xs uppercase tracking-[0.18em] text-slate-400">{benchmark.statusLabel}</p>
+                    </div>
+                    <span className="rounded-full border border-white/10 px-2 py-1 text-[10px] uppercase tracking-[0.18em] text-slate-300">
+                      {benchmark.trend}
+                    </span>
+                  </div>
+                  <div className="mt-4 flex flex-wrap gap-6">
+                    <div>
+                      <div className="text-[11px] uppercase tracking-[0.16em] text-slate-500">USD / bbl</div>
+                      <div className="mt-1 text-xl font-display text-white">${benchmark.priceUsdPerBbl.toFixed(2)}</div>
+                    </div>
+                    <div>
+                      <div className="text-[11px] uppercase tracking-[0.16em] text-slate-500">USD / mt</div>
+                      <div className="mt-1 text-xl font-display text-white">${benchmark.priceUsdPerMt.toFixed(2)}</div>
+                    </div>
+                  </div>
+                  <p className="mt-3 text-xs text-slate-500">
+                    {benchmark.source} | {benchmark.symbol}
+                    {benchmark.note ? ` | ${benchmark.note}` : ""}
+                  </p>
+                </button>
+              ))}
+            </div>
+            <div className="mt-5 h-56">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={history}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                  <XAxis dataKey="time" stroke="#94a3b8" hide />
+                  <YAxis stroke="#94a3b8" />
+                  <Tooltip />
+                  <Line type="monotone" dataKey="Brent" stroke="#f59e0b" dot={false} />
+                  <Line type="monotone" dataKey="Dubai" stroke="#22d3ee" dot={false} />
+                </LineChart>
+              </ResponsiveContainer>
             </div>
           </div>
 
-          <div className="grid gap-5 xl:grid-cols-[1.15fr_0.85fr]">
-            <div className="rounded-2xl border border-white/15 bg-card/60 p-6">
-              <p className="font-tech text-xs uppercase tracking-[0.22em] text-primary">Region Negotiation Engine</p>
-              <h2 className="mt-2 text-xl font-display text-white">Closest trader working offers</h2>
-              <p className="mt-2 text-sm text-slate-300">
-                {marketEngine?.methodology ?? "Derived region pricing uses the selected benchmark structure, volume sensitivity, and typical premium plus freight behavior."}
-              </p>
-              <div className="mt-4 grid gap-4 lg:grid-cols-3">
-                {regionCards.map((card) => (
-                  <article
-                    key={card.region}
-                    className={`rounded-2xl border p-5 ${card.region === inputs.region ? "border-primary/40 bg-primary/10" : "border-white/10 bg-black/10"}`}
+          <div className="rounded-2xl border border-white/12 bg-card/65 p-6">
+            <p className="font-tech text-xs uppercase tracking-[0.22em] text-primary">Product workspace</p>
+            <h2 className="mt-2 text-2xl font-display text-white">Choose product, then shape the quote</h2>
+            <p className="mt-2 text-sm text-slate-300">
+              The workspace is product-first. Select the product you are actually pricing, then decide whether to use the benchmark, the live product quote, or a manual base.
+            </p>
+
+            <div className="mt-5 rounded-2xl border border-white/10 bg-black/10 p-4">
+              <div className="grid gap-2 md:grid-cols-5">
+                {PRODUCT_FAMILY_TABS.map((tab) => (
+                  <button
+                    key={tab.key}
+                    type="button"
+                    onClick={() => setActiveFamilyTab(tab.key)}
+                    className={`rounded-2xl border px-4 py-3 text-left transition-colors ${
+                      activeFamilyTab === tab.key
+                        ? "border-primary/35 bg-primary/10"
+                        : "border-white/10 bg-background/40 hover:border-white/20"
+                    }`}
+                  >
+                    <div className="text-sm text-white">{tab.label}</div>
+                    <div className="mt-1 text-[11px] uppercase tracking-[0.16em] text-slate-400">{tab.description}</div>
+                  </button>
+                ))}
+              </div>
+
+              <div className="mt-4 grid gap-3 xl:grid-cols-2">
+                {productWorkspaceRows.map((row) => (
+                  <button
+                    key={row.key}
+                    type="button"
+                    onClick={() =>
+                      setInputs((current) => ({
+                        ...current,
+                        selectedProduct: row.label,
+                        benchmark: PRODUCT_STRATEGIES[row.label]?.benchmark ?? current.benchmark,
+                        useManualBase: false,
+                      }))
+                    }
+                    className={`rounded-2xl border p-4 text-left transition-colors ${
+                      inputs.selectedProduct === row.label
+                        ? "border-primary/35 bg-primary/10"
+                        : "border-white/10 bg-background/40 hover:border-white/20"
+                    }`}
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <p className="text-sm font-medium text-white">{card.label}</p>
-                        <p className="mt-1 text-xs uppercase tracking-[0.18em] text-slate-400">{card.incoterm}</p>
+                        <p className="text-sm text-white">{row.label}</p>
+                        <p className="mt-1 text-xs uppercase tracking-[0.16em] text-slate-400">{row.benchmark}</p>
                       </div>
-                      <button
-                        type="button"
-                        className="rounded-full border border-white/10 px-3 py-1 text-[11px] uppercase tracking-[0.18em] text-slate-200"
-                        onClick={() => setInputs((v) => ({ ...v, region: card.region }))}
-                      >
-                        Use
-                      </button>
+                      <span className="rounded-full border border-white/10 px-2 py-1 text-[10px] uppercase tracking-[0.18em] text-slate-300">
+                        {row.source}
+                      </span>
                     </div>
-                    <div className="mt-4 grid gap-3">
-                      <div>
-                        <div className="text-[11px] uppercase tracking-[0.18em] text-slate-400">Competitive</div>
-                        <div className="text-2xl font-display text-white">${card.competitiveUsdMt.toFixed(2)}</div>
-                      </div>
-                      <div>
-                        <div className="text-[11px] uppercase tracking-[0.18em] text-slate-400">Target</div>
-                        <div className="text-2xl font-display text-white">${card.targetUsdMt.toFixed(2)}</div>
-                      </div>
-                      <div>
-                        <div className="text-[11px] uppercase tracking-[0.18em] text-slate-400">Defended</div>
-                        <div className="text-2xl font-display text-white">${card.defendedUsdMt.toFixed(2)}</div>
-                      </div>
-                    </div>
-                    <div className="mt-4 text-xs leading-6 text-slate-400">
-                      Base {card.baseUsdMt.toFixed(2)} + premium {card.premiumUsdMt.toFixed(2)} + freight {card.freightUsdMt.toFixed(2)} + logistics {card.logisticsUsdMt.toFixed(2)}
-                    </div>
-                    <p className="mt-3 text-xs leading-5 text-slate-500">{card.note}</p>
-                  </article>
+                    <div className="mt-3 text-2xl font-display text-white">${row.valueUsdMt.toFixed(2)}</div>
+                    <p className="mt-1 text-xs text-slate-500">{row.rawLabel}</p>
+                  </button>
                 ))}
               </div>
             </div>
 
-            <div className="rounded-2xl border border-white/15 bg-card/60 p-6">
-              <p className="font-tech text-xs uppercase tracking-[0.22em] text-primary">Base Oil Engine</p>
-              <h2 className="mt-2 text-xl font-display text-white">SN150 / SN500 derived desk ranges</h2>
+            <div className="mt-6 rounded-2xl border border-white/10 bg-black/10 p-5">
+              <div className="grid gap-4 lg:grid-cols-[0.92fr_1.08fr]">
+                <div className="space-y-4">
+                  <div className="rounded-2xl border border-white/10 bg-background/40 p-4">
+                    <div className="text-[11px] uppercase tracking-[0.18em] text-slate-400">Selected product strategy</div>
+                    <div className="mt-2 text-2xl font-display text-white">{selectedQuote?.product ?? "--"}</div>
+                    <p className="mt-2 text-sm text-slate-300">{selectedProductStrategy.strategy}</p>
+                    <p className="mt-3 text-[11px] uppercase tracking-[0.18em] text-slate-400">
+                      Mode: {selectedProductStrategy.family} | Output: {selectedProductStrategy.quoteLabel}
+                    </p>
+                  </div>
+
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <label className="grid gap-2 text-sm text-slate-200">
+                      Benchmark basis
+                      <select
+                        className="rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-white"
+                        value={inputs.benchmark}
+                        onChange={(e) => setInputs((current) => ({ ...current, benchmark: e.target.value as ManualInputs["benchmark"] }))}
+                      >
+                        <option value="brent">Brent</option>
+                        <option value="dubaiProxy">Dubai proxy</option>
+                        <option value="plattsEquivalent">Platts-equivalent</option>
+                      </select>
+                    </label>
+                    <label className="grid gap-2 text-sm text-slate-200">
+                      Region
+                      <select
+                        className="rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-white"
+                        value={inputs.region}
+                        onChange={(e) => setInputs((current) => ({ ...current, region: e.target.value as ManualInputs["region"] }))}
+                      >
+                        <option value="uae">UAE</option>
+                        <option value="india">India</option>
+                        <option value="ksa">KSA</option>
+                      </select>
+                    </label>
+                    <label className="grid gap-2 text-sm text-slate-200">
+                      Volume (MT)
+                      <input
+                        className="rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-white"
+                        type="number"
+                        min="1"
+                        value={inputs.volumeMt}
+                        onChange={(e) => setInputs((current) => ({ ...current, volumeMt: toInputNumber(e.target.value) || 1 }))}
+                      />
+                    </label>
+                    <label className="grid gap-2 text-sm text-slate-200">
+                      Manual base override
+                      <input
+                        className="rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-white"
+                        type="number"
+                        value={inputs.manualBaseUsdMt}
+                        onChange={(e) => setInputs((current) => ({ ...current, manualBaseUsdMt: toInputNumber(e.target.value) }))}
+                      />
+                    </label>
+                  </div>
+
+                  <div className="grid gap-3">
+                    {[
+                      ["brokerPremiumUsdMt", "Broker premium"],
+                      ["freightUsdMt", "Freight"],
+                      ["dubaiDifferentialUsdMt", "Benchmark differential"],
+                      ["densityAdjustmentUsdMt", "Quality / density"],
+                      ["marginUsdMt", "Margin"],
+                    ].map(([key, label]) => (
+                      <label key={key} className="grid gap-2 text-sm text-slate-200">
+                        {label} (USD/MT)
+                        <input
+                          className="rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-white"
+                          type="number"
+                          value={inputs[key as keyof ManualInputs] as number}
+                          onChange={(e) => setInputs((current) => ({ ...current, [key]: toInputNumber(e.target.value) }))}
+                        />
+                      </label>
+                    ))}
+                  </div>
+
+                  <div className="flex flex-wrap gap-3">
+                    <label className="flex items-center gap-3 text-sm text-slate-200">
+                      <input
+                        type="checkbox"
+                        checked={inputs.useBenchmarkBase}
+                        onChange={(e) => setInputs((current) => ({ ...current, useBenchmarkBase: e.target.checked }))}
+                      />
+                      Use selected benchmark as base
+                    </label>
+                    <label className="flex items-center gap-3 text-sm text-slate-200">
+                      <input
+                        type="checkbox"
+                        checked={inputs.useManualBase}
+                        onChange={(e) => setInputs((current) => ({ ...current, useManualBase: e.target.checked }))}
+                      />
+                      Use manual base instead
+                    </label>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="rounded-2xl border border-emerald-400/20 bg-emerald-500/10 p-4">
+                      <div className="text-[11px] uppercase tracking-[0.18em] text-emerald-200">Competitive level</div>
+                      <div className="mt-2 text-3xl font-display text-white">${formatUsd(calculatorRegionCard.competitiveUsdMt)} / MT</div>
+                      <p className="mt-2 text-sm text-emerald-50">
+                        Base {formatUsd(calculatorRegionCard.baseUsdMt)} + premium {formatUsd(calculatorRegionCard.premiumUsdMt)} + freight {formatUsd(calculatorRegionCard.freightUsdMt)} + logistics {formatUsd(calculatorRegionCard.logisticsUsdMt)}
+                      </p>
+                    </div>
+                    <div className="rounded-2xl border border-amber-400/20 bg-amber-500/10 p-4">
+                      <div className="text-[11px] uppercase tracking-[0.18em] text-amber-200">Target quote</div>
+                      <div className="mt-2 text-3xl font-display text-white">${formatUsd(calculatorRegionCard.targetUsdMt)} / MT</div>
+                      <p className="mt-2 text-sm text-amber-50">${offerUsdBbl.toFixed(2)} / bbl equivalent | {calculatorRegionCard.incoterm}</p>
+                    </div>
+                  </div>
+
+                  <div className={`rounded-2xl border p-4 ${offerAssessment.colorClass}`}>
+                    <div className="text-[11px] uppercase tracking-[0.18em]">Assessment</div>
+                    <div className="mt-2 text-2xl font-display">{offerAssessment.label}</div>
+                    <p className="mt-2 text-sm opacity-90">{offerAssessment.detail}</p>
+                    <p className="mt-2 text-xs uppercase tracking-[0.16em] opacity-80">{offerAssessment.suggestion}</p>
+                  </div>
+
+                  <div className="grid gap-4 md:grid-cols-3">
+                    <div className="rounded-2xl border border-white/10 bg-black/10 p-4">
+                      <div className="text-[11px] uppercase tracking-[0.18em] text-slate-400">Base input</div>
+                      <div className="mt-2 text-2xl font-display text-white">${formatUsd(baseUsdMt)}</div>
+                      <p className="mt-2 text-xs text-slate-500">{inputs.useManualBase ? "Manual base" : inputs.useBenchmarkBase ? selectedBenchmarkCard?.label : selectedQuote?.product}</p>
+                    </div>
+                    <div className="rounded-2xl border border-white/10 bg-black/10 p-4">
+                      <div className="text-[11px] uppercase tracking-[0.18em] text-slate-400">Defended level</div>
+                      <div className="mt-2 text-2xl font-display text-white">${formatUsd(calculatorRegionCard.defendedUsdMt)}</div>
+                      <p className="mt-2 text-xs text-slate-500">Use only if urgency, quality, or logistics justify the spread.</p>
+                    </div>
+                    <div className="rounded-2xl border border-white/10 bg-black/10 p-4">
+                      <div className="text-[11px] uppercase tracking-[0.18em] text-slate-400">Desk note</div>
+                      <div className="mt-2 text-sm leading-6 text-slate-300">{selectedRegionCard?.note ?? REGION_PRESETS[inputs.region].note}</div>
+                    </div>
+                  </div>
+
+                  <div className="h-60 rounded-2xl border border-white/10 bg-black/10 p-3">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={breakdownData}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                        <XAxis dataKey="name" stroke="#94a3b8" />
+                        <YAxis stroke="#94a3b8" />
+                        <Tooltip />
+                        <Bar dataKey="value" fill="#22c55e" radius={[8, 8, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid gap-5 xl:grid-cols-[1.08fr_0.92fr]">
+          <div className="rounded-2xl border border-white/12 bg-card/65 p-6">
+            <p className="font-tech text-xs uppercase tracking-[0.22em] text-primary">Regional validation</p>
+            <h2 className="mt-2 text-2xl font-display text-white">Closest trader bands by destination</h2>
+            <p className="mt-2 text-sm text-slate-300">
+              These are supporting regional guardrails. They stay separate from the quote builder so the desk can compare its working number against likely market acceptance.
+            </p>
+            <div className="mt-5 grid gap-4 lg:grid-cols-3">
+              {regionCards.map((card) => (
+                <button
+                  key={card.region}
+                  type="button"
+                  onClick={() => setInputs((current) => ({ ...current, region: card.region }))}
+                  className={`rounded-2xl border p-5 text-left transition-colors ${
+                    card.region === inputs.region
+                      ? "border-primary/35 bg-primary/10"
+                      : "border-white/10 bg-black/10 hover:border-white/20"
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm text-white">{card.label}</p>
+                      <p className="mt-1 text-xs uppercase tracking-[0.18em] text-slate-400">{card.incoterm}</p>
+                    </div>
+                    <span className="rounded-full border border-white/10 px-2 py-1 text-[10px] uppercase tracking-[0.18em] text-slate-300">Use</span>
+                  </div>
+                  <div className="mt-4 grid gap-3">
+                    <div>
+                      <div className="text-[11px] uppercase tracking-[0.16em] text-slate-500">Competitive</div>
+                      <div className="mt-1 text-2xl font-display text-white">${card.competitiveUsdMt.toFixed(2)}</div>
+                    </div>
+                    <div>
+                      <div className="text-[11px] uppercase tracking-[0.16em] text-slate-500">Target</div>
+                      <div className="mt-1 text-2xl font-display text-white">${card.targetUsdMt.toFixed(2)}</div>
+                    </div>
+                    <div>
+                      <div className="text-[11px] uppercase tracking-[0.16em] text-slate-500">Defended</div>
+                      <div className="mt-1 text-2xl font-display text-white">${card.defendedUsdMt.toFixed(2)}</div>
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+            <div className="mt-5 h-56 rounded-2xl border border-white/10 bg-black/10 p-3">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={variationData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                  <XAxis dataKey="name" stroke="#94a3b8" />
+                  <YAxis stroke="#94a3b8" />
+                  <Tooltip />
+                  <Bar dataKey="offer" fill="#f59e0b" radius={[8, 8, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          <div className="space-y-5">
+            <div className="rounded-2xl border border-white/12 bg-card/65 p-6">
+              <p className="font-tech text-xs uppercase tracking-[0.22em] text-primary">Base oil desk</p>
+              <h2 className="mt-2 text-2xl font-display text-white">Derived base oil view</h2>
               <p className="mt-2 text-sm text-slate-300">
-                Virgin and RC lines are derived from today&apos;s gasoil and Brent structure. They are working desk references for negotiation prep, not licensed spot assessments.
+                Base oils stay as a distinct module. They are derived from benchmark structure, not treated as the center of the whole dashboard.
               </p>
-              <div className="mt-4 grid gap-4">
-                {baseOilOffers.map((oil) => (
+              <div className="mt-5 grid gap-3">
+                {filteredBaseOilOffers.map((oil) => (
                   <article key={oil.slug} className="rounded-2xl border border-white/10 bg-black/10 p-4">
                     <div className="flex items-start justify-between gap-3">
                       <div>
@@ -907,30 +1169,84 @@ export default function AdminDashboard({ shellless = false }: AdminDashboardProp
                       <span className="rounded-full border border-white/10 px-2 py-1 text-[10px] uppercase tracking-[0.18em] text-slate-300">{oil.family}</span>
                     </div>
                     <div className="mt-3 text-2xl font-display text-white">${oil.priceUsdMt.toFixed(2)} / MT</div>
-                    <div className="mt-1 text-sm text-slate-300">
-                      Range ${oil.lowUsdMt.toFixed(2)} - ${oil.highUsdMt.toFixed(2)}
-                    </div>
-                    <p className="mt-2 text-xs leading-5 text-slate-500">{oil.note}</p>
+                    <p className="mt-1 text-sm text-slate-300">Range ${oil.lowUsdMt.toFixed(2)} - ${oil.highUsdMt.toFixed(2)}</p>
                   </article>
                 ))}
               </div>
             </div>
+
+            <div className="rounded-2xl border border-white/12 bg-card/65 p-6">
+              <p className="font-tech text-xs uppercase tracking-[0.22em] text-primary">Saved work</p>
+              <h2 className="mt-2 text-2xl font-display text-white">Verified scenario memory</h2>
+              <div className="mt-4 grid gap-3">
+                {savedScenarios.length === 0 ? (
+                  <div className="rounded-2xl border border-white/10 bg-black/10 p-4 text-sm text-slate-400">
+                    No saved scenarios yet.
+                  </div>
+                ) : (
+                  savedScenarios
+                    .slice()
+                    .reverse()
+                    .slice(0, 4)
+                    .map((scenario) => (
+                      <article key={scenario.id} className="rounded-2xl border border-white/10 bg-black/10 p-4">
+                        <p className="text-white">
+                          {scenario.region.toUpperCase()} | {scenario.inputs.selectedProduct} | ${scenario.targetUsdMt.toFixed(2)} / MT
+                        </p>
+                        <p className="mt-1 text-xs text-slate-500">
+                          {new Date(scenario.createdAt).toLocaleString()} | benchmark {scenario.inputs.benchmark}
+                        </p>
+                      </article>
+                    ))
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid gap-5 xl:grid-cols-[1.02fr_0.98fr]">
+          <div className="rounded-2xl border border-white/12 bg-card/65 p-6">
+            <p className="font-tech text-xs uppercase tracking-[0.22em] text-primary">Market context</p>
+            <h2 className="mt-2 text-2xl font-display text-white">News that matters for the desk</h2>
+            <p className="mt-2 text-sm text-slate-300">
+              Market drivers are kept concise. The admin should not read like a media feed; it should show only enough context to support today&apos;s quote.
+            </p>
+            <div className="mt-5 grid gap-3">
+              {marketNews.length === 0 ? (
+                <div className="rounded-2xl border border-white/10 bg-black/10 p-4 text-sm text-slate-400">
+                  News feed is temporarily unavailable.
+                </div>
+              ) : (
+                marketNews.slice(0, 4).map((item) => (
+                  <a
+                    key={`${item.source}-${item.link}`}
+                    href={item.link}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="rounded-2xl border border-white/10 bg-black/10 p-4 transition-colors hover:border-white/20"
+                  >
+                    <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                      <p className="text-white">{item.title}</p>
+                      <span className="text-xs uppercase tracking-[0.18em] text-slate-400">{item.source}</span>
+                    </div>
+                    <p className="mt-2 text-xs text-slate-500">{new Date(item.publishedAt).toLocaleString()}</p>
+                  </a>
+                ))
+              )}
+            </div>
           </div>
 
-          <div className="rounded-2xl border border-white/15 bg-card/60 p-6">
-            <p className="font-tech text-xs uppercase tracking-[0.22em] text-primary">Source Stack</p>
-            <h2 className="mt-2 text-xl font-display text-white">Live references used by the calculator engine</h2>
-            <p className="mt-2 text-sm text-slate-300">
-              The engine is not limited to one or two sites. It combines live APIs, rotating energy-news feeds, and public reference sources so calculations can be checked against a wider market context without confusing references with licensed backend data.
-            </p>
-            <div className="mt-4 grid gap-4 md:grid-cols-3">
+          <div className="rounded-2xl border border-white/12 bg-card/65 p-6">
+            <p className="font-tech text-xs uppercase tracking-[0.22em] text-primary">Coverage & sources</p>
+            <h2 className="mt-2 text-2xl font-display text-white">Reference stack behind the desk</h2>
+            <div className="mt-5 grid gap-3 md:grid-cols-2">
               {sourceCatalog.map((source) => (
                 <a
                   key={source.name}
                   href={source.url}
                   target="_blank"
                   rel="noreferrer"
-                  className="rounded-2xl border border-white/10 bg-black/10 p-4 transition-colors hover:border-primary/30 hover:bg-primary/5"
+                  className="rounded-2xl border border-white/10 bg-black/10 p-4 transition-colors hover:border-white/20"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div>
@@ -943,180 +1259,26 @@ export default function AdminDashboard({ shellless = false }: AdminDashboardProp
                 </a>
               ))}
             </div>
-          </div>
-
-          <div className="rounded-2xl border border-white/15 bg-card/60 p-6">
-            <p className="font-tech text-xs uppercase tracking-[0.22em] text-primary">Market Drivers</p>
-            <h2 className="mt-2 text-xl font-display text-white">Same-day energy news used alongside pricing context</h2>
-            <p className="mt-2 text-sm text-slate-300">
-              Each pricing run pairs the regional engine with fresh oil and gas headlines from major energy publications, so negotiations can be read against the current market tone rather than price alone.
-            </p>
-            <div className="mt-4 grid gap-3">
-              {marketNews.length === 0 ? (
-                <div className="rounded-2xl border border-white/10 bg-black/10 p-4 text-sm text-slate-400">
-                  News feed is temporarily unavailable.
-                </div>
-              ) : (
-                marketNews.slice(0, 6).map((item) => (
-                  <a
-                    key={`${item.source}-${item.link}`}
-                    href={item.link}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="rounded-2xl border border-white/10 bg-black/10 p-4 transition-colors hover:border-primary/30 hover:bg-primary/5"
-                  >
-                    <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
-                      <p className="text-white">{item.title}</p>
-                      <span className="text-xs uppercase tracking-[0.18em] text-slate-400">{item.source}</span>
-                    </div>
-                    <p className="mt-2 text-xs text-slate-500">{new Date(item.publishedAt).toLocaleString()}</p>
-                  </a>
-                ))
-              )}
-            </div>
-          </div>
-
-          <div className="grid gap-5 lg:grid-cols-2">
-            <div className="rounded-2xl border border-white/15 bg-card/60 p-6">
-              <p className="font-tech text-xs uppercase tracking-[0.22em] text-primary">Deal Formula</p>
-              <div className="mt-4 grid gap-4 md:grid-cols-3">
-                <div className="rounded-2xl border border-white/10 bg-black/10 p-4">
-                  <div className="text-[11px] uppercase tracking-[0.22em] text-slate-400">Base price input</div>
-                  <div className="mt-2 text-2xl font-display text-white">${selectedRegionCard?.baseUsdMt.toFixed(2) ?? baseUsdMt.toFixed(2)}</div>
-                  <p className="mt-2 text-xs text-slate-500">The engine uses {marketEngine?.baseReferenceLabel ?? "the selected benchmark"} as the core reference before regional premium, freight, and logistics are applied.</p>
-                </div>
-                <div className="rounded-2xl border border-white/10 bg-black/10 p-4">
-                  <div className="text-[11px] uppercase tracking-[0.22em] text-slate-400">Broker Quote</div>
-                  <div className="mt-2 text-2xl font-display text-white">${selectedRegionCard?.premiumUsdMt.toFixed(2) ?? inputs.brokerPremiumUsdMt.toFixed(2)}</div>
-                  <p className="mt-2 text-xs text-slate-500">Prompt market spread or negotiated premium/discount.</p>
-                </div>
-                <div className="rounded-2xl border border-white/10 bg-black/10 p-4">
-                  <div className="text-[11px] uppercase tracking-[0.22em] text-slate-400">Freight</div>
-                  <div className="mt-2 text-2xl font-display text-white">${selectedRegionCard?.freightUsdMt.toFixed(2) ?? inputs.freightUsdMt.toFixed(2)}</div>
-                  <p className="mt-2 text-xs text-slate-500">Shipping, inland, or prompt logistics cost used in the deal.</p>
-                </div>
-              </div>
-              <div className="mt-4 rounded-2xl border border-primary/20 bg-primary/10 p-4 text-sm text-white">
-                <span className="font-tech text-xs uppercase tracking-[0.22em] text-primary">Formula</span>
-                <div className="mt-2 text-lg">Base Price + Broker Quote + Freight + Logistics = <span className="font-display">${selectedRegionCard?.targetUsdMt.toFixed(2) ?? coreDealUsdMt.toFixed(2)} / MT</span></div>
-                <div className="mt-2 text-xs uppercase tracking-[0.18em] text-slate-200">
-                  Transaction currency: {TRANSACTION_CURRENCY}
-                </div>
-              </div>
-              <div className="mt-4 grid gap-3 md:grid-cols-3">
-                <div className="rounded-2xl border border-white/10 bg-black/10 p-4">
-                  <div className="text-[11px] uppercase tracking-[0.18em] text-slate-400">Low / aggressive</div>
-                  <div className="mt-2 text-2xl font-display text-white">${selectedRegionCard?.competitiveUsdMt.toFixed(2) ?? "--"}</div>
-                </div>
-                <div className="rounded-2xl border border-white/10 bg-black/10 p-4">
-                  <div className="text-[11px] uppercase tracking-[0.18em] text-slate-400">Target / common</div>
-                  <div className="mt-2 text-2xl font-display text-white">${selectedRegionCard?.targetUsdMt.toFixed(2) ?? "--"}</div>
-                </div>
-                <div className="rounded-2xl border border-white/10 bg-black/10 p-4">
-                  <div className="text-[11px] uppercase tracking-[0.18em] text-slate-400">High / defended</div>
-                  <div className="mt-2 text-2xl font-display text-white">${selectedRegionCard?.defendedUsdMt.toFixed(2) ?? "--"}</div>
-                </div>
-              </div>
-            </div>
-            <div className="rounded-2xl border border-white/15 bg-card/60 p-6">
-              <p className="font-tech text-xs uppercase tracking-[0.22em] text-primary">Offer Breakdown</p>
-              <div className="mt-4 h-72">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={breakdownData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                    <XAxis dataKey="name" stroke="#94a3b8" />
-                    <YAxis stroke="#94a3b8" />
-                    <Tooltip />
-                    <Bar dataKey="value" fill="#22c55e" radius={[8, 8, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-            <div className="rounded-2xl border border-white/15 bg-card/60 p-6">
-              <p className="font-tech text-xs uppercase tracking-[0.22em] text-primary">Variations</p>
-              <div className="mt-4 h-72">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={variationData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                    <XAxis dataKey="name" stroke="#94a3b8" />
-                    <YAxis stroke="#94a3b8" />
-                    <Tooltip />
-                    <Bar dataKey="offer" fill="#f59e0b" radius={[8, 8, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-white/15 bg-card/60 p-6">
-            <p className="font-tech text-xs uppercase tracking-[0.22em] text-primary">UAE And KSA Proxy Table</p>
-            <h2 className="mt-2 text-xl font-display text-white">Derived pricing references</h2>
-            <p className="mt-2 text-sm text-slate-300">
-              Premiums and factors below are working desk assumptions. UAE uses slightly stronger middle-distillate and black-oil realizations around Fujairah and prompt export corridors. KSA uses slightly wider inland/export adjustments.
-            </p>
-            <div className="mt-4 overflow-x-auto">
-              <table className="w-full min-w-[860px] border-separate border-spacing-y-3 text-sm text-slate-300">
-                <thead>
-                  <tr className="text-left text-xs uppercase tracking-[0.18em] text-slate-400">
-                    <th className="px-3">Product</th>
-                    <th className="px-3">Benchmark</th>
-                    <th className="px-3">Formula</th>
-                    <th className="px-3">UAE Factor/Premium</th>
-                    <th className="px-3">UAE Result</th>
-                    <th className="px-3">KSA Factor/Premium</th>
-                    <th className="px-3">KSA Result</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {regionalProxyTable.map((row) => (
-                    <tr key={row.product} className="rounded-2xl bg-black/10">
-                      <td className="px-3 py-3 font-medium text-white">{row.product}</td>
-                      <td className="px-3 py-3">{row.benchmark}</td>
-                      <td className="px-3 py-3">{row.formula}</td>
-                      <td className="px-3 py-3">{row.uaeParameter}</td>
-                      <td className="px-3 py-3 text-white">${row.uaeResult.toFixed(2)} {row.unit}</td>
-                      <td className="px-3 py-3">{row.ksaParameter}</td>
-                      <td className="px-3 py-3 text-white">${row.ksaResult.toFixed(2)} {row.unit}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <div className="mt-4 grid gap-3 md:grid-cols-2">
-              <div className="rounded-2xl border border-white/10 bg-black/10 p-4 text-sm text-slate-300">
-                <div className="text-[11px] uppercase tracking-[0.22em] text-slate-400">How premiums are derived</div>
-                <p className="mt-2">Diesel and kerosene premiums are added over the nearest live middle-distillate proxy because logistics, sulfur/spec, and regional promptness usually price as a spread over gasoil or heating oil, not directly over crude.</p>
-              </div>
-              <div className="rounded-2xl border border-white/10 bg-black/10 p-4 text-sm text-slate-300">
-                <div className="text-[11px] uppercase tracking-[0.22em] text-slate-400">How factors are derived</div>
-                <p className="mt-2">Naphtha and recovery oil factors are crude-linked yield/value assumptions. Naphtha is usually a light-end fraction below Brent on a per-ton basis. Recovery black oil trades at a deeper discount because of quality, handling, and downstream recovery limits.</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-white/15 bg-secondary/70 p-6">
-            <p className="font-tech text-xs uppercase tracking-[0.22em] text-primary">Market Coverage</p>
-            <h2 className="mt-2 text-xl font-display text-white">All available oil and energy prices</h2>
-            <div className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {quotes.map((quote) => (
-                <article key={quote.product} className="rounded-2xl border border-white/10 bg-black/10 p-4">
+            <div className="mt-5 grid gap-3">
+              {regionalProxyTable.slice(0, 3).map((row) => (
+                <div key={row.product} className="rounded-2xl border border-white/10 bg-black/10 p-4">
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <p className="text-sm font-medium text-white">{quote.product}</p>
-                      <p className="mt-1 text-xs text-slate-400">{quote.benchmark}</p>
+                      <p className="text-white">{row.product}</p>
+                      <p className="mt-1 text-xs uppercase tracking-[0.18em] text-slate-400">{row.formula}</p>
                     </div>
-                    <span className="rounded-full bg-white/10 px-2 py-1 text-[10px] uppercase tracking-[0.18em] text-slate-300">{quote.source}</span>
+                    <span className="rounded-full border border-white/10 px-2 py-1 text-[10px] uppercase tracking-[0.18em] text-slate-300">{row.benchmark}</span>
                   </div>
-                  <p className="mt-3 text-2xl font-display text-white">${quote.price.toFixed(2)}</p>
-                  <p className="text-sm text-slate-300">{quote.unit} | raw {quote.rawPrice.toFixed(quote.rawUnit === "USD/gal" ? 4 : quote.rawUnit === "USD/MMBtu" ? 3 : 2)} {quote.rawUnit}</p>
-                  {quote.note ? <p className="mt-2 text-xs leading-5 text-slate-500">{quote.note}</p> : null}
-                </article>
+                  <p className="mt-3 text-sm text-slate-300">
+                    UAE ${row.uaeResult.toFixed(2)} {row.unit} | KSA ${row.ksaResult.toFixed(2)} {row.unit}
+                  </p>
+                </div>
               ))}
             </div>
-            <p className="mt-4 text-xs text-slate-400">Direct live inputs come from configured IG markets and benchmark APIs when available. Dubai/Platts-linked and refinery-specific gaps fall back to clearly marked proxy or derived estimates instead of empty tiles.</p>
           </div>
         </div>
-      </section>
+      </div>
+    </section>
   );
 
   if (shellless) {

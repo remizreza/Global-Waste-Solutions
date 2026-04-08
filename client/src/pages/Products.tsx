@@ -23,11 +23,23 @@ export default function Products() {
         <div className="container mx-auto relative z-10 max-w-6xl">
           <ScrollStage className="mb-14" direction="right">
           <motion.div
-            className="section-shell mb-14 rounded-[1.75rem] px-6 py-10 text-center sm:px-10"
+            className="section-shell relative mb-14 overflow-hidden rounded-[1.75rem] px-6 py-10 text-center sm:px-10"
             initial="hidden"
             animate="visible"
             variants={revealMask(28)}
           >
+            <video
+              className="bg-video-smooth absolute inset-0 h-full w-full object-cover opacity-26"
+              src="/assets/products-port-bg-web.mp4"
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="metadata"
+            />
+            <div className="absolute inset-0 bg-[linear-gradient(135deg,rgba(5,9,20,0.84),rgba(7,12,24,0.68)_45%,rgba(28,18,10,0.66))]" />
+            <div className="absolute inset-0 bg-grid-pattern opacity-[0.05]" />
+            <div className="relative z-10">
             <p className="section-label mb-5 text-sm">
               TRADING & SUPPLY ACCESS
             </p>
@@ -37,6 +49,7 @@ export default function Products() {
             <p className="text-gray-300 max-w-3xl mx-auto">
               Structured sourcing, supply coordination, and logistics support for strategic industrial commodities across GCC corridors.
             </p>
+            </div>
           </motion.div>
           </ScrollStage>
 

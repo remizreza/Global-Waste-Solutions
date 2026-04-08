@@ -145,27 +145,44 @@ export default function TraderDashboard() {
 
   return (
     <SiteLayout>
-      <section className="min-h-screen px-6 pb-16 pt-32">
-        <div className="container mx-auto flex max-w-7xl flex-col gap-6">
-          <div className="overflow-hidden rounded-[2rem] border border-white/15 bg-[linear-gradient(135deg,rgba(7,30,44,0.96),rgba(8,48,64,0.78)_50%,rgba(64,48,18,0.68))] p-7 shadow-[0_30px_80px_rgba(0,0,0,0.28)]">
-            <p className="mb-3 font-tech text-xs uppercase tracking-[0.26em] text-primary">Public Live Price Board</p>
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+      <section className="relative min-h-screen overflow-hidden px-6 pb-16 pt-32">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(16,42,58,0.16),transparent_34%),linear-gradient(180deg,rgba(4,8,18,0.98),rgba(5,10,22,0.94)_42%,rgba(10,14,24,0.98))]" />
+        <div className="pointer-events-none absolute inset-0 bg-grid-pattern opacity-[0.035]" />
+        <div className="pointer-events-none absolute inset-y-0 left-[8%] hidden w-px bg-white/8 lg:block" />
+        <div className="pointer-events-none absolute inset-y-0 right-[8%] hidden w-px bg-white/6 lg:block" />
+        <div className="container relative z-10 mx-auto flex max-w-7xl flex-col gap-6">
+          <div className="relative overflow-hidden rounded-[2rem] border border-white/15 shadow-[0_30px_80px_rgba(0,0,0,0.28)]">
+            <video
+              className="bg-video-smooth absolute inset-0 h-full w-full scale-[1.03] object-cover saturate-[1.08] contrast-[1.04] brightness-[0.92]"
+              src="/assets/admin-yard-bg.mp4"
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="auto"
+            />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_78%_24%,rgba(242,135,55,0.22),transparent_24%),radial-gradient(circle_at_18%_32%,rgba(66,123,255,0.16),transparent_26%),linear-gradient(112deg,rgba(5,12,22,0.3),rgba(6,13,24,0.12)_28%,rgba(6,14,24,0.44)_56%,rgba(7,14,24,0.78)_82%,rgba(8,16,28,0.9))]" />
+            <div className="absolute inset-0 bg-grid-pattern opacity-[0.045]" />
+            <div className="absolute inset-x-0 top-0 h-24 bg-[linear-gradient(180deg,rgba(255,255,255,0.12),transparent)]" />
+            <div className="absolute inset-y-0 left-[42%] hidden w-px bg-white/10 xl:block" />
+            <div className="relative z-10 p-7">
               <div className="max-w-3xl">
+                <p className="mb-3 font-tech text-xs uppercase tracking-[0.26em] text-primary">Public Live Price Board</p>
                 <h1 className="text-3xl font-display text-white md:text-5xl">REDOXY live benchmark board.</h1>
                 <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-200">
                   Public view shows live benchmark direction plus one locked Platts-linked gasoil reference. Use Brent for market direction and the Platts-linked base for actual middle-distillate negotiation.
                 </p>
               </div>
-              <div className="grid gap-3 text-sm text-slate-200 sm:grid-cols-3">
-                <div className="rounded-2xl border border-white/10 bg-black/15 px-4 py-3">
+              <div className="mt-8 grid gap-3 text-sm text-slate-200 sm:grid-cols-3">
+                <div className="rounded-2xl border border-white/10 bg-[linear-gradient(145deg,rgba(5,10,20,0.6),rgba(10,20,32,0.34))] px-4 py-3 backdrop-blur-md">
                   <div className="text-[11px] uppercase tracking-[0.22em] text-slate-300">Updated</div>
                   <div className="mt-1 text-white">{updated}</div>
                 </div>
-                <div className="rounded-2xl border border-white/10 bg-black/15 px-4 py-3">
+                <div className="rounded-2xl border border-white/10 bg-[linear-gradient(145deg,rgba(5,10,20,0.6),rgba(10,20,32,0.34))] px-4 py-3 backdrop-blur-md">
                   <div className="text-[11px] uppercase tracking-[0.22em] text-slate-300">Market Pulse</div>
                   <div className="mt-1 text-white">{snapshot.marketPulse}</div>
                 </div>
-                <div className="rounded-2xl border border-white/10 bg-black/15 px-4 py-3">
+                <div className="rounded-2xl border border-white/10 bg-[linear-gradient(145deg,rgba(5,10,20,0.6),rgba(10,20,32,0.34))] px-4 py-3 backdrop-blur-md">
                   <div className="text-[11px] uppercase tracking-[0.22em] text-slate-300">Desk Activity</div>
                   <div className="mt-1 text-white">{snapshot.tradersOnline} traders online</div>
                 </div>

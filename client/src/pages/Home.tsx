@@ -31,6 +31,7 @@ import type { MotionValue } from "framer-motion";
 const heroHeading = "Sustainable Industrial & Energy Solutions".split(" ");
 const heroTagline = "Integrated industrial, environmental, and trading services across GCC, Asia, and Africa".split(" ");
 const heroVideoSrc = "/assets/hero-introduction.mp4";
+const heroHeadlineVariants = staggerContainer(0.16, 0.08);
 
 function HeroTaglineWord({
   word,
@@ -424,9 +425,16 @@ export default function Home() {
               filter: heroCardFilter,
             }}
           >
+            <motion.h1 variants={heroHeadlineVariants} className="mx-auto max-w-4xl text-balance text-center text-4xl font-display leading-[0.94] text-white sm:text-5xl lg:text-7xl">
+              Sustainable Industrial Growth
+            </motion.h1>
+            <motion.p
+              variants={fadeIn}
+              className="mx-auto mt-5 max-w-3xl text-balance text-center text-base leading-7 text-slate-200 sm:text-lg"
+            >
             Integrated industrial, environmental, and trading services across GCC, Asia, and Africa.
-          </motion.p>
-          <motion.div variants={fadeIn} className="flex flex-col sm:flex-row gap-4 justify-center">
+            </motion.p>
+            <motion.div variants={fadeIn} className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href={pageLinks.services} className="btn-premium magnetic-button" data-premium-interactive data-premium-mode="magnetic">
                 Explore Our Services <ArrowRight className="w-4 h-4" />
               </Link>
@@ -436,6 +444,7 @@ export default function Home() {
                 data-premium-mode="magnetic">
                 Learn About The Group
               </Link>
+            </motion.div>
           </motion.div>
         </motion.div>
       </section>
@@ -632,7 +641,7 @@ export default function Home() {
             <Link href={pageLinks.technology} className="btn-premium-outline mt-5 !px-4 !py-2 !text-xs !font-tech magnetic-button">
                 See Our Technology
               </Link>
-          </div>
+          </motion.div>
           <motion.div
             className="grid items-start gap-4 sm:grid-cols-2 lg:col-span-7 lg:grid-cols-12"
             initial="hidden"
