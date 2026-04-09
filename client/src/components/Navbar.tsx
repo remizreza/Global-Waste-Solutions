@@ -41,7 +41,7 @@ export default function Navbar() {
     <nav
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         scrolled
-          ? "nav-glass border-b border-emerald-950/40 shadow-[0_12px_38px_rgba(4,14,10,0.42)]"
+          ? "nav-glass border-b border-emerald-950/25 shadow-[0_12px_38px_rgba(4,14,10,0.32)]"
           : "bg-transparent"
       }`}
     >
@@ -83,7 +83,7 @@ export default function Navbar() {
               </Link>
             ))}
           </div>
-          <div className="flex items-center gap-4 rounded-full border border-emerald-900/35 bg-[linear-gradient(145deg,rgba(6,16,28,0.76),rgba(10,34,16,0.52))] px-5 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
+          <div className="flex items-center gap-4 rounded-full border border-emerald-900/22 bg-[linear-gradient(145deg,rgba(6,16,28,0.76),rgba(9,24,18,0.38))] px-5 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
             {utilityNavItems.map((item) => (
               <Link
                 key={item.href}
@@ -117,7 +117,7 @@ export default function Navbar() {
             animate={reduceMotion ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
             exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -8, scale: 0.98 }}
             transition={{ duration: motionDuration.ui, ease: MOTION_EASE }}
-            className="lg:hidden mx-4 mt-2 origin-top rounded-[1.4rem] border border-emerald-950/40 bg-[linear-gradient(155deg,rgba(6,16,28,0.94),rgba(10,34,16,0.88))] backdrop-blur-xl"
+            className="lg:hidden mx-4 mt-2 origin-top rounded-[1.4rem] border border-emerald-950/25 bg-[linear-gradient(155deg,rgba(6,16,28,0.94),rgba(8,22,18,0.84))] backdrop-blur-xl"
           >
             <motion.div
               className="flex flex-col p-6 gap-4"

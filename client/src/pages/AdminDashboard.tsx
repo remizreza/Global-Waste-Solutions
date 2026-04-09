@@ -702,7 +702,7 @@ export default function AdminDashboard({ shellless = false }: AdminDashboardProp
   if (!sessionReady && !snapshot) {
     return (
       <div className="min-h-screen bg-background px-6 pb-16 pt-20 text-foreground">
-        <div className="container mx-auto max-w-3xl rounded-[28px] border border-emerald-950/35 bg-[linear-gradient(160deg,rgba(8,15,30,0.96),rgba(10,28,22,0.9)_60%,rgba(14,45,0,0.72))] p-8 shadow-[0_30px_120px_rgba(0,0,0,0.38)]">
+        <div className="container mx-auto max-w-3xl rounded-[28px] border border-emerald-950/24 bg-[linear-gradient(160deg,rgba(8,15,30,0.96),rgba(8,22,20,0.88)_60%,rgba(16,33,14,0.46))] p-8 shadow-[0_30px_120px_rgba(0,0,0,0.38)]">
           <p className="font-tech text-xs uppercase tracking-[0.22em] text-primary">Admin Dashboard</p>
           <h1 className="mt-3 text-3xl font-display text-white">Loading pricing workbench</h1>
           <p className="mt-3 text-sm text-slate-300">Verifying session and loading live benchmarks, region bands, and news context.</p>
@@ -713,7 +713,7 @@ export default function AdminDashboard({ shellless = false }: AdminDashboardProp
 
   const page = (
     <section className="relative min-h-screen overflow-hidden px-6 pb-16 pt-28">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(18,44,58,0.12),transparent_34%),radial-gradient(circle_at_82%_18%,rgba(14,45,0,0.18),transparent_28%),linear-gradient(180deg,rgba(4,8,18,0.98),rgba(6,18,16,0.95)_42%,rgba(10,24,14,0.98))]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(18,44,58,0.1),transparent_34%),radial-gradient(circle_at_82%_18%,rgba(24,66,18,0.12),transparent_28%),linear-gradient(180deg,rgba(4,8,18,0.98),rgba(6,16,16,0.95)_42%,rgba(8,20,14,0.98))]" />
       <div className="pointer-events-none absolute inset-0 bg-grid-pattern opacity-[0.04]" />
       <div className="pointer-events-none absolute inset-y-0 left-[8%] hidden w-px bg-white/7 lg:block" />
       <div className="pointer-events-none absolute inset-y-0 right-[8%] hidden w-px bg-white/6 lg:block" />
@@ -728,7 +728,7 @@ export default function AdminDashboard({ shellless = false }: AdminDashboardProp
             playsInline
             preload="auto"
           />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_82%_22%,rgba(242,135,55,0.18),transparent_24%),radial-gradient(circle_at_20%_28%,rgba(14,45,0,0.16),transparent_26%),linear-gradient(145deg,rgba(8,15,30,0.28),rgba(8,16,30,0.12)_28%,rgba(9,28,18,0.38)_58%,rgba(12,32,10,0.78))]" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_82%_22%,rgba(242,135,55,0.16),transparent_24%),radial-gradient(circle_at_20%_28%,rgba(24,66,18,0.1),transparent_26%),linear-gradient(145deg,rgba(8,15,30,0.28),rgba(8,16,30,0.12)_28%,rgba(8,22,18,0.3)_58%,rgba(10,24,12,0.72))]" />
           <div className="absolute inset-0 bg-grid-pattern opacity-[0.05]" />
           <div className="absolute inset-x-0 top-0 h-28 bg-[linear-gradient(180deg,rgba(255,255,255,0.12),transparent)]" />
           <div className="absolute inset-y-0 left-[58%] hidden w-px bg-white/10 xl:block" />
@@ -791,24 +791,24 @@ export default function AdminDashboard({ shellless = false }: AdminDashboardProp
             </div>
 
             <div className="grid content-end gap-3 sm:grid-cols-2 xl:grid-cols-2">
-              <div className="rounded-2xl border border-emerald-950/35 bg-[linear-gradient(145deg,rgba(5,10,20,0.56),rgba(10,30,18,0.3))] p-4 backdrop-blur-md">
+              <div className="rounded-2xl border border-emerald-950/24 bg-[linear-gradient(145deg,rgba(5,10,20,0.56),rgba(8,22,18,0.22))] p-4 backdrop-blur-md">
                 <div className="text-[11px] uppercase tracking-[0.2em] text-slate-300">Market pulse</div>
                 <div className="mt-3 text-2xl font-display text-white">{snapshot?.marketPulse ?? "--"}</div>
                 <p className="mt-2 text-xs text-slate-400">Updated {updated}</p>
               </div>
-              <div className="rounded-2xl border border-emerald-950/35 bg-[linear-gradient(145deg,rgba(5,10,20,0.56),rgba(10,30,18,0.3))] p-4 backdrop-blur-md">
+              <div className="rounded-2xl border border-emerald-950/24 bg-[linear-gradient(145deg,rgba(5,10,20,0.56),rgba(8,22,18,0.22))] p-4 backdrop-blur-md">
                 <div className="text-[11px] uppercase tracking-[0.2em] text-slate-300">Active product</div>
                 <div className="mt-3 text-2xl font-display text-white">{inputs.selectedProduct}</div>
                 <p className="mt-2 text-xs text-slate-400">{selectedProductStrategy.quoteLabel}</p>
               </div>
-              <div className="rounded-2xl border border-emerald-950/35 bg-[linear-gradient(145deg,rgba(5,10,20,0.56),rgba(10,30,18,0.3))] p-4 backdrop-blur-md">
+              <div className="rounded-2xl border border-emerald-950/24 bg-[linear-gradient(145deg,rgba(5,10,20,0.56),rgba(8,22,18,0.22))] p-4 backdrop-blur-md">
                 <div className="text-[11px] uppercase tracking-[0.2em] text-slate-300">Selected benchmark</div>
                 <div className="mt-3 text-2xl font-display text-white">
                   {selectedBenchmarkCard?.label ?? "--"}
                 </div>
                 <p className="mt-2 text-xs text-slate-400">{selectedProductStrategy.strategy}</p>
               </div>
-              <div className="rounded-2xl border border-emerald-950/35 bg-[linear-gradient(145deg,rgba(5,10,20,0.56),rgba(10,30,18,0.3))] p-4 backdrop-blur-md">
+              <div className="rounded-2xl border border-emerald-950/24 bg-[linear-gradient(145deg,rgba(5,10,20,0.56),rgba(8,22,18,0.22))] p-4 backdrop-blur-md">
                 <div className="text-[11px] uppercase tracking-[0.2em] text-slate-300">Verified memory</div>
                 <div className="mt-3 text-2xl font-display text-white">{verifiedUsefulScenarios.length}</div>
                 <p className="mt-2 text-xs text-slate-400">

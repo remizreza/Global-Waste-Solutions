@@ -3,32 +3,32 @@
 @import "tw-animate-css";
 
 @theme inline {
-  --color-background: #04111b; /* Deep navy-green preview */
+  --color-background: #05101a; /* Deep navy with subtle forest undertone */
   --color-foreground: #eef3ff;
 
-  --color-card: #0a1a24;
+  --color-card: #0a1721;
   --color-card-foreground: #eef3ff;
 
-  --color-popover: #07171f;
+  --color-popover: #08161f;
   --color-popover-foreground: #eef3ff;
 
   --color-primary: #ff6b1a; /* Brand orange */
   --color-primary-foreground: #ffffff;
 
-  --color-secondary: #0a1f18; /* Navy-green secondary */
+  --color-secondary: #0b1d19; /* Restrained navy-green secondary */
   --color-secondary-foreground: #ffffff;
 
   --color-accent: #00a6ff; /* Brand electric blue */
   --color-accent-foreground: #ffffff;
 
-  --color-muted: #10261f;
+  --color-muted: #11231f;
   --color-muted-foreground: #a9b4d3;
 
   --color-destructive: hsl(0 62% 30%);
   --color-destructive-foreground: hsl(210 20% 98%);
 
-  --color-border: #1b4332;
-  --color-input: #1b4332;
+  --color-border: #1a342a;
+  --color-input: #1a342a;
   --color-ring: #ff6b1a;
 
   --font-sans: "Plus Jakarta Sans", sans-serif;
@@ -329,7 +329,7 @@ body[data-custom-cursor="true"] [role="button"] {
   }
 
   .brand-surface {
-    background: linear-gradient(145deg, rgba(11, 31, 58, 0.92), rgba(10, 36, 18, 0.9));
+    background: linear-gradient(145deg, rgba(11, 31, 58, 0.92), rgba(9, 28, 20, 0.82));
     border: 1px solid rgba(255, 255, 255, 0.12);
     box-shadow: 0 16px 40px rgba(0, 0, 0, 0.26);
     backdrop-filter: blur(10px);
@@ -348,9 +348,9 @@ body[data-custom-cursor="true"] [role="button"] {
   .site-ambient {
     background:
       radial-gradient(circle at top, rgba(255, 107, 26, 0.1), transparent 26%),
-      radial-gradient(circle at 82% 16%, rgba(14, 45, 0, 0.22), transparent 24%),
+      radial-gradient(circle at 82% 16%, rgba(24, 66, 18, 0.14), transparent 24%),
       radial-gradient(circle at 18% 62%, rgba(255, 255, 255, 0.035), transparent 28%),
-      linear-gradient(180deg, #04111b 0%, #071913 34%, #0e2d00 100%);
+      linear-gradient(180deg, #05101a 0%, #07161a 34%, #10210f 100%);
   }
 
   .hero-architectural-grid {
@@ -364,7 +364,7 @@ body[data-custom-cursor="true"] [role="button"] {
   .hero-spotlight {
     background:
       radial-gradient(circle at 50% 18%, rgba(255, 255, 255, 0.1), transparent 24%),
-      radial-gradient(circle at 50% 0%, rgba(14, 45, 0, 0.18), transparent 28%);
+      radial-gradient(circle at 50% 0%, rgba(24, 66, 18, 0.12), transparent 28%);
     animation: spotlightBreath 10s ease-in-out infinite;
   }
 
@@ -373,7 +373,7 @@ body[data-custom-cursor="true"] [role="button"] {
     overflow: hidden;
     background:
       linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.01)),
-      linear-gradient(145deg, rgba(11, 31, 58, 0.84), rgba(10, 36, 18, 0.9));
+      linear-gradient(145deg, rgba(11, 31, 58, 0.84), rgba(8, 24, 19, 0.84));
     border: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow: 0 24px 90px rgba(0, 0, 0, 0.38);
     backdrop-filter: blur(12px);
@@ -401,7 +401,7 @@ body[data-custom-cursor="true"] [role="button"] {
     border: 1px solid rgba(255, 255, 255, 0.06);
     background:
       linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.01)),
-      linear-gradient(145deg, rgba(8, 17, 39, 0.84), rgba(10, 36, 18, 0.9));
+      linear-gradient(145deg, rgba(8, 17, 39, 0.86), rgba(9, 24, 18, 0.82));
     backdrop-filter: blur(14px);
     box-shadow:
       0 22px 64px rgba(0, 0, 0, 0.22),
@@ -445,7 +445,7 @@ body[data-custom-cursor="true"] [role="button"] {
     border-color: rgba(255, 255, 255, 0.09);
     background:
       linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.012)),
-      linear-gradient(145deg, rgba(9, 18, 40, 0.82), rgba(10, 36, 18, 0.9));
+      linear-gradient(145deg, rgba(9, 18, 40, 0.84), rgba(8, 24, 18, 0.82));
     box-shadow:
       0 30px 100px rgba(0, 0, 0, 0.34),
       inset 0 1px 0 rgba(255, 255, 255, 0.06);
@@ -459,7 +459,7 @@ body[data-custom-cursor="true"] [role="button"] {
     border-color: rgba(255, 255, 255, 0.05);
     background:
       linear-gradient(180deg, rgba(255, 255, 255, 0.022), rgba(255, 255, 255, 0.008)),
-      rgba(8, 26, 20, 0.88);
+      rgba(8, 20, 18, 0.86);
     box-shadow:
       0 18px 44px rgba(0, 0, 0, 0.2),
       inset 0 1px 0 rgba(255, 255, 255, 0.035);
@@ -497,8 +497,8 @@ body[data-custom-cursor="true"] [role="button"] {
   .footer-luxury {
     background:
       radial-gradient(circle at 12% 0%, rgba(255, 107, 26, 0.1), transparent 34%),
-      radial-gradient(circle at 88% 18%, rgba(14, 45, 0, 0.18), transparent 32%),
-      linear-gradient(180deg, rgba(4, 10, 18, 0.98), rgba(10, 28, 14, 1));
+      radial-gradient(circle at 88% 18%, rgba(24, 66, 18, 0.12), transparent 32%),
+      linear-gradient(180deg, rgba(4, 10, 18, 0.98), rgba(8, 20, 16, 1));
   }
 
   .footer-panel {
@@ -506,7 +506,7 @@ body[data-custom-cursor="true"] [role="button"] {
     border: 1px solid rgba(255, 255, 255, 0.08);
     background:
       linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0.01)),
-      linear-gradient(145deg, rgba(8, 16, 35, 0.9), rgba(10, 36, 18, 0.94));
+      linear-gradient(145deg, rgba(8, 16, 35, 0.92), rgba(8, 24, 18, 0.86));
     box-shadow:
       0 28px 90px rgba(0, 0, 0, 0.34),
       inset 0 1px 0 rgba(255, 255, 255, 0.05);
@@ -821,9 +821,9 @@ body[data-custom-cursor="true"] [role="button"] {
 
   .nav-glass {
     background:
-      linear-gradient(180deg, rgba(7, 18, 32, 0.92), rgba(9, 26, 20, 0.82)),
+      linear-gradient(180deg, rgba(7, 18, 32, 0.92), rgba(8, 22, 20, 0.8)),
       radial-gradient(circle at 18% 0%, rgba(249, 115, 22, 0.16), transparent 36%),
-      radial-gradient(circle at 82% 0%, rgba(14, 45, 0, 0.22), transparent 40%);
+      radial-gradient(circle at 82% 0%, rgba(24, 66, 18, 0.14), transparent 40%);
     backdrop-filter: blur(20px);
   }
 
